@@ -1,0 +1,28 @@
+gnome-clang
+===========
+
+gnome-clang is a set of tools and plugins for Clang which aim to improve the
+usefulness of Clang for developing GNOME applications.
+
+The first (and currently only) plugin in this set is a static analysis plugin to
+utilise GObject introspection annotations to automatically add attributes to
+functions and parameters in C code.
+
+Dependencies
+============
+
+ • glib-2.0 ≥ 2.38.0
+ • gio-2.0 ≥ 2.38.0
+ • gobject-introspection-1.0 ≥ 1.38.0
+ • llvm ≥ 3.5svn
+
+Licensing
+=========
+
+gnome-clang is licensed under the GPL; see COPYING for more details.
+
+Contact
+=======
+
+Philip Withnall <philip.withnall@collabora.co.uk>
+http://people.collabora.com/~pwith/gnome-clang/
