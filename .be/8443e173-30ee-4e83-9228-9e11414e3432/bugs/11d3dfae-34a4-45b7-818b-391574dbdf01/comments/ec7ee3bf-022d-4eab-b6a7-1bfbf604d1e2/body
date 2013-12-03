@@ -1,0 +1,3 @@
+When Clang gets support for the returns_nonnull GCC attribute, it would be nice to tie it in with the (allow-none) annotation and emit it if that annotation isn’t present on a pointer return type.
+
+http://llvm.org/bugs/show_bug.cgi?id=4832
