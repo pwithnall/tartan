@@ -29,19 +29,23 @@ using namespace clang;
 
 class GirAttributesConsumer : public ASTConsumer {
 private:
-	std::string _gi_namespace;
-	std::string _gi_version;
-	std::string _gi_c_prefix;
+	struct Repo {
+		/* All non-NULL. */
+		std::string nspace;
+		std::string version;
+		std::string c_prefix;
 
-	GIRepository *_repo = NULL;
-	GITypelib *_typelib = NULL;
+		GIRepository* repo;
+		GITypelib* typelib;
+	};
+
+	std::vector<Repo> _repos;
 
 public:
-	GirAttributesConsumer (std::string& gi_namespace,
-	                       std::string& gi_version);
 	~GirAttributesConsumer ();
 
-	void prepare (GError **error);
+	void load_namespace (std::string& gi_namespace, std::string& gi_version,
+	                     GError **error);
 
 private:
 	void _handle_function_decl (FunctionDecl& func);

@@ -47,11 +47,10 @@ protected:
 		GError *error = NULL;
 
 		/* TODO: Sort of need to be able to specify multiple namespaces. */
-		GirAttributesConsumer *consumer =
-			new GirAttributesConsumer (this->_gi_namespace,
-			                           this->_gi_version);
+		GirAttributesConsumer *consumer = new GirAttributesConsumer ();
 
-		consumer->prepare (&error);
+		consumer->load_namespace (this->_gi_namespace,
+		                          this->_gi_version, &error);
 		if (error != NULL) {
 			llvm::errs () << "Error loading GIR typelib ‘" <<
 			                 this->_gi_namespace << "’ (version " <<

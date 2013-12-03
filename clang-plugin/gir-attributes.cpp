@@ -33,44 +33,50 @@
 #define DEBUG(X)
 #endif
 
-GirAttributesConsumer::GirAttributesConsumer (std::string& gi_namespace,
-                                              std::string& gi_version)
-{
-	this->_gi_namespace = gi_namespace;
-	this->_gi_version = gi_version;
-}
-
 GirAttributesConsumer::~GirAttributesConsumer ()
 {
-	if (this->_typelib != NULL)
-		g_object_unref (this->_typelib);
-	if (this->_repo != NULL)
-		g_object_unref (this->_repo);
+	for (std::vector<Repo>::iterator it = this->_repos.begin ();
+	     it != this->_repos.end (); ++it) {
+		Repo r = *it;
+		g_object_unref (r.typelib);
+		g_object_unref (r.repo);
+	}
+
+	this->_repos.clear ();
 }
 
 void
-GirAttributesConsumer::prepare (GError **error)
+GirAttributesConsumer::load_namespace (std::string& gi_namespace,
+                                       std::string& gi_version, GError **error)
 {
 	/* Load the GIR typelib. */
-	this->_repo = g_irepository_get_default ();
-	this->_typelib = g_irepository_require (this->_repo,
-	                                        this->_gi_namespace.c_str (),
-	                                        this->_gi_version.c_str (),
-	                                        (GIRepositoryLoadFlags) 0,
-	                                        error);
+	GIRepository* repo = g_irepository_get_default ();
+	GITypelib* typelib = g_irepository_require (repo, gi_namespace.c_str (),
+	                                            gi_version.c_str (),
+	                                            (GIRepositoryLoadFlags) 0,
+	                                            error);
 
-	if (this->_typelib == NULL) {
-		g_object_unref (this->_repo);
-		this->_repo = NULL;
+	if (typelib == NULL) {
+		g_object_unref (repo);
+		repo = NULL;
+		return;
 	}
 
 	/* Get the C prefix from the repository and convert it to lower case. */
 	const char *c_prefix =
-		g_irepository_get_c_prefix (this->_repo,
-		                            this->_gi_namespace.c_str ());
-	this->_gi_c_prefix = std::string (c_prefix);
-	std::transform (this->_gi_c_prefix.begin (), this->_gi_c_prefix.end (),
-	                this->_gi_c_prefix.begin (), ::tolower);
+		g_irepository_get_c_prefix (repo, gi_namespace.c_str ());
+
+	Repo r = Repo ();
+	r.nspace = gi_namespace;
+	r.version = gi_version;
+	r.c_prefix = std::string (c_prefix);
+	r.repo = repo;
+	r.typelib = typelib;
+
+	std::transform (r.c_prefix.begin (), r.c_prefix.end (),
+	                r.c_prefix.begin (), ::tolower);
+
+	this->_repos.push_back (r);
 }
 
 void
@@ -83,35 +89,47 @@ GirAttributesConsumer::_handle_function_decl (FunctionDecl& func)
 	if (sc != SC_None && sc != SC_Extern)
 		return;
 
-	/* The func_name includes the namespace, which needs stripping.
-	 * e.g. g_irepository_find_by_name → find_by_name. */
-	std::string func_name = func.getNameAsString ();
-	std::string func_name_stripped;
-
-	if (func_name.compare (0, this->_gi_c_prefix.size (),
-	                       this->_gi_c_prefix) == 0) {
-		size_t prefix_len =
-			this->_gi_c_prefix.size () + 1 /* underscore */;
-		func_name_stripped = func_name.substr (prefix_len);
-	} else {
-		DEBUG ("Ignoring function " << func_name);
-		return;
-	}
-
 	/* Try to find typelib information about the function. */
 	GIBaseInfo *info;
-	info = g_irepository_find_by_name (this->_repo,
-	                                   this->_gi_namespace.c_str (),
-	                                   func_name_stripped.c_str ());
+	std::string func_name = func.getNameAsString ();  /* TODO: expensive? */
+	std::string func_name_stripped;
 
-	DEBUG ("Looking for info for function " << func_name_stripped);
+	for (std::vector<Repo>::const_iterator it = this->_repos.begin ();
+	     it != this->_repos.end (); ++it) {
+		Repo r = *it;
+
+		DEBUG ("Looking for function " << func_name <<
+		       " in repository " << r.nspace << " (version " <<
+		       r.version << ", C prefix ‘" << r.c_prefix << "’).");
+
+		/* The func_name includes the namespace, which needs stripping.
+		 * e.g. g_irepository_find_by_name → find_by_name. */
+		if (func_name.compare (0, r.c_prefix.size (),
+		                       r.c_prefix) == 0) {
+			size_t prefix_len =
+				r.c_prefix.size () + 1 /* underscore */;
+			func_name_stripped = func_name.substr (prefix_len);
+		} else {
+			DEBUG ("\tDoesn’t match C prefix ‘" << r.c_prefix <<
+			       "’.");
+			continue;
+		}
+
+		info = g_irepository_find_by_name (r.repo, r.nspace.c_str (),
+		                                   func_name_stripped.c_str ());
+
+		if (info != NULL) {
+			/* Successfully found an entry in the typelib. */
+			DEBUG ("Found info!");
+			break;
+		}
+	}
 
 	if (info == NULL)
 		return;
 
-	/* Successfully found an entry in the typelib. */
-	DEBUG ("Found info!");
-
+	/* Extract information from the GIBaseInfo and add AST attributes
+	 * accordingly. */
 	switch (g_base_info_get_type (info)) {
 	case GI_INFO_TYPE_FUNCTION: {
 		GICallableInfo *callable_info = (GICallableInfo *) info;
@@ -181,8 +199,8 @@ GirAttributesConsumer::_handle_function_decl (FunctionDecl& func)
 		llvm::errs () << "Error: Unhandled GI type " <<
 		                 g_base_info_get_type (info) <<
 		                 " in introspection info for function ‘" <<
-		                 func_name << "’ (" << this->_gi_c_prefix <<
-		                 "::" << func_name_stripped << ").\n";
+		                 func_name << "’ (" << func_name_stripped <<
+		                 ").\n";
 	}
 
 	g_base_info_unref (info);
