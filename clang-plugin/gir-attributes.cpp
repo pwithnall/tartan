@@ -292,6 +292,18 @@ GirAttributesConsumer::_handle_function_decl (FunctionDecl& func)
 			func.addAttr (deprecated_attr);
 		}
 
+		/* Mark the function as allocating memory if it’s a
+		 * constructor. */
+		if (g_function_info_get_flags (info) &
+		    GI_FUNCTION_IS_CONSTRUCTOR &&
+		    !func.hasAttr<MallocAttr> ()) {
+			MallocAttr* malloc_attr =
+				::new (func.getASTContext ())
+				MallocAttr (func.getSourceRange (),
+				            func.getASTContext ());
+			func.addAttr (malloc_attr);
+		}
+
 		break;
 	}
 	case GI_INFO_TYPE_CALLBACK:
