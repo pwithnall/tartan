@@ -26,6 +26,7 @@ clang_plugin_libclang_gnome_la_CPPFLAGS = \
 
 clang_plugin_libclang_gnome_la_CXXFLAGS = \
 	$(AM_CXXFLAGS) \
+	-std=c++0x -pedantic \
 	$(GNOME_CLANG_CFLAGS) \
 	$(LLVM_CXXFLAGS) \
 	$(WARN_CXXFLAGS) \

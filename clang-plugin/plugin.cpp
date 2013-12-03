@@ -37,63 +37,97 @@ namespace {
  */
 class GirAttributesAction : public PluginASTAction {
 private:
-	std::string _gi_namespace;
-	std::string _gi_version;
+	std::unique_ptr<GirAttributesConsumer> _consumer;
+
+public:
+	GirAttributesAction ()
+	{
+		this->_consumer =
+			std::unique_ptr<GirAttributesConsumer> (
+				new GirAttributesConsumer ());
+	}
 
 protected:
+	/* Note: This is called before ParseArgs, and must transfer ownership
+	 * of the ASTConsumer. */
 	ASTConsumer *
 	CreateASTConsumer (CompilerInstance &CI, llvm::StringRef)
 	{
-		GError *error = NULL;
-
-		/* TODO: Sort of need to be able to specify multiple namespaces. */
-		GirAttributesConsumer *consumer = new GirAttributesConsumer ();
-
-		consumer->load_namespace (this->_gi_namespace,
-		                          this->_gi_version, &error);
-		if (error != NULL) {
-			llvm::errs () << "Error loading GIR typelib ‘" <<
-			                 this->_gi_namespace << "’ (version " <<
-			                 this->_gi_version << "): " <<
-			                 error->message;
-			return NULL;
-		}
-
-		return consumer;
+		return this->_consumer.release ();
 	}
 
-	/* Parse command line arguments for the plugin.
-	 * TODO: Called before CreateASTConsumer? */
+private:
+	/* Command line parser helper for loading GI namespaces. */
+	bool
+	_gi_repository_helper (std::vector<std::string>::const_iterator it,
+	                       std::vector<std::string>::const_iterator end)
+	{
+		if (it + 2 >= end) {
+			llvm::errs () << "Error: --gi-repository takes two " <<
+			                 "arguments: --gi-repository " <<
+			                 "[namespace] [version].\n";
+			return false;
+		}
+
+		std::advance (it, 1);  /* skip --gi-repository */
+		std::string gi_namespace = *it;
+		std::advance (it, 1);  /* skip namespace */
+		std::string gi_version = *it;
+
+		/* Load the repository. */
+		GError *error = NULL;
+
+		this->_consumer->load_namespace (gi_namespace, gi_version,
+		                                 &error);
+		if (error != NULL) {
+			llvm::errs () << "Error loading GI repository ‘" <<
+			                 gi_namespace << "’ (version " <<
+			                 gi_version << "): " <<
+			                 error->message << "\n";
+			return false;
+		}
+
+		return true;
+	}
+
+protected:
+	/* Parse command line arguments for the plugin. Note: This is called
+	 * after CreateASTConsumer. */
 	bool
 	ParseArgs (const CompilerInstance &CI,
 	           const std::vector<std::string>& args)
 	{
+		unsigned int n_repos = 0;
+
 		/* TODO: Gross hack for testing. */
-		this->_gi_namespace = "GLib";
-		this->_gi_version = "2.0";
+		const char* fake_args[] = { "--gi-repository", "GLib", "2.0",
+		                            "--gi-repository", "Gio", "2.0",
+		                            "--gi-repository", "GObject", "2.0",
+		                            "--gi-repository", "GModule",
+		                            "2.0" };
+		std::vector<std::string> v (fake_args, fake_args + 12);
+		std::vector<std::string>::const_iterator i = v.begin ();
+		this->_gi_repository_helper (i, v.end ());
+		this->_gi_repository_helper (i, v.end ());
 		return true;
 
-		for (unsigned int i = 0, e = args.size (); i < e; i++) {
-			if (args[i] == "-gi-namespace") {
-				if (i + 1 >= e) {
-					/* TODO: Error */
-				}
+		for (std::vector<std::string>::const_iterator it = args.begin();
+		     it != args.end (); ++it) {
+			std::string arg = *it;
 
-				this->_gi_namespace = args[i + 1];
-			} else if (args[i] == "-gi-version") {
-				if (i + 1 >= e) {
-					/* TODO: Error */
-				}
-
-				this->_gi_version = args[i + 1];
-			} else if (args[i] == "help") {
+			if (arg == "--gi-repository") {
+				if (!this->_gi_repository_helper (it,
+				                                  args.end ()))
+					return false;
+				n_repos++;
+			} else if (arg == "help") {
 				this->PrintHelp (llvm::errs ());
 			}
 		}
 
-		if (this->_gi_namespace.empty ()) {
-			llvm::errs () << "Error: -gi-namespace is required.";
-			/* TODO */
+		if (n_repos == 0) {
+			llvm::errs () << "Error: --gi-repository is required.\n";
+			return false;
 		}
 
 		return true;

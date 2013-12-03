@@ -20,10 +20,24 @@
  *     Philip Withnall <philip.withnall@collabora.co.uk>
  */
 
-#include <clang/AST/Attr.h>
+#include <memory>
 
 #include <girepository.h>
 #include <gitypes.h>
+
+namespace std
+{
+	template <> struct default_delete<GIRepository>
+	{
+		void
+		operator () (GIRepository *ptr)
+		{
+			g_object_unref (ptr);
+		}
+	};
+}
+
+#include <clang/AST/Attr.h>
 
 #include "gir-attributes.h"
 
@@ -33,16 +47,15 @@
 #define DEBUG(X)
 #endif
 
+GirAttributesConsumer::GirAttributesConsumer ()
+{
+	this->_repo =
+		std::unique_ptr<GIRepository> (g_irepository_get_default ());
+}
+
 GirAttributesConsumer::~GirAttributesConsumer ()
 {
-	for (std::vector<Repo>::iterator it = this->_repos.begin ();
-	     it != this->_repos.end (); ++it) {
-		Repo r = *it;
-		g_object_unref (r.typelib);
-		g_object_unref (r.repo);
-	}
-
-	this->_repos.clear ();
+	/* Nothing to see here. */
 }
 
 void
@@ -50,33 +63,30 @@ GirAttributesConsumer::load_namespace (std::string& gi_namespace,
                                        std::string& gi_version, GError **error)
 {
 	/* Load the GIR typelib. */
-	GIRepository* repo = g_irepository_get_default ();
-	GITypelib* typelib = g_irepository_require (repo, gi_namespace.c_str (),
+	GITypelib* typelib = g_irepository_require (this->_repo.get (),
+	                                            gi_namespace.c_str (),
 	                                            gi_version.c_str (),
 	                                            (GIRepositoryLoadFlags) 0,
 	                                            error);
 
-	if (typelib == NULL) {
-		g_object_unref (repo);
-		repo = NULL;
+	if (typelib == NULL)
 		return;
-	}
 
 	/* Get the C prefix from the repository and convert it to lower case. */
 	const char *c_prefix =
-		g_irepository_get_c_prefix (repo, gi_namespace.c_str ());
+		g_irepository_get_c_prefix (this->_repo.get (),
+		                            gi_namespace.c_str ());
 
-	Repo r = Repo ();
+	Nspace r = Nspace ();
 	r.nspace = gi_namespace;
 	r.version = gi_version;
 	r.c_prefix = std::string (c_prefix);
-	r.repo = repo;
 	r.typelib = typelib;
 
 	std::transform (r.c_prefix.begin (), r.c_prefix.end (),
 	                r.c_prefix.begin (), ::tolower);
 
-	this->_repos.push_back (r);
+	this->_typelibs.push_back (r);
 }
 
 void
@@ -94,9 +104,9 @@ GirAttributesConsumer::_handle_function_decl (FunctionDecl& func)
 	std::string func_name = func.getNameAsString ();  /* TODO: expensive? */
 	std::string func_name_stripped;
 
-	for (std::vector<Repo>::const_iterator it = this->_repos.begin ();
-	     it != this->_repos.end (); ++it) {
-		Repo r = *it;
+	for (std::vector<Nspace>::const_iterator it = this->_typelibs.begin ();
+	     it != this->_typelibs.end (); ++it) {
+		Nspace r = *it;
 
 		DEBUG ("Looking for function " << func_name <<
 		       " in repository " << r.nspace << " (version " <<
@@ -115,7 +125,8 @@ GirAttributesConsumer::_handle_function_decl (FunctionDecl& func)
 			continue;
 		}
 
-		info = g_irepository_find_by_name (r.repo, r.nspace.c_str (),
+		info = g_irepository_find_by_name (this->_repo.get (),
+		                                   r.nspace.c_str (),
 		                                   func_name_stripped.c_str ());
 
 		if (info != NULL) {
@@ -135,7 +146,6 @@ GirAttributesConsumer::_handle_function_decl (FunctionDecl& func)
 		GICallableInfo *callable_info = (GICallableInfo *) info;
 
 		/* TODO: Return types. */
-		/* TODO: warning if attr doesn't match gir */
 
 		NonNullAttr *attr;
 		std::vector<unsigned int> non_null_args;
