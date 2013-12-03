@@ -278,6 +278,20 @@ GirAttributesConsumer::_handle_function_decl (FunctionDecl& func)
 			_constify_function_return_type (func);
 		}
 
+		/* Mark the function as deprecated if it wasn’t already. The
+		 * typelib file doesn’t contain a deprecation message, version,
+		 * or replacement function so we can’t make use of them. */
+		if (g_base_info_is_deprecated (info) &&
+		    !func.hasAttr<DeprecatedAttr> ()) {
+			DeprecatedAttr* deprecated_attr =
+				::new (func.getASTContext ())
+				DeprecatedAttr (func.getSourceRange (),
+				                func.getASTContext (),
+				                "Deprecated using the gtk-doc "
+				                "attribute.");
+			func.addAttr (deprecated_attr);
+		}
+
 		break;
 	}
 	case GI_INFO_TYPE_CALLBACK:
