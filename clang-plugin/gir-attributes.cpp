@@ -126,7 +126,7 @@ GirAttributesConsumer::_handle_function_decl (FunctionDecl& func)
 		attr = func.getAttr<NonNullAttr> ();
 		if (attr != NULL) {
 			/* Extend and replace the existing attribute. */
-			llvm::errs () << "extending existing attr\n";
+			DEBUG ("Extending existing attribute.");
 			non_null_args.insert (non_null_args.begin (),
 			                      attr->args_begin (),
 			                      attr->args_end ());
@@ -142,16 +142,12 @@ GirAttributesConsumer::_handle_function_decl (FunctionDecl& func)
 
 			if (!g_arg_info_may_be_null (&arg) &&
 			    g_type_info_is_pointer (&type_info)) {
-				llvm::errs () << "got arg " << j << " from GIR\n";
+				DEBUG ("Got nonnull arg " << j << " from GIR.");
 				non_null_args.push_back (j);
 			}
 		}
 
 		if (non_null_args.size () > 0) {
-			llvm::errs () << "NONNULL:\n";
-			for (unsigned int z = 0; z < non_null_args.size (); z++)
-				llvm::errs () << "\t" << non_null_args[z] << "\n";
-
 			attr = ::new (func.getASTContext ())
 				NonNullAttr (func.getSourceRange (),
 				             func.getASTContext (),
@@ -182,8 +178,11 @@ GirAttributesConsumer::_handle_function_decl (FunctionDecl& func)
 	case GI_INFO_TYPE_UNRESOLVED:
 	case GI_INFO_TYPE_INVALID:
 	default:
-		/* TODO */
-		llvm::errs () << "Error: unhandled type " << g_base_info_get_type (info) << "\n";
+		llvm::errs () << "Error: Unhandled GI type " <<
+		                 g_base_info_get_type (info) <<
+		                 " in introspection info for function ‘" <<
+		                 func_name << "’ (" << this->_gi_c_prefix <<
+		                 "::" << func_name_stripped << ").\n";
 	}
 
 	g_base_info_unref (info);
