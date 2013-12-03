@@ -89,6 +89,69 @@ GirAttributesConsumer::load_namespace (std::string& gi_namespace,
 	this->_typelibs.push_back (r);
 }
 
+/* Determine whether a type should be const, given its (transfer) annotation and
+ * base type. */
+static bool
+_type_should_be_const (GITransfer transfer, GITypeTag type_tag)
+{
+	return (transfer == GI_TRANSFER_NOTHING &&
+	        (type_tag == GI_TYPE_TAG_UTF8 ||
+	         type_tag == GI_TYPE_TAG_FILENAME ||
+	         type_tag == GI_TYPE_TAG_ARRAY ||
+	         type_tag == GI_TYPE_TAG_GLIST ||
+	         type_tag == GI_TYPE_TAG_GSLIST ||
+	         type_tag == GI_TYPE_TAG_GHASH ||
+	         type_tag == GI_TYPE_TAG_ERROR));
+}
+
+/* Make the return type of a FunctionType const. This will go one level of
+ * typing below the return type, so it won’t constify the top-level pointer
+ * return. e.g.:
+ *     char* → const char *          (pointer to const char)
+ * and not:
+ *     char* → char * const          (const pointer to char)
+ *     char* → const char * const    (const pointer to const char) */
+static void
+_constify_function_return_type (FunctionDecl& func)
+{
+	/* We have to construct a new type because the existing FunctionType
+	 * is immutable. */
+	const FunctionType* f_type = func.getType ()->getAs<FunctionType> ();
+	ASTContext& context = func.getASTContext ();
+	const QualType old_result_type = f_type->getResultType ();
+
+	const PointerType* old_result_pointer_type = dyn_cast<PointerType> (old_result_type);
+	if (old_result_pointer_type == NULL)
+		return;
+
+	QualType new_result_pointee_type =
+		old_result_pointer_type->getPointeeType ().withConst ();
+	QualType new_result_type = context.getPointerType (new_result_pointee_type);
+
+	for (FunctionDecl* func_decl = func.getMostRecentDecl ();
+	     func_decl != NULL; func_decl = func_decl->getPreviousDecl ()) {
+		const FunctionNoProtoType* f_n_type =
+			dyn_cast<FunctionNoProtoType> (f_type);
+		QualType t;
+
+		if (f_n_type != NULL) {
+			t = context.getFunctionNoProtoType (new_result_type,
+			                                    f_n_type->getExtInfo ());
+		} else {
+			const FunctionProtoType *f_p_type =
+				cast<FunctionProtoType> (f_type);
+			t = context.getFunctionType (new_result_type,
+			                             f_p_type->getArgTypes (),
+			                             f_p_type->getExtProtoInfo ());
+		}
+
+		DEBUG ("Constifying type " <<
+		       func_decl->getType ().getAsString () << " → " <<
+		       t.getAsString ());
+		func_decl->setType (t);
+	}
+}
+
 void
 GirAttributesConsumer::_handle_function_decl (FunctionDecl& func)
 {
@@ -145,43 +208,74 @@ GirAttributesConsumer::_handle_function_decl (FunctionDecl& func)
 	case GI_INFO_TYPE_FUNCTION: {
 		GICallableInfo *callable_info = (GICallableInfo *) info;
 
-		/* TODO: Return types. */
-
-		NonNullAttr *attr;
 		std::vector<unsigned int> non_null_args;
 		unsigned int j, k;
 
-		attr = func.getAttr<NonNullAttr> ();
-		if (attr != NULL) {
+		NonNullAttr* nonnull_attr = func.getAttr<NonNullAttr> ();
+		if (nonnull_attr != NULL) {
 			/* Extend and replace the existing attribute. */
 			DEBUG ("Extending existing attribute.");
 			non_null_args.insert (non_null_args.begin (),
-			                      attr->args_begin (),
-			                      attr->args_end ());
+			                      nonnull_attr->args_begin (),
+			                      nonnull_attr->args_end ());
 		}
 
 		for (j = 0, k = g_callable_info_get_n_args (callable_info);
 		     j < k; j++) {
 			GIArgInfo arg;
 			GITypeInfo type_info;
+			GITransfer transfer;
+			GITypeTag type_tag;
 
 			g_callable_info_load_arg (callable_info, j, &arg);
 			g_arg_info_load_type (&arg, &type_info);
+			transfer = g_arg_info_get_ownership_transfer (&arg);
+			type_tag = g_type_info_get_tag (&type_info);
 
 			if (!g_arg_info_may_be_null (&arg) &&
 			    g_type_info_is_pointer (&type_info)) {
 				DEBUG ("Got nonnull arg " << j << " from GIR.");
 				non_null_args.push_back (j);
 			}
+
+			if (_type_should_be_const (transfer, type_tag)) {
+				ParmVarDecl *parm = func.getParamDecl (j);
+				QualType t = parm->getType ();
+
+				if (!t.isConstant (parm->getASTContext ()))
+					parm->setType (t.withConst ());
+			}
 		}
 
 		if (non_null_args.size () > 0) {
-			attr = ::new (func.getASTContext ())
+			nonnull_attr = ::new (func.getASTContext ())
 				NonNullAttr (func.getSourceRange (),
 				             func.getASTContext (),
 				             non_null_args.data (),
 				             non_null_args.size ());
-			func.addAttr (attr);
+			func.addAttr (nonnull_attr);
+		}
+
+		/* Process the function’s return type. */
+		/* FIXME: Support returns_nonnull when Clang supports it.
+		 * http://llvm.org/bugs/show_bug.cgi?id=4832 */
+		GITypeInfo return_type_info;
+		GITransfer return_transfer;
+		GITypeTag return_type_tag;
+
+		g_callable_info_load_return_type (info, &return_type_info);
+		return_transfer = g_callable_info_get_caller_owns (info);
+		return_type_tag = g_type_info_get_tag (&return_type_info);
+
+		if (return_transfer != GI_TRANSFER_NOTHING) {
+			WarnUnusedAttr* warn_unused_attr =
+				::new (func.getASTContext ())
+				WarnUnusedAttr (func.getSourceRange (),
+				                func.getASTContext ());
+			func.addAttr (warn_unused_attr);
+		} else if (_type_should_be_const (return_transfer,
+		                                  return_type_tag)) {
+			_constify_function_return_type (func);
 		}
 
 		break;
