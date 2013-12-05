@@ -336,7 +336,6 @@ GirAttributesConsumer::_handle_function_decl (FunctionDecl& func)
 	g_base_info_unref (info);
 }
 
-/* Prepare must have been called successfully before this may be called. */
 bool
 GirAttributesConsumer::HandleTopLevelDecl (DeclGroupRef decl_group)
 {
