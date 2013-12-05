@@ -14,6 +14,7 @@ clang_LTLIBRARIES = clang-plugin/libclang-gnome.la
 clang_plugin_libclang_gnome_la_SOURCES = \
 	clang-plugin/plugin.cpp \
 	clang-plugin/gir-attributes.cpp \
+	clang-plugin/gassert-attributes.cpp \
 	$(NULL)
 
 clang_plugin_libclang_gnome_la_CPPFLAGS = \

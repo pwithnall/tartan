@@ -24,9 +24,11 @@
 #include <clang/AST/AST.h>
 #include <clang/AST/ASTConsumer.h>
 #include <clang/Frontend/CompilerInstance.h>
+#include <clang/Frontend/MultiplexConsumer.h>
 #include <llvm/Support/raw_ostream.h>
 
 #include "gir-attributes.h"
+#include "gassert-attributes.h"
 
 using namespace clang;
 
@@ -37,14 +39,18 @@ namespace {
  */
 class GirAttributesAction : public PluginASTAction {
 private:
-	std::unique_ptr<GirAttributesConsumer> _consumer;
+	std::unique_ptr<GirAttributesConsumer> _gir_consumer;
+	std::unique_ptr<GAssertAttributesConsumer> _gassert_consumer;
 
 public:
 	GirAttributesAction ()
 	{
-		this->_consumer =
+		this->_gir_consumer =
 			std::unique_ptr<GirAttributesConsumer> (
 				new GirAttributesConsumer ());
+		this->_gassert_consumer =
+			std::unique_ptr<GAssertAttributesConsumer> (
+				new GAssertAttributesConsumer ());
 	}
 
 protected:
@@ -53,7 +59,11 @@ protected:
 	ASTConsumer *
 	CreateASTConsumer (CompilerInstance &CI, llvm::StringRef)
 	{
-		return this->_consumer.release ();
+		std::vector<ASTConsumer*> consumers;
+		consumers.push_back (this->_gir_consumer.release ());
+		consumers.push_back (this->_gassert_consumer.release ());
+
+		return new MultiplexConsumer (consumers);
 	}
 
 private:
@@ -77,8 +87,8 @@ private:
 		/* Load the repository. */
 		GError *error = NULL;
 
-		this->_consumer->load_namespace (gi_namespace, gi_version,
-		                                 &error);
+		this->_gir_consumer->load_namespace (gi_namespace, gi_version,
+		                                     &error);
 		if (error != NULL) {
 			llvm::errs () << "Error loading GI repository ‘" <<
 			                 gi_namespace << "’ (version " <<
