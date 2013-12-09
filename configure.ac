@@ -62,6 +62,7 @@ AS_IF([test "$major" -eq "$req_major" -a "$minor" -ge "$req_minor"],[
 	LLVM_CXXFLAGS=`$LLVM_CONFIG --cxxflags`
 	LLVM_LDFLAGS=`$LLVM_CONFIG --ldflags`
 	LLVM_LIBS=`$LLVM_CONFIG --libs`
+	LLVM_VERSION=`$LLVM_CONFIG --version`
 	AC_MSG_RESULT([yes])
 ],[
 	AC_MSG_ERROR([LLVM version $LLVM_REQS or later needed.])
@@ -70,6 +71,7 @@ AS_IF([test "$major" -eq "$req_major" -a "$minor" -ge "$req_minor"],[
 AC_SUBST([LLVM_CXXFLAGS])
 AC_SUBST([LLVM_LDFLAGS])
 AC_SUBST([LLVM_LIBS])
+AC_SUBST([LLVM_VERSION])
 
 # Internationalisation
 GETTEXT_PACKAGE=AC_PACKAGE_NAME

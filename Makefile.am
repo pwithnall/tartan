@@ -7,8 +7,7 @@ EXTRA_DIST =
 GITIGNOREFILES =
 
 # clang-plugin library
-# TODO
-clangdir = $(libdir)/clang/3.5/
+clangdir = $(libdir)/gnome-clang/$(LLVM_VERSION)/
 clang_LTLIBRARIES = clang-plugin/libclang-gnome.la
 
 clang_plugin_libclang_gnome_la_SOURCES = \
