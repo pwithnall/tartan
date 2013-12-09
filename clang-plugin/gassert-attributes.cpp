@@ -258,6 +258,45 @@ _is_assertion_stmt (Stmt& stmt, const ASTContext& context)
 		return _disjunction_expr (then_assertion, else_assertion,
 		                          context);
 	}
+	case Stmt::StmtClass::ConditionalOperatorClass: {
+		/* Handle a ternary operator.
+		 * Transformations:
+		 *     C ? S1 : S2 ↦
+		 *       (C ∧ calc(S1)) ∨ (¬C ∧ calc(S2)) */
+		ConditionalOperator& op_expr = cast<ConditionalOperator> (stmt);
+		assert (op_expr.getTrueExpr () != NULL);
+		assert (op_expr.getFalseExpr () != NULL);
+
+		Expr* neg_cond = _negation_expr (op_expr.getCond (), context);
+
+		Expr* then_assertion =
+			_is_assertion_stmt (*(op_expr.getTrueExpr ()), context);
+		if (then_assertion == NULL)
+			return NULL;
+
+		then_assertion =
+			_conjunction_expr (op_expr.getCond (), then_assertion,
+			                   context);
+
+		Expr* else_assertion =
+			_is_assertion_stmt (*(op_expr.getFalseExpr ()),
+			                    context);
+		if (else_assertion == NULL)
+			return NULL;
+
+		else_assertion =
+			_conjunction_expr (neg_cond, else_assertion, context);
+
+		return _disjunction_expr (then_assertion, else_assertion,
+		                          context);
+	}
+	case Stmt::StmtClass::SwitchStmtClass: {
+		/* Handle a switch statement.
+		 * Transformations:
+		 *     switch (C) { L1: S1; L2: S2; …; Lz: Sz } ↦ NULL
+		 * FIXME: This should get a proper transformation sometime. */
+		return NULL;
+	}
 	case Stmt::StmtClass::AttributedStmtClass: {
 		/* Handle an attributed statement, e.g. G_LIKELY(…).
 		 * Transformations:
@@ -314,6 +353,10 @@ _is_assertion_stmt (Stmt& stmt, const ASTContext& context)
 
 		return compound_condition;
 	}
+	case Stmt::StmtClass::GotoStmtClass:
+		/* Handle a goto statement.
+		 * Transformations:
+		 *     goto L ↦ FALSE */
 	case Stmt::StmtClass::ReturnStmtClass: {
 		/* Handle a return statement.
 		 * Transformations:
@@ -342,17 +385,79 @@ _is_assertion_stmt (Stmt& stmt, const ASTContext& context)
 			                context.getLogicalOperationType (),
 			                SourceLocation ());
 	}
+	case Stmt::StmtClass::ParenExprClass: {
+		/* Handle a parenthesised expression.
+		 * Transformations:
+		 *     ( S ) ↦ calc(S) */
+		ParenExpr& paren_expr = cast<ParenExpr> (stmt);
+
+		Stmt* sub_expr = paren_expr.getSubExpr ();
+		if (sub_expr == NULL)
+			return NULL;
+
+		return _is_assertion_stmt (*sub_expr, context);
+	}
+	case Stmt::StmtClass::LabelStmtClass: {
+		/* Handle a label statement.
+		 * Transformations:
+		 *     label: S ↦ calc(S) */
+		LabelStmt& label_stmt = cast<LabelStmt> (stmt);
+
+		Stmt* sub_stmt = label_stmt.getSubStmt ();
+		if (sub_stmt == NULL)
+			return NULL;
+
+		return _is_assertion_stmt (*sub_stmt, context);
+	}
+	case Stmt::StmtClass::CStyleCastExprClass: {
+		/* Handle an explicit cast.
+		 * Transformations:
+		 *     (T) S ↦ calc(S) */
+		CStyleCastExpr& cast_expr = cast<CStyleCastExpr> (stmt);
+
+		Stmt* sub_expr = cast_expr.getSubExpr ();
+		if (sub_expr == NULL)
+			return NULL;
+
+		return _is_assertion_stmt (*sub_expr, context);
+	}
+	case Stmt::StmtClass::GCCAsmStmtClass:
+	case Stmt::StmtClass::MSAsmStmtClass:
+		/* Inline assembly. There is no way we are parsing this, so
+		 * conservatively assume it modifies program state.
+		 * Transformations:
+		 *     A ↦ NULL */
 	case Stmt::StmtClass::BinaryOperatorClass:
 		/* Handle a binary operator statement. Since this is being
 		 * processed at the top level, it’s most likely an assignment,
 		 * so conservatively assume it modifies program state.
 		 * Transformations:
 		 *     S1 op S2 ↦ NULL */
-	case Stmt::StmtClass::ForStmtClass: {
+	case Stmt::StmtClass::UnaryOperatorClass:
+		/* Handle a unary operator statement. Since this is being
+		 * processed at the top level, it’s not very interesting re.
+		 * assertions, even though it probably won’t modify program
+		 * state (unless it’s a pre- or post-increment or -decrement
+		 * operator). Be conservative and assume it does, though.
+		 * Transformations:
+		 *     op S ↦ NULL */
+	case Stmt::StmtClass::CompoundAssignOperatorClass:
+		/* Handle a compound assignment operator, e.g. x += 5. This
+		 * definitely modifies program state, so ignore it.
+		 * Transformations:
+		 *     S1 op S2 ↦ NULL */
+	case Stmt::StmtClass::ForStmtClass:
 		/* Handle a for statement. We assume these *always* change
 		 * program state.
 		 * Transformations:
 		 *     for (…) { … } ↦ NULL */
+	case Stmt::StmtClass::WhileStmtClass: {
+		/* Handle a while(…) { … } block. Because we don't want to solve
+		 * the halting problem, just assume all while statements cannot
+		 * be assertion statements.
+		 * Transformations:
+		 *     while (C) { S } ↦ NULL
+		 */
 		return NULL;
 	}
 	case Stmt::StmtClass::NoStmtClass:
@@ -589,8 +694,12 @@ _assertion_is_gobject_type_check (Expr& assertion_expr,
 
 		return ret;
 	}
-	case Expr::IntegerLiteralClass: {
-		/* Integer literals can’t be type checks. */
+	case Expr::IntegerLiteralClass:
+	case Expr::BinaryOperatorClass:
+	case Expr::UnaryOperatorClass:
+	case Expr::CallExprClass:
+	case Expr::ImplicitCastExprClass: {
+		/* These can’t be type checks. */
 		return ret;
 	}
 	case Stmt::StmtClass::NoStmtClass:
@@ -667,6 +776,19 @@ _assertion_is_explicit_nonnull_check (Expr& assertion_expr,
 
 		return ret;
 	}
+	case Expr::UnaryOperatorClass: {
+		/* A unary operator. For the moment, assume this isn't a
+		 * non-null check.
+		 *
+		 * FIXME: In the future, define a proper program transformation
+		 * to check for non-null checks, since we could have expressions
+		 * like:
+		 *     !(my_var == NULL)
+		 * or (more weirdly):
+		 *     ~(my_var == NULL)
+		 */
+		return ret;
+	}
 	case Expr::CStyleCastExprClass:
 	case Expr::ImplicitCastExprClass: {
 		/* A (explicit or implicit) cast. This can either be:
@@ -692,6 +814,12 @@ _assertion_is_explicit_nonnull_check (Expr& assertion_expr,
 		ret.insert (decl_ref_expr.getDecl ());
 		return ret;
 	}
+	case Expr::StmtExprClass:
+		/* FIXME: Statement expressions can be nonnull checks, but
+		 * detecting them requires a formal program transformation which
+		 * has not been implemented yet. */
+	case Expr::CallExprClass:
+		/* Function calls can’t be nonnull checks. */
 	case Expr::IntegerLiteralClass: {
 		/* Integer literals can’t be nonnull checks. */
 		return ret;
