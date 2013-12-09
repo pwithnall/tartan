@@ -69,20 +69,44 @@ protected:
 private:
 	/* Command line parser helper for loading GI namespaces. */
 	bool
-	_gi_repository_helper (std::vector<std::string>::const_iterator it,
+	_gi_repository_helper (const CompilerInstance &CI,
+	                       std::vector<std::string>::const_iterator it,
 	                       std::vector<std::string>::const_iterator end)
 	{
-		if (it + 2 >= end) {
-			llvm::errs () << "Error: --gi-repository takes two " <<
-			                 "arguments: --gi-repository " <<
-			                 "[namespace] [version].\n";
+		if (it + 1 >= end) {
+			DiagnosticsEngine &d = CI.getDiagnostics ();
+			unsigned int id = d.getCustomDiagID (
+				DiagnosticsEngine::Error,
+				"--gi-repository requires a "
+				"[namespace]-[version] argument (e.g. "
+				"--gi-repository GLib-2.0).");
+			d.Report (id);
+
 			return false;
 		}
 
 		std::advance (it, 1);  /* skip --gi-repository */
-		std::string gi_namespace = *it;
-		std::advance (it, 1);  /* skip namespace */
-		std::string gi_version = *it;
+		std::string gi_namespace_and_version = *it;
+
+		/* Try and split up the namespace and version.
+		 * e.g. ‘GLib-2.0’ becomes ‘GLib’ and ‘2.0’. */
+		std::string::size_type p = gi_namespace_and_version.find ("-");
+		if (p == std::string::npos) {
+			DiagnosticsEngine &d = CI.getDiagnostics ();
+			unsigned int id = d.getCustomDiagID (
+				DiagnosticsEngine::Error,
+				"--gi-repository requires a "
+				"[namespace]-[version] argument (e.g. "
+				"--gi-repository GLib-2.0).");
+			d.Report (id);
+
+			return false;
+		}
+
+		std::string gi_namespace =
+			gi_namespace_and_version.substr (0, p);
+		std::string gi_version =
+			gi_namespace_and_version.substr (p + 1);
 
 		/* Load the repository. */
 		GError *error = NULL;
@@ -90,10 +114,14 @@ private:
 		this->_gir_consumer->load_namespace (gi_namespace, gi_version,
 		                                     &error);
 		if (error != NULL) {
-			llvm::errs () << "Error loading GI repository ‘" <<
-			                 gi_namespace << "’ (version " <<
-			                 gi_version << "): " <<
-			                 error->message << "\n";
+			DiagnosticsEngine &d = CI.getDiagnostics ();
+			unsigned int id = d.getCustomDiagID (
+				DiagnosticsEngine::Error,
+				"Error loading GI repository ‘" + gi_namespace +
+				"’ (version " + gi_version + "): " +
+				error->message);
+			d.Report (id);
+
 			return false;
 		}
 
@@ -109,34 +137,28 @@ protected:
 	{
 		unsigned int n_repos = 0;
 
-		/* TODO: Gross hack for testing. */
-		const char* fake_args[] = { "--gi-repository", "GLib", "2.0",
-		                            "--gi-repository", "Gio", "2.0",
-		                            "--gi-repository", "GObject", "2.0",
-		                            "--gi-repository", "GModule",
-		                            "2.0" };
-		std::vector<std::string> v (fake_args, fake_args + 12);
-		std::vector<std::string>::const_iterator i = v.begin ();
-		this->_gi_repository_helper (i, v.end ());
-		this->_gi_repository_helper (i, v.end ());
-		return true;
-
 		for (std::vector<std::string>::const_iterator it = args.begin();
 		     it != args.end (); ++it) {
 			std::string arg = *it;
 
 			if (arg == "--gi-repository") {
-				if (!this->_gi_repository_helper (it,
+				if (!this->_gi_repository_helper (CI, it,
 				                                  args.end ()))
 					return false;
 				n_repos++;
-			} else if (arg == "help") {
+			} else if (arg == "--help") {
 				this->PrintHelp (llvm::errs ());
 			}
 		}
 
 		if (n_repos == 0) {
-			llvm::errs () << "Error: --gi-repository is required.\n";
+			DiagnosticsEngine &d = CI.getDiagnostics ();
+			unsigned int id = d.getCustomDiagID (
+				DiagnosticsEngine::Error,
+				"At least one --gi-repository "
+				"[namespace]-[version] argument is required.");
+			d.Report (id);
+
 			return false;
 		}
 
@@ -148,8 +170,24 @@ protected:
 	PrintHelp (llvm::raw_ostream& out)
 	{
 		/* TODO: i18n */
-		out << "A plugin to add C code attributes from GIR annotation "
-		       "data. This plugin currently accepts no arguments.\n";
+		out << "A plugin to enable extra static analysis checks and "
+		       "warnings for C code which uses GLib, by making use of "
+		       "GIR metadata and other GLib coding conventions.\n"
+		       "\n"
+		       "Arguments:\n"
+		       "    --gi-repository [namespace]-[version]\n"
+		       "        Load the GIR metadata for the given version of "
+		               "the given namespace.\n"
+		       "        Both namespace and "
+		               "version are required parameters.\n"
+		       "\n"
+		       "Usage:\n"
+		       "    clang -cc1 -load /path/to/libclang-gnome.so "
+		           "-add-plugin gnome \\\n"
+		       "        -plugin-arg-gnome --gi-repository\n"
+		       "        -plugin-arg-gnome GLib-2.0\n"
+		       "        -plugin-arg-gnome --gi-repository\n"
+		       "        -plugin-arg-gnome GnomeDesktop-3.0\n";
 	}
 
 	bool

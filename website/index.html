@@ -79,6 +79,17 @@ analyser, or can be integrated with JHBuild to be automatically run on all C
 source code compiled using JHBuild (this is the recommended method of using
 gnome-clang).</p>
 
+<p>In both cases, the set of GIR namespaces to load must be specified using the
+<span class="env-var">GNOME_CLANG_GIRS</span> environment variable, giving both
+the namespace and its version, e.g.:</p>
+<pre>GNOME_CLANG_GIRS="GLib-2.0 Gio-2.0 GnomeDesktop-3.0"</pre>
+<p>This should be used to load the GIR for the module being compiled, plus the
+GIRs of all its dependencies. (The GIRs for external dependencies will be loaded
+automatically if correctly specified in the top-level GIR, but those for
+internal dependencies will not, and hence must be listed manually in the
+environment variable.)</p>
+
+
 <h3 id="usage-jhbuild">Usage with JHBuild</h3>
 
 <p><a href="https://developer.gnome.org/jhbuild/stable/introduction.html.en" title="User manual for the JHBuild software build tool.">JHBuild</a>
@@ -100,6 +111,12 @@ static_analyzer_template = 'scan-build -v -o %(outputdir)s/%(module)s</pre>
 <p>This will enable static analysis of C code compiled with JHBuild, but will
 not enable GLib-specific warnings.</p>
 
+<p>In both cases, the <span class="env-var">GNOME_CLANG_GIRS</span> environment
+variable may be set in <span class="filename">~/.jhbuildrc</span>. This will be
+set the same for all modules compiled using JHBuild, and consequently this part
+of the gnome-clang invocation may change in future:</p>
+<pre>os.environ['GNOME_CLANG_GIRS'] = 'GLib-2.0 Gio-2.0 GnomeDesktop-3.0'</pre>
+
 
 <h3 id="usage-standalone">Standalone usage</h3>
 
@@ -120,6 +137,11 @@ the <span class="env-var">GNOME_CLANG_CC</span> and
 <span class="env-var">GNOME_CLANG_PLUGIN</span> environment variables to the
 absolute paths of the <span class="program-name">clang</span> binary and the
 <span class="program-name">libclang-gnome.so</span> library, respectively.</p>
+
+<p>The <span class="env-var">GNOME_CLANG_CFLAGS</span> environment variable may
+optionally be set to pass extra options to the compiler after the gnome-clang
+options. Similarly, <span class="env-var">GNOME_CLANG_OPTIONS</span> may
+optionally be set to pass extra options to the gnome-clang plugin (only).</p>
 
 <p>Finally, gnome-clang may be used without the wrapper script by passing the
 <span class="command">-load</span> and <span class="command">add-plugin</span>

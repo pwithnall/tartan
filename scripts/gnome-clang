@@ -35,6 +35,23 @@ fi
 
 plugin_name=gnome
 
+# Process GNOME_CLANG_OPTIONS, prefixing everything with -plugin-arg-gnome to
+# ensure Clang passes it to (only) the plugin.
+plugin_options=()
+for arg in $GNOME_CLANG_OPTIONS; do
+	plugin_options+=( '-plugin-arg-gnome' )
+	plugin_options+=( "$arg" )
+done
+
+# Same for GNOME_CLANG_GIRS, but also adding the --gi-repository argument.
+plugin_gir_options=()
+for gir in $GNOME_CLANG_GIRS; do
+	plugin_gir_options+=( '-plugin-arg-gnome' )
+	plugin_gir_options+=( '--gi-repository' )
+	plugin_gir_options+=( '-plugin-arg-gnome' )
+	plugin_gir_options+=( "$gir" )
+done
+
 # Clang can’t accept -load as the first argument.
 first_arg=$1
 shift
@@ -44,5 +61,7 @@ exec "$real_clang" \
 	"$first_arg" \
 	-load "$plugin_path" \
 	-add-plugin "$plugin_name" \
+	${plugin_gir_options[@]} \
+	${plugin_options[@]} \
 	$GNOME_CLANG_CFLAGS \
 	"$@"
