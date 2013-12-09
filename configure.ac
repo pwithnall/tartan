@@ -66,7 +66,7 @@ AS_IF([test "$major" -eq "$req_major" -a "$minor" -ge "$req_minor"],[
 	# will be available when the plugin is loaded anyway.
 	#LLVM_LIBS=`$LLVM_CONFIG --libs`
 	LLVM_LIBS=''
-	LLVM_VERSION=`$LLVM_CONFIG --version`
+	LLVM_VERSION="$major.$minor"  # don’t include the ‘svn’ suffix
 	AC_MSG_RESULT([yes])
 ],[
 	AC_MSG_ERROR([LLVM version $LLVM_REQS or later needed.])
