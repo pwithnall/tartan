@@ -1,12 +1,15 @@
 gnome-clang
 ===========
 
-gnome-clang is a set of tools and plugins for Clang which aim to improve the
-usefulness of Clang for developing GNOME applications.
+gnome-clang is a set of tools and plugins for Clang which aim to improve its
+usefulness for developing GNOME applications and libraries.
 
-The first (and currently only) plugin in this set is a static analysis plugin to
+The first plugin in this set is a static analysis plugin to
 utilise GObject introspection annotations to automatically add attributes to
 functions and parameters in C code.
+
+The second plugin utilises g_return_if_fail() preconditions to add attributes
+to functions and parameters in C code.
 
 Dependencies
 ============
