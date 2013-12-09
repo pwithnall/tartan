@@ -61,7 +61,10 @@ minor=`echo $llvm_version | sed 's/\([[0-9]]*\)\.\([[0-9]]*\)\(svn\)\?/\2/'`
 AS_IF([test "$major" -eq "$req_major" -a "$minor" -ge "$req_minor"],[
 	LLVM_CXXFLAGS=`$LLVM_CONFIG --cxxflags`
 	LLVM_LDFLAGS=`$LLVM_CONFIG --ldflags`
-	LLVM_LIBS=`$LLVM_CONFIG --libs`
+	# Don't link against the LLVM libs because they're huge. All the symbols
+	# will be available when the plugin is loaded anyway.
+	#LLVM_LIBS=`$LLVM_CONFIG --libs`
+	LLVM_LIBS=''
 	LLVM_VERSION=`$LLVM_CONFIG --version`
 	AC_MSG_RESULT([yes])
 ],[
