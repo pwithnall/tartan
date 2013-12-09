@@ -565,13 +565,9 @@ _simplify_boolean_expr (Expr* expr, const ASTContext& context)
 			return expr;
 		}
 
-		DEBUG_EXPR ("LHS: ", *lhs);
-		DEBUG_EXPR ("RHS: ", *rhs);
-
 		llvm::APSInt bool_expr;
 
 		if (lhs->isIntegerConstantExpr (bool_expr, context)) {
-			DEBUG ("FASD " << bool_expr.toString (10) << " " << is_or << " " << is_and);
 			if (is_or && bool_expr.getBoolValue ()) {
 				/* 1 || S2 ↦ 1 */
 				return new (context)
@@ -593,7 +589,6 @@ _simplify_boolean_expr (Expr* expr, const ASTContext& context)
 				return rhs;
 			}
 		} else if (rhs->isIntegerConstantExpr (bool_expr, context)) {
-			DEBUG ("DASD " << bool_expr.toString (10) << " " << is_or << " " << is_and);
 			if (is_or && bool_expr.getBoolValue ()) {
 				/* S1 || 1 ↦ 1 */
 				return new (context)
@@ -615,8 +610,6 @@ _simplify_boolean_expr (Expr* expr, const ASTContext& context)
 				return lhs;
 			}
 		}
-
-		DEBUG ("BASD " << is_or << " " << is_and);
 
 		/* S1 op S2 ↦ simplify(S1) op simplify(S2) */
 		op_expr.setLHS (lhs);
