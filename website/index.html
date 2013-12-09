@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8"/>
+	<title>gnome-clang: a Clang analysis plugin for GLib and GNOME</title>
+	<style type="text/css">
+	.filename, .program-name, .command, .env-var, .function-name {
+		font-family: monospace;
+	}
+
+	.replaceable {
+		font-style: italic;
+	}
+	</style>
+</head>
+
+<body>
+<h1>gnome-clang: a Clang analysis plugin for GLib and GNOME</h1>
+
+<p>gnome-clang is a plugin for the
+<a href="http://clang-analyzer.llvm.org/" title="Static analyser using the LLVM suite.">Clang
+static analyser</a> and C compiler which adds tighter support for
+<a href="https://developer.gnome.org/glib/stable/" title="Developer manual for the GLib utility library.">GLib</a>
+and GNOME, introducing extra checks and warnings when compiling C code which
+uses GLib.</p>
+
+<p>If you want to <span style="font-weight:bold">get started using gnome-clang with
+<a href="https://developer.gnome.org/jhbuild/stable/introduction.html.en" title="User manual for the JHBuild software build tool.">JHBuild</a></span>:</p>
+<ol>
+	<li><a href="#download-installation">Download and install</a> the
+	    plugin.</li>
+	<li><a href="#usage-jhbuild">Set it up with JHBuild</a>.</li>
+</ol>
+
+<p>The plugin works by loading gobject-introspection metadata for all functions
+it encounters (both functions exported by the code being compiled, if it is a
+library; and functions called by it). This metadata is then used to add compiler
+attributes to the code, such as non-NULL attributes, which the compiler can then
+use for static analysis and emitting extra compiler warnings.</p>
+<p>The plugin also detects common coding practices for code which uses GLib,
+such as the use of
+<a href="https://developer.gnome.org/glib/stable/glib-Warnings-and-Assertions.html#g-return-if-fail" title="Developer documentation for GLib’s g_return_if_fail()."><span class="function-name">g_return_if_fail()</span></a>
+to describe function preconditions, and uses this to add extra compiler
+attributes.</p>
+<!-- TODO: More? -->
+
+<p>gnome-clang is licenced under the
+<a href="http://www.gnu.org/licenses/gpl-3.0.html" title="Text of the GNU General Public Licence, version 3.0.">GPLv3+</a>.</p>
+
+
+<h2 id="download-installation">Download and installation</h2>
+
+<p>Tarballs for released versions of gnome-clang can be downloaded here:</p>
+<ul>
+	<li><a href="./gnome-clang-0.1.0.tar.xz">0.1.0</a></li>
+</ul>
+
+<p>Compilation follows the standard automake process:</p>
+<pre>tar -xJf ./gnome-clang-<span class="replaceable">$VERSION</span>.tar.xz
+cd ./gnome-clang-<span class="replaceable">$VERSION</span>
+./configure --prefix=<span class="replaceable">$PREFIX</span>
+make
+make install</pre>
+<p>Alternatively,
+<a href="https://developer.gnome.org/jhbuild/stable/introduction.html.en" title="User manual for the JHBuild software build tool.">JHBuild</a>
+may be used directly (e.g. after <a href="#git">cloning the git
+repository</a>):</p>
+<pre>cd ./gnome-clang
+jhbuild make</pre>
+
+<p>This will install the gnome-clang plugin, a dynamically loadable library, in
+<span class="filename"><span class="replaceable">$PREFIX</span>/lib/gnome-clang/<span class="replaceable">$LLVM_VERSION</span>/libclang-gnome.so</span>.</p>
+
+
+<h2 id="usage">Usage</h2>
+
+<p>gnome-clang can be used as a standalone plugin with the Clang static
+analyser, or can be integrated with JHBuild to be automatically run on all C
+source code compiled using JHBuild (this is the recommended method of using
+gnome-clang).</p>
+
+<h3 id="usage-jhbuild">Usage with JHBuild</h3>
+
+<p><a href="https://developer.gnome.org/jhbuild/stable/introduction.html.en" title="User manual for the JHBuild software build tool.">JHBuild</a>
+has in-built support for compiling with the
+<span class="program-name">scan-build</span> wrapper, a script which comes with
+Clang to allow projects to be statically analysed in parallel with compilation
+(and without requiring Clang to be used for compilation itself). To enable this
+using gnome-clang, add the following lines to
+<span class="filename">~/.jhbuildrc</span>:</p>
+<pre>static_analyzer = True
+static_analyzer_template = 'scan-build --use-analyzer=<span class="replaceable">$JHBUILD_PREFIX</span>/bin/gnome-clang -v -o %(outputdir)s/%(module)s</pre>
+<p>where <span class="program-name">gnome-clang</span> is a wrapper script for
+Clang which loads and enables the gnome-clang plugin.</p>
+
+<p>The <span class="program-name">scan-build</span> wrapper can also be used
+without gnome-clang:</p>
+<pre>static_analyzer = True
+static_analyzer_template = 'scan-build -v -o %(outputdir)s/%(module)s</pre>
+<p>This will enable static analysis of C code compiled with JHBuild, but will
+not enable GLib-specific warnings.</p>
+
+
+<h3 id="usage-standalone">Standalone usage</h3>
+
+<p>The easiest way to use gnome-clang with the Clang static analyser directly is
+to use the <span class="program-name">gnome-clang</span> wrapper script,
+e.g.:<br/>
+<span class="command">clang -cc1 -analyze -std=c89 my-project/*.c</span><br/>
+becomes:<br/>
+<span class="command">gnome-clang -cc1 -analyze -std=c89 my-project/*.c</span><br/>
+which wraps the normal Clang compiler and automatically loads the correct
+plugin.</p>
+
+<p>The <span class="program-name">gnome-clang</span> script looks for the
+<span class="program-name">clang</span> binary in the same directory as itself,
+and then looks for <span class="program-name">libclang-gnome.so</span> in the
+same prefix. If either of these are installed in non-standard locations, set
+the <span class="env-var">CLANG_GNOME_CC</span> and
+<span class="env-var">CLANG_GNOME_PLUGIN</span> environment variables to the
+absolute paths of the <span class="program-name">clang</span> binary and the
+<span class="program-name">libclang-gnome.so</span> library, respectively.</p>
+
+<p>Finally, gnome-clang may be used without the wrapper script by passing the
+<span class="command">-load</span> and <span class="command">add-plugin</span>
+arguments directly to the compiler:</p>
+<pre>clang -cc1 -load <span class="replaceable">$PREFIX</span>/lib/gnome-clang/<span class="replaceable">$LLVM_VERSION</span>/libclang-gnome.so -add-plugin gnome -analyze -std=c89 my-project/*.c</pre>
+
+
+<h2>Source code and bugs</h2>
+
+<h3 id="git">Git repository</h3>
+
+<p>The source code for gnome-clang is stored in git, which can be
+<a href="http://cgit.collabora.com/git/user/pwith/gnome-clang.git/"
+   title="Git repository browser for gnome-clang source.">viewed online</a> or
+cloned:</p>
+<pre>git clone git://git.collabora.co.uk/git/user/pwith/gnome-clang.git</pre>
+
+
+<h3 id="bugs">Bugs</h3>
+
+<p>gnome-clang uses Bugs Everywhere for feature enhancement tracking, so to
+view all currently open bugs, <a href="#git">clone the gnome-clang git
+repository</a> and run:</p>
+<pre>be list</pre>
+
+<p>To file a bug, please <a href="#contact">contact the authors</a> by
+e-mail.</p>
+
+
+<h2 id="contact">Contact</h2>
+
+<p>gnome-clang is written by Philip Withnall, as part of R&amp;D work by
+<a href="http://collabora.com/" title="Open source consultants.">Collabora</a>.</p>
+<p>If you have any bug reports, questions, suggestions or criticism of the
+project, please e-mail me (philip tecnocode co uk).</p>
+
+</body>
+</html>
