@@ -37,13 +37,13 @@ namespace {
 /**
  * Plugin core.
  */
-class GirAttributesAction : public PluginASTAction {
+class GnomeAction : public PluginASTAction {
 private:
 	std::unique_ptr<GirAttributesConsumer> _gir_consumer;
 	std::unique_ptr<GAssertAttributesConsumer> _gassert_consumer;
 
 public:
-	GirAttributesAction ()
+	GnomeAction ()
 	{
 		this->_gir_consumer =
 			std::unique_ptr<GirAttributesConsumer> (
@@ -162,7 +162,7 @@ protected:
 
 
 /* Register the plugin with LLVM. */
-static FrontendPluginRegistry::Add<GirAttributesAction>
-X("gir-attributes", "add attributes from GIR data");
+static FrontendPluginRegistry::Add<GnomeAction>
+X("gnome", "add attributes and warnings using GNOME-specific metadata");
 
 } /* namespace */
