@@ -148,7 +148,7 @@ GirAttributesConsumer::_handle_function_decl (FunctionDecl& func)
 		return;
 
 	/* Try to find typelib information about the function. */
-	GIBaseInfo *info;
+	GIBaseInfo *info = NULL;
 	std::string func_name = func.getNameAsString ();  /* TODO: expensive? */
 	std::string func_name_stripped;
 
