@@ -59,6 +59,7 @@ major=`echo $llvm_version | sed 's/\([[0-9]]*\)\.\([[0-9]]*\)\(svn\)\?/\1/'`
 minor=`echo $llvm_version | sed 's/\([[0-9]]*\)\.\([[0-9]]*\)\(svn\)\?/\2/'`
 
 AS_IF([test "$major" -eq "$req_major" -a "$minor" -ge "$req_minor"],[
+	LLVM_CPPFLAGS=`$LLVM_CONFIG --cppflags`
 	LLVM_CXXFLAGS=`$LLVM_CONFIG --cxxflags`
 	LLVM_LDFLAGS=`$LLVM_CONFIG --ldflags`
 	# Don't link against the LLVM libs because they're huge. All the symbols
@@ -71,6 +72,7 @@ AS_IF([test "$major" -eq "$req_major" -a "$minor" -ge "$req_minor"],[
 	AC_MSG_ERROR([LLVM version $LLVM_REQS or later needed.])
 ])
 
+AC_SUBST([LLVM_CPPFLAGS])
 AC_SUBST([LLVM_CXXFLAGS])
 AC_SUBST([LLVM_LDFLAGS])
 AC_SUBST([LLVM_LIBS])

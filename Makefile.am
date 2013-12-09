@@ -20,8 +20,7 @@ clang_plugin_libclang_gnome_la_CPPFLAGS = \
 	$(AM_CPPFLAGS) \
 	-I$(top_srcdir) \
 	$(DISABLE_DEPRECATED) \
-	-D__STDC_LIMIT_MACROS \
-	-D__STDC_CONSTANT_MACROS \
+	$(LLVM_CPPFLAGS) \
 	$(NULL)
 
 clang_plugin_libclang_gnome_la_CXXFLAGS = \
