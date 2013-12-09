@@ -38,7 +38,7 @@ private:
 		GITypelib* typelib;  /* unowned */
 	};
 
-	std::unique_ptr<GIRepository> _repo;
+	GIRepository* _repo;  /* unowned */
 	std::vector<Nspace> _typelibs;
 
 public:

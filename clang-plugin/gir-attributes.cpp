@@ -20,22 +20,8 @@
  *     Philip Withnall <philip.withnall@collabora.co.uk>
  */
 
-#include <memory>
-
 #include <girepository.h>
 #include <gitypes.h>
-
-namespace std
-{
-	template <> struct default_delete<GIRepository>
-	{
-		void
-		operator () (GIRepository *ptr)
-		{
-			g_object_unref (ptr);
-		}
-	};
-}
 
 #include <clang/AST/Attr.h>
 
@@ -49,8 +35,7 @@ namespace std
 
 GirAttributesConsumer::GirAttributesConsumer ()
 {
-	this->_repo =
-		std::unique_ptr<GIRepository> (g_irepository_get_default ());
+	this->_repo = g_irepository_get_default ();
 }
 
 GirAttributesConsumer::~GirAttributesConsumer ()
@@ -63,7 +48,7 @@ GirAttributesConsumer::load_namespace (std::string& gi_namespace,
                                        std::string& gi_version, GError **error)
 {
 	/* Load the GIR typelib. */
-	GITypelib* typelib = g_irepository_require (this->_repo.get (),
+	GITypelib* typelib = g_irepository_require (this->_repo,
 	                                            gi_namespace.c_str (),
 	                                            gi_version.c_str (),
 	                                            (GIRepositoryLoadFlags) 0,
@@ -74,7 +59,7 @@ GirAttributesConsumer::load_namespace (std::string& gi_namespace,
 
 	/* Get the C prefix from the repository and convert it to lower case. */
 	const char *c_prefix =
-		g_irepository_get_c_prefix (this->_repo.get (),
+		g_irepository_get_c_prefix (this->_repo,
 		                            gi_namespace.c_str ());
 
 	Nspace r = Nspace ();
@@ -188,7 +173,7 @@ GirAttributesConsumer::_handle_function_decl (FunctionDecl& func)
 			continue;
 		}
 
-		info = g_irepository_find_by_name (this->_repo.get (),
+		info = g_irepository_find_by_name (this->_repo,
 		                                   r.nspace.c_str (),
 		                                   func_name_stripped.c_str ());
 
