@@ -45,6 +45,9 @@ clang_plugin_libclang_gnome_la_LDFLAGS = \
 	-no-undefined \
 	$(NULL)
 
+# Clang wrapper script
+dist_bin_SCRIPTS = scripts/gnome-clang
+
 # Cleaning
 EXTRA_DIST += \
 	autogen.sh \

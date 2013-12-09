@@ -1,0 +1,48 @@
+#!/bin/sh
+
+clang_bin_dir=`dirname "$0"`
+clang_prefix="$clang_bin_dir/.."
+
+# Try and find the real Clang executable. $CLANG_GNOME_CC trumps everything.
+# Otherwise assume clang is in the same directory as this script.
+if [ "x$CLANG_GNOME_CC" != "x" ]; then
+	real_clang="$CLANG_GNOME_CC"
+elif [ -f "$clang_prefix/bin/clang" ]; then
+	real_clang="$clang_prefix/bin/clang"
+elif [ -f /usr/bin/clang ]; then
+	real_clang=/usr/bin/clang
+else
+	echo "Error: Could not find clang executable. Set CLANG_GNOME_CC to the absolute path of the real clang executable." >& 2
+fi
+
+# Extract the clang version.
+# clang --version returns something like:
+#     clang version 3.3 (tags/RELEASE_33/rc3)
+#     Target: x86_64-redhat-linux-gnu
+#     Thread model: posix
+clang_version=`"$real_clang" --version | head -n1 | cut -f3 -d ' '`
+
+# Try and find the gnome-clang plugin. $CLANG_GNOME_PLUGIN trumps everything.
+if [ "x$CLANG_GNOME_PLUGIN" != "x" ]; then
+	plugin_path="$CLANG_GNOME_PLUGIN"
+elif [ -f "$clang_prefix/lib64/gnome-clang/$clang_version/libclang-gnome.so" ]; then
+	plugin_path="$clang_prefix/lib64/gnome-clang/$clang_version/libclang-gnome.so"
+elif [ -f "$clang_prefix/lib/gnome-clang/$clang_version/libclang-gnome.so" ]; then
+	plugin_path="$clang_prefix/lib/gnome-clang/$clang_version/libclang-gnome.so"
+else
+	echo "Error: Could not find libclang-gnome.so. Set CLANG_GNOME_PLUGIN to the absolute path of the gnome-clang plugin." >& 2
+fi
+
+plugin_name=gnome
+
+# Clang can’t accept -load as the first argument.
+first_arg=$1
+shift
+
+# Exec Clang with the plugin loaded.
+exec "$real_clang" \
+	"$first_arg" \
+	-load "$plugin_path" \
+	-add-plugin "$plugin_name" \
+	$CLANG_GNOME_CFLAGS \
+	"$@"
