@@ -20,6 +20,9 @@
  *     Philip Withnall <philip.withnall@collabora.co.uk>
  */
 
+#ifndef GNOME_CLANG_ASSERTION_EXTRACTER_H
+#define GNOME_CLANG_ASSERTION_EXTRACTER_H
+
 #include <unordered_set>
 
 #include <clang/AST/AST.h>
@@ -34,3 +37,5 @@ namespace AssertionExtracter {
 		Expr& assertion_expr, const ASTContext& context,
 		std::unordered_set<const ValueDecl*>& param_decls);
 }
+
+#endif /* !GNOME_CLANG_ASSERTION_EXTRACTER_H */

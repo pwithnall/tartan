@@ -20,6 +20,9 @@
  *     Philip Withnall <philip.withnall@collabora.co.uk>
  */
 
+#ifndef GNOME_CLANG_DEBUG_H
+#define GNOME_CLANG_DEBUG_H
+
 #ifdef ENABLE_DEBUG
 #define DEBUG(M) llvm::errs () << M << "\n"
 #define DEBUG_EXPR(M, E) llvm::errs () << M; \
@@ -31,3 +34,5 @@
 #endif
 
 #define WARN(M) llvm::errs () << "Warning: " << M << "\n"
+
+#endif /* !GNOME_CLANG_DEBUG_H */

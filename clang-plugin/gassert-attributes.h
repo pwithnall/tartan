@@ -20,6 +20,9 @@
  *     Philip Withnall <philip.withnall@collabora.co.uk>
  */
 
+#ifndef GNOME_CLANG_GASSERT_ATTRIBUTES_H
+#define GNOME_CLANG_GASSERT_ATTRIBUTES_H
+
 #include <clang/AST/AST.h>
 #include <clang/AST/ASTConsumer.h>
 #include <clang/Frontend/CompilerInstance.h>
@@ -36,3 +39,5 @@ private:
 public:
 	virtual bool HandleTopLevelDecl (DeclGroupRef decl_group);
 };
+
+#endif /* !GNOME_CLANG_GASSERT_ATTRIBUTES_H */
