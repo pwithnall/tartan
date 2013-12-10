@@ -15,6 +15,7 @@ clang_plugin_libclang_gnome_la_SOURCES = \
 	clang-plugin/debug.cpp \
 	clang-plugin/plugin.cpp \
 	clang-plugin/gir-attributes.cpp \
+	clang-plugin/gir-manager.cpp \
 	clang-plugin/gassert-attributes.cpp \
 	$(NULL)
 

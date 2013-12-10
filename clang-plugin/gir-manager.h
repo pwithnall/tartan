@@ -20,30 +20,33 @@
  *     Philip Withnall <philip.withnall@collabora.co.uk>
  */
 
-#ifndef GNOME_CLANG_GIR_ATTRIBUTES_H
-#define GNOME_CLANG_GIR_ATTRIBUTES_H
-
-#include <clang/AST/AST.h>
-#include <clang/AST/ASTConsumer.h>
+#ifndef GNOME_CLANG_GIR_MANAGER_H
+#define GNOME_CLANG_GIR_MANAGER_H
 
 #include <girepository.h>
 
-#include "gir-manager.h"
-
-using namespace clang;
-
-class GirAttributesConsumer : public ASTConsumer {
-
-public:
-	explicit GirAttributesConsumer (const GirManager& gir_manager) :
-		_gir_manager (gir_manager) {}
-
+class GirManager {
 private:
-	const GirManager& _gir_manager;
+	struct Nspace {
+		/* All non-NULL. */
+		std::string nspace;
+		std::string version;
+		std::string c_prefix;
 
-	void _handle_function_decl (FunctionDecl& func);
+		GITypelib* typelib;  /* unowned */
+	};
+
+	GIRepository* _repo;  /* unowned */
+	std::vector<Nspace> _typelibs;
+
 public:
-	virtual bool HandleTopLevelDecl (DeclGroupRef decl_group);
+	GirManager ();
+
+	void load_namespace (const std::string& gi_namespace,
+	                     const std::string& gi_version,
+	                     GError** error);
+
+	GIBaseInfo* find_function_info (const std::string& func_name) const;
 };
 
-#endif /* !GNOME_CLANG_GIR_ATTRIBUTES_H */
+#endif /* !GNOME_CLANG_GIR_MANAGER_H */

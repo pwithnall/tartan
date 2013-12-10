@@ -42,12 +42,14 @@ private:
 	std::unique_ptr<GirAttributesConsumer> _gir_consumer;
 	std::unique_ptr<GAssertAttributesConsumer> _gassert_consumer;
 
+	GirManager _gir_manager;
+
 public:
 	GnomeAction ()
 	{
 		this->_gir_consumer =
 			std::unique_ptr<GirAttributesConsumer> (
-				new GirAttributesConsumer ());
+				new GirAttributesConsumer (this->_gir_manager));
 		this->_gassert_consumer =
 			std::unique_ptr<GAssertAttributesConsumer> (
 				new GAssertAttributesConsumer ());
@@ -111,8 +113,8 @@ private:
 		/* Load the repository. */
 		GError *error = NULL;
 
-		this->_gir_consumer->load_namespace (gi_namespace, gi_version,
-		                                     &error);
+		this->_gir_manager.load_namespace (gi_namespace, gi_version,
+		                                   &error);
 		if (error != NULL) {
 			DiagnosticsEngine &d = CI.getDiagnostics ();
 			unsigned int id = d.getCustomDiagID (

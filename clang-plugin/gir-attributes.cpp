@@ -28,47 +28,6 @@
 #include "debug.h"
 #include "gir-attributes.h"
 
-GirAttributesConsumer::GirAttributesConsumer ()
-{
-	this->_repo = g_irepository_get_default ();
-}
-
-GirAttributesConsumer::~GirAttributesConsumer ()
-{
-	/* Nothing to see here. */
-}
-
-void
-GirAttributesConsumer::load_namespace (std::string& gi_namespace,
-                                       std::string& gi_version, GError **error)
-{
-	/* Load the GIR typelib. */
-	GITypelib* typelib = g_irepository_require (this->_repo,
-	                                            gi_namespace.c_str (),
-	                                            gi_version.c_str (),
-	                                            (GIRepositoryLoadFlags) 0,
-	                                            error);
-
-	if (typelib == NULL)
-		return;
-
-	/* Get the C prefix from the repository and convert it to lower case. */
-	const char *c_prefix =
-		g_irepository_get_c_prefix (this->_repo,
-		                            gi_namespace.c_str ());
-
-	Nspace r = Nspace ();
-	r.nspace = gi_namespace;
-	r.version = gi_version;
-	r.c_prefix = std::string (c_prefix);
-	r.typelib = typelib;
-
-	std::transform (r.c_prefix.begin (), r.c_prefix.end (),
-	                r.c_prefix.begin (), ::tolower);
-
-	this->_typelibs.push_back (r);
-}
-
 /* Determine whether a type should be const, given its (transfer) annotation and
  * base type. */
 static bool
@@ -143,41 +102,8 @@ GirAttributesConsumer::_handle_function_decl (FunctionDecl& func)
 		return;
 
 	/* Try to find typelib information about the function. */
-	GIBaseInfo *info = NULL;
-	std::string func_name = func.getNameAsString ();  /* TODO: expensive? */
-	std::string func_name_stripped;
-
-	for (std::vector<Nspace>::const_iterator it = this->_typelibs.begin ();
-	     it != this->_typelibs.end (); ++it) {
-		Nspace r = *it;
-
-		DEBUG ("Looking for function " << func_name <<
-		       " in repository " << r.nspace << " (version " <<
-		       r.version << ", C prefix ‘" << r.c_prefix << "’).");
-
-		/* The func_name includes the namespace, which needs stripping.
-		 * e.g. g_irepository_find_by_name → find_by_name. */
-		if (func_name.compare (0, r.c_prefix.size (),
-		                       r.c_prefix) == 0) {
-			size_t prefix_len =
-				r.c_prefix.size () + 1 /* underscore */;
-			func_name_stripped = func_name.substr (prefix_len);
-		} else {
-			DEBUG ("\tDoesn’t match C prefix ‘" << r.c_prefix <<
-			       "’.");
-			continue;
-		}
-
-		info = g_irepository_find_by_name (this->_repo,
-		                                   r.nspace.c_str (),
-		                                   func_name_stripped.c_str ());
-
-		if (info != NULL) {
-			/* Successfully found an entry in the typelib. */
-			DEBUG ("Found info!");
-			break;
-		}
-	}
+	const std::string func_name = func.getNameAsString ();  /* TODO: expensive? */
+	GIBaseInfo *info = this->_gir_manager.find_function_info (func_name);
 
 	if (info == NULL)
 		return;
@@ -309,8 +235,7 @@ GirAttributesConsumer::_handle_function_decl (FunctionDecl& func)
 		llvm::errs () << "Error: Unhandled GI type " <<
 		                 g_base_info_get_type (info) <<
 		                 " in introspection info for function ‘" <<
-		                 func_name << "’ (" << func_name_stripped <<
-		                 ").\n";
+		                 func_name << "’.\n";
 	}
 
 	g_base_info_unref (info);
