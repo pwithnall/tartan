@@ -1,0 +1,57 @@
+Hacking on gnome-clang
+======================
+
+A very basic and incomplete guide.
+
+
+Plugins
+-------
+
+gnome-clang currently provides a single plugin to be loaded by the Clang static
+analyser. In the future, it may provide several plugins, but the number of such
+should be limited to reduce the length of command lines needed for compilation.
+For example, it would be reasonable to have one plugin specific to GLib, one
+to libsoup, one to libgdata, etc.
+
+
+Concepts
+--------
+
+The code in gnome-clang can be split up into three types of module.
+
+Annotaters:
+    Annotaters consume metadata (such as GIR annotation data or precondition
+    assertions in C code) and modify Clang’s AST by adding qualifiers and
+    attributes to aid its normal static analysis checkers avoid false negatives
+    and find new true positives.
+
+Checkers:
+    Checkers examine (and do not modify) the Clang AST, looking for specific
+    constructs which they warn or error about. For example, one checker compares
+    nonnull attributes with precondition assertions and warns if they disagree.
+    Each checker should be self-contained and only check one type of construct;
+    this allows the user to disable checkers they don’t want.
+
+    There is a conflict between many of these checkers and annotations added by
+    the annotaters above. Ideally, any AST changes made by the annotaters will
+    be tagged as such, and the checkers will warn about them. Otherwise false
+    negatives will result, where the annotaters have fixed up bad code rather
+    than getting the user to fix it. (Having the annotaters fix this code is
+    necessary to allow for further static analysis; e.g. nonnull checks.)
+
+Analysers:
+    Analysers run only at analysis time, modifying the symbolic program state
+    (rather than the AST) during analysis to help reduce the number of false
+    positives. Analysers do not emit warnings or errors.
+
+
+Measurement
+-----------
+
+Any changes made to the checking or reporting in gnome-clang should be carefully
+measured by running the modified plugin against a large number of GNOME modules,
+and analysing how the error counts of those modules change. Avoiding false
+positives is highly preferred over avoiding false negatives, on the principle
+that nobody will use the plugin if it produces more than a couple of false
+positives. As long as the plugin finds some true positives, the number of false
+negatives is of low importance — we’re not losing anything by them.
