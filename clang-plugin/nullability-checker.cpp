@@ -42,6 +42,18 @@
  * static analyser within a single code base. For analysis across code bases,
  * (allow-none) annotations or nonnull attributes are needed. Hence the warnings
  * emitted by this checker try to gently push the user towards adding them.
+ *
+ * FIXME: The majority of false positives from this checker come from implicit
+ * nonnull attributes added to functions which aren’t correctly annotated with
+ * (allow-none). The checker produces an error like the following:
+ *     Missing non-NULL precondition assertion on the ‘key’ parameter of
+ *     function g_hash_table_remove() (already has a nonnull attribute).
+ * Which implies that a nonnull attribute exists when it doesn’t. Instead, the
+ * error should say that a non-NULL precondition assertion *or* an (allow-none)
+ * annotation should be added, and it should ignore the implicit nonnull
+ * attribute. However, if a function has an explicit nonnull attribute (i.e. not
+ * implicitly added by the analyser plugin) the warning message should be
+ * unchanged.
  */
 
 #include <unordered_set>
@@ -223,6 +235,8 @@ NullabilityVisitor::TraverseFunctionDecl (FunctionDecl* func)
 		} else if (!has_allow_none && !has_assertion) {
 			switch (has_nonnull) {
 			case EXPLICIT_NULLABLE:
+				/* TODO: Say the nonnull attribute is implicit
+				 * if it was added by the GirConsumer. */
 				Debug::emit_warning (
 					"Missing (allow-none) annotation on "
 					"the ‘" +
@@ -245,6 +259,8 @@ NullabilityVisitor::TraverseFunctionDecl (FunctionDecl* func)
 					parm_decl->getLocStart ());
 				break;
 			case EXPLICIT_NONNULL:
+				/* TODO: Say the nonnull attribute is implicit
+				 * if it was added by the GirConsumer. */
 				Debug::emit_warning (
 					"Missing non-NULL precondition "
 					"assertion on the ‘" +
