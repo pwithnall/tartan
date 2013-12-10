@@ -30,6 +30,7 @@ using namespace clang;
 namespace AssertionExtracter {
 	Expr* is_assertion_stmt (Stmt& stmt, const ASTContext& context);
 
-	std::unordered_set<const ValueDecl*> assertion_is_nonnull_check (
-		Expr& assertion_expr, const ASTContext& context);
+	unsigned int assertion_is_nonnull_check (
+		Expr& assertion_expr, const ASTContext& context,
+		std::unordered_set<const ValueDecl*>& param_decls);
 }

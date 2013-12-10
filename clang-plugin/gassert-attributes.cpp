@@ -53,9 +53,9 @@ _handle_assertion (FunctionDecl& func, Expr& assertion_expr,
 
 	/* If the assertion is a non-NULL check, add nonnull attributes to the
 	 * function’s parameters accordingly. */
-	std::unordered_set<const ValueDecl*> ret =
-		AssertionExtracter::assertion_is_nonnull_check (assertion_expr,
-		                                                context);
+	std::unordered_set<const ValueDecl*> ret;
+	AssertionExtracter::assertion_is_nonnull_check (assertion_expr,
+	                                                context, ret);
 
 	if (ret.size () == 0)
 		return;

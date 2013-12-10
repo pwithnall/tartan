@@ -617,14 +617,16 @@ _simplify_boolean_expr (Expr* expr, const ASTContext& context)
  *    __r;
  * }))))
  *
- * Return a set of the ValueDecls of the variables being checked. This will be
- * empty if no variables are type checked. */
-static std::unordered_set<const ValueDecl*>
+ * Insert the ValueDecls of the variables being checked into the provided
+ * unordered_set, and return the number of such insertions (this will be 0 if no
+ * variables are type checked). The returned number may be an over-estimate
+ * of the number of elements in the set, as it doesn’t account for
+ * duplicates. */
+unsigned int
 _assertion_is_gobject_type_check (Expr& assertion_expr,
-                                  const ASTContext& context)
+                                  const ASTContext& context,
+                                  std::unordered_set<const ValueDecl*>& ret)
 {
-	std::unordered_set<const ValueDecl*> ret;
-
 	DEBUG_EXPR (__func__ << ": ", assertion_expr);
 
 	switch (assertion_expr.getStmtClass ()) {
@@ -642,25 +644,27 @@ _assertion_is_gobject_type_check (Expr& assertion_expr,
 		const Stmt* first_stmt = *(compound_stmt->body_begin ());
 
 		if (first_stmt->getStmtClass () != Expr::DeclStmtClass)
-			return ret;
+			return 0;
 
 		const DeclStmt& decl_stmt = cast<DeclStmt> (*first_stmt);
 		const VarDecl* decl =
 			dyn_cast<VarDecl> (decl_stmt.getSingleDecl ());
 
 		if (decl == NULL)
-			return ret;
+			return 0;
 
 		if (decl->getNameAsString () != "__inst")
-			return ret;
+			return 0;
 
 		const Expr* init =
 			decl->getAnyInitializer ()->IgnoreParenCasts ();
 		const DeclRefExpr* decl_expr = dyn_cast<DeclRefExpr> (init);
-		if (decl_expr != NULL)
+		if (decl_expr != NULL) {
 			ret.insert (decl_expr->getDecl ());
+			return 1;
+		}
 
-		return ret;
+		return 0;
 	}
 	case Expr::IntegerLiteralClass:
 	case Expr::BinaryOperatorClass:
@@ -668,27 +672,29 @@ _assertion_is_gobject_type_check (Expr& assertion_expr,
 	case Expr::CallExprClass:
 	case Expr::ImplicitCastExprClass: {
 		/* These can’t be type checks. */
-		return ret;
+		return 0;
 	}
 	case Stmt::StmtClass::NoStmtClass:
 	default:
 		WARN (__func__ << "() can’t handle expressions of type " <<
 		      assertion_expr.getStmtClassName ());
-		return ret;
+		return 0;
 	}
 }
 
 /* Calculate whether an assertion is a standard non-NULL check.
  * e.g. (x != NULL), (x), (x != NULL && …) or (x && …).
  *
- * Return a set of the ValueDecls of the variables being checked. This will be
- * empty if no variables are non-NULL checked. */
-static std::unordered_set<const ValueDecl*>
+ * Insert the ValueDecls of the variables being checked into the provided
+ * unordered_set, and return the number of such insertions (this will be 0 if no
+ * variables are non-NULL checked). The returned number may be an over-estimate
+ * of the number of elements in the set, as it doesn’t account for
+ * duplicates. */
+unsigned int
 _assertion_is_explicit_nonnull_check (Expr& assertion_expr,
-                                      const ASTContext& context)
+                                      const ASTContext& context,
+                                      std::unordered_set<const ValueDecl*>& ret)
 {
-	std::unordered_set<const ValueDecl*> ret;
-
 	DEBUG_EXPR (__func__ << ": ", assertion_expr);
 
 	switch (assertion_expr.getStmtClass ()) {
@@ -699,24 +705,20 @@ _assertion_is_explicit_nonnull_check (Expr& assertion_expr,
 
 		if (opcode == BinaryOperatorKind::BO_LAnd) {
 			/* LHS && RHS */
-			std::unordered_set<const ValueDecl*> lhs_vars =
-				AssertionExtracter::assertion_is_nonnull_check (*(bin_expr.getLHS ()), context);
-			std::unordered_set<const ValueDecl*> rhs_vars =
-				AssertionExtracter::assertion_is_nonnull_check (*(bin_expr.getRHS ()), context);
+			unsigned int lhs_count =
+				AssertionExtracter::assertion_is_nonnull_check (*(bin_expr.getLHS ()), context, ret);
+			unsigned int rhs_count =
+				AssertionExtracter::assertion_is_nonnull_check (*(bin_expr.getRHS ()), context, ret);
 
-			std::set_union (lhs_vars.begin (),
-			                lhs_vars.end (),
-			                rhs_vars.begin (),
-			                rhs_vars.end (),
-			                std::inserter (ret, ret.end ()));
-
-			return ret;
+			return lhs_count + rhs_count;
 		} else if (opcode == BinaryOperatorKind::BO_LOr) {
 			/* LHS || RHS */
-			std::unordered_set<const ValueDecl*> lhs_vars =
-				AssertionExtracter::assertion_is_nonnull_check (*(bin_expr.getLHS ()), context);
-			std::unordered_set<const ValueDecl*> rhs_vars =
-				AssertionExtracter::assertion_is_nonnull_check (*(bin_expr.getRHS ()), context);
+			std::unordered_set<const ValueDecl*> lhs_vars, rhs_vars;
+
+			unsigned int lhs_count =
+				AssertionExtracter::assertion_is_nonnull_check (*(bin_expr.getLHS ()), context, lhs_vars);
+			unsigned int rhs_count =
+				AssertionExtracter::assertion_is_nonnull_check (*(bin_expr.getRHS ()), context, rhs_vars);
 
 			std::set_intersection (lhs_vars.begin (),
 			                       lhs_vars.end (),
@@ -724,7 +726,7 @@ _assertion_is_explicit_nonnull_check (Expr& assertion_expr,
 			                       rhs_vars.end (),
 			                       std::inserter (ret, ret.end ()));
 
-			return ret;
+			return lhs_count + rhs_count;
 		} else if (opcode == BinaryOperatorKind::BO_NE) {
 			/* LHS != RHS */
 			Expr* rhs = bin_expr.getRHS ();
@@ -734,15 +736,15 @@ _assertion_is_explicit_nonnull_check (Expr& assertion_expr,
 			if (k != Expr::NullPointerConstantKind::NPCK_NotNull &&
 			    bin_expr.getLHS ()->IgnoreParenCasts ()->getStmtClass () == Expr::DeclRefExprClass) {
 				ret.insert (cast<DeclRefExpr> (bin_expr.getLHS ()->IgnoreParenCasts ())->getDecl ());
-				return ret;
+				return 1;
 			}
 
 			/* Either not a comparison to NULL, or the expr being
 			 * compared is not a DeclRefExpr. */
-			return ret;
+			return 0;
 		}
 
-		return ret;
+		return 0;
 	}
 	case Expr::UnaryOperatorClass: {
 		/* A unary operator. For the moment, assume this isn't a
@@ -755,7 +757,7 @@ _assertion_is_explicit_nonnull_check (Expr& assertion_expr,
 		 * or (more weirdly):
 		 *     ~(my_var == NULL)
 		 */
-		return ret;
+		return 0;
 	}
 	case Expr::CStyleCastExprClass:
 	case Expr::ImplicitCastExprClass: {
@@ -768,19 +770,19 @@ _assertion_is_explicit_nonnull_check (Expr& assertion_expr,
 
 		if (sub_expr->getStmtClass () == Expr::DeclRefExprClass) {
 			ret.insert (cast<DeclRefExpr> (sub_expr)->getDecl ());
-			return ret;
+			return 1;
 		}
 
 		/* Not a cast to NULL, or the expr being casted is not a
 		 * DeclRefExpr. */
-		return ret;
+		return 0;
 	}
 	case Expr::DeclRefExprClass: {
 		/* A variable reference, which will implicitly become a non-NULL
 		 * check. */
 		DeclRefExpr& decl_ref_expr = cast<DeclRefExpr> (assertion_expr);
 		ret.insert (decl_ref_expr.getDecl ());
-		return ret;
+		return 1;
 	}
 	case Expr::StmtExprClass:
 		/* FIXME: Statement expressions can be nonnull checks, but
@@ -790,36 +792,29 @@ _assertion_is_explicit_nonnull_check (Expr& assertion_expr,
 		/* Function calls can’t be nonnull checks. */
 	case Expr::IntegerLiteralClass: {
 		/* Integer literals can’t be nonnull checks. */
-		return ret;
+		return 0;
 	}
 	case Stmt::StmtClass::NoStmtClass:
 	default:
 		WARN (__func__ << "() can’t handle expressions of type " <<
 		      assertion_expr.getStmtClassName ());
-		return ret;
+		return 0;
 	}
 }
 
-std::unordered_set<const ValueDecl*>
+unsigned int
 AssertionExtracter::assertion_is_nonnull_check (Expr& assertion_expr,
-                                                const ASTContext& context)
+                                                const ASTContext& context,
+                                                std::unordered_set<const ValueDecl*>& param_decls)
 {
 	/* After this call, assume expr is in boolean disjunctive normal
 	 * form. */
 	Expr* expr = _simplify_boolean_expr (&assertion_expr, context);
 
-	std::unordered_set<const ValueDecl*> ret;
+	unsigned int explicit_nonnull_count =
+		_assertion_is_explicit_nonnull_check (*expr, context, param_decls);
+	unsigned int type_check_count =
+		_assertion_is_gobject_type_check (*expr, context, param_decls);
 
-	std::unordered_set<const ValueDecl*> explicit_vars =
-		_assertion_is_explicit_nonnull_check (*expr, context);
-	std::unordered_set<const ValueDecl*> type_check_vars =
-		_assertion_is_gobject_type_check (*expr, context);
-
-	std::set_union (explicit_vars.begin (),
-	                explicit_vars.end (),
-	                type_check_vars.begin (),
-	                type_check_vars.end (),
-	                std::inserter (ret, ret.end ()));
-
-	return ret;
+	return explicit_nonnull_count + type_check_count;
 }
