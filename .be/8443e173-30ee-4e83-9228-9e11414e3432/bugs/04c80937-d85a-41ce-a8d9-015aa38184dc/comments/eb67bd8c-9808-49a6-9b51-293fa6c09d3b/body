@@ -1,0 +1,1 @@
+Only allow the plugin to be enabled during static analysis, to eliminate the risk of bugs in the plugin leading to translation bugs in the compiled program.
