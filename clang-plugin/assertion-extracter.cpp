@@ -350,6 +350,11 @@ AssertionExtracter::is_assertion_stmt (Stmt& stmt, const ASTContext& context)
 		/* Handle a null statement.
 		 * Transformations:
 		 *     ; ↦ TRUE */
+	case Stmt::StmtClass::DeclRefExprClass:
+		/* Handle a variable reference expression. These don’t modify
+		 * program state.
+		 * Transformations:
+		 *     E ↦ TRUE */
 	case Stmt::StmtClass::DeclStmtClass: {
 		/* Handle a variable declaration statement. These don’t modify
 		 * program state; they only introduce new state, so can’t affect
