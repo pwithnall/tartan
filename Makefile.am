@@ -14,12 +14,18 @@ clang_LTLIBRARIES = clang-plugin/libclang-gnome.la
 
 clang_plugin_libclang_gnome_la_SOURCES = \
 	clang-plugin/assertion-extracter.cpp \
+	clang-plugin/assertion-extracter.h \
 	clang-plugin/debug.cpp \
+	clang-plugin/debug.h \
 	clang-plugin/plugin.cpp \
 	clang-plugin/gir-attributes.cpp \
+	clang-plugin/gir-attributes.h \
 	clang-plugin/gir-manager.cpp \
+	clang-plugin/gir-manager.h \
 	clang-plugin/gassert-attributes.cpp \
+	clang-plugin/gassert-attributes.h \
 	clang-plugin/nullability-checker.cpp \
+	clang-plugin/nullability-checker.h \
 	$(NULL)
 
 clang_plugin_libclang_gnome_la_CPPFLAGS = \
