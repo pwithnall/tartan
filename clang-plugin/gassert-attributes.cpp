@@ -25,19 +25,8 @@
 #include <clang/AST/Attr.h>
 #include <clang/Lex/Lexer.h>
 
+#include "debug.h"
 #include "gassert-attributes.h"
-
-#ifdef ENABLE_DEBUG
-#define DEBUG(M) llvm::errs () << M << "\n"
-#define DEBUG_EXPR(M, E) llvm::errs () << M; \
-	(E).printPretty (llvm::errs (), NULL, context.getPrintingPolicy ()); \
-	llvm::errs () << "\n"
-#else
-#define DEBUG(M)
-#define DEBUG_EXPR(M, E)
-#endif
-
-#define WARN(M) llvm::errs () << "Warning: " << M << "\n"
 
 GAssertAttributesConsumer::GAssertAttributesConsumer ()
 {

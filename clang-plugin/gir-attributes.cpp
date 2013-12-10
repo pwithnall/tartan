@@ -25,13 +25,8 @@
 
 #include <clang/AST/Attr.h>
 
+#include "debug.h"
 #include "gir-attributes.h"
-
-#ifdef ENABLE_DEBUG
-#define DEBUG(X) llvm::errs () << X << "\n"
-#else
-#define DEBUG(X)
-#endif
 
 GirAttributesConsumer::GirAttributesConsumer ()
 {
