@@ -78,8 +78,10 @@ _handle_assertion (FunctionDecl& func, Expr& assertion_expr,
 
 		const ParmVarDecl* parm_decl = dyn_cast<ParmVarDecl> (val_decl);
 		if (parm_decl == NULL) {
-			WARN ("non-ParmVarDecl " <<
-			      val_decl->getNameAsString ());
+			/* People can use statically declared variables, etc.,
+			 * in their assertions. Ignore those. */
+			DEBUG ("non-ParmVarDecl " <<
+			       val_decl->getNameAsString ());
 			continue;
 		}
 
