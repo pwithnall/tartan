@@ -17,6 +17,7 @@ clang_plugin_libclang_gnome_la_SOURCES = \
 	clang-plugin/gir-attributes.cpp \
 	clang-plugin/gir-manager.cpp \
 	clang-plugin/gassert-attributes.cpp \
+	clang-plugin/nullability-checker.cpp \
 	$(NULL)
 
 clang_plugin_libclang_gnome_la_CPPFLAGS = \

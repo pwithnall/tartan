@@ -29,6 +29,7 @@
 
 #include "gir-attributes.h"
 #include "gassert-attributes.h"
+#include "nullability-checker.h"
 
 using namespace clang;
 
@@ -45,12 +46,15 @@ protected:
 	/* Note: This is called before ParseArgs, and must transfer ownership
 	 * of the ASTConsumer. */
 	ASTConsumer *
-	CreateASTConsumer (CompilerInstance &CI, llvm::StringRef)
+	CreateASTConsumer (CompilerInstance &compiler, llvm::StringRef in_file)
 	{
 		std::vector<ASTConsumer*> consumers;
 		consumers.push_back (
 			new GirAttributesConsumer (this->_gir_manager));
 		consumers.push_back (new GAssertAttributesConsumer ());
+		consumers.push_back (
+			new NullabilityConsumer (compiler,
+			                         this->_gir_manager));
 
 		return new MultiplexConsumer (consumers);
 	}
