@@ -75,7 +75,7 @@ NullabilityVisitor::TraverseFunctionDecl (FunctionDecl* func)
 
 	/* Can only handle functions which have a body defined. */
 	Stmt* func_body = func->getBody ();
-	if (func_body == NULL)
+	if (func_body == NULL || !func->isThisDeclarationADefinition ())
 		return true;
 
 	/* The body should be a compound statement, e.g.

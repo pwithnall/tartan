@@ -131,8 +131,24 @@ GirAttributesConsumer::_handle_function_decl (FunctionDecl& func)
 	case GI_INFO_TYPE_FUNCTION: {
 		GICallableInfo *callable_info = (GICallableInfo *) info;
 
+		/* GError formal parameters aren’t included in the number of
+		 * callable arguments. */
+		unsigned int k = g_callable_info_get_n_args (callable_info);
+		unsigned int err_params =
+			(g_function_info_get_flags (callable_info) &
+			 GI_FUNCTION_THROWS) ? 1 : 0;
+
+		/* Sanity check. */
+		if (k + err_params != func.getNumParams ()) {
+			WARN ("Number of GIR callable parameters (" << k << ") "
+			      "differs from number of C formal parameters (" <<
+			      func.getNumParams () << "). Ignoring function " <<
+			      func_name << "().");
+			break;
+		}
+
 		std::vector<unsigned int> non_null_args;
-		unsigned int j, k;
+		unsigned int j;
 
 		NonNullAttr* nonnull_attr = func.getAttr<NonNullAttr> ();
 		if (nonnull_attr != NULL) {
@@ -143,8 +159,7 @@ GirAttributesConsumer::_handle_function_decl (FunctionDecl& func)
 			                      nonnull_attr->args_end ());
 		}
 
-		for (j = 0, k = g_callable_info_get_n_args (callable_info);
-		     j < k; j++) {
+		for (j = 0; j < k; j++) {
 			GIArgInfo arg;
 			GITypeInfo type_info;
 			GITransfer transfer;

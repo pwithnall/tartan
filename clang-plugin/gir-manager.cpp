@@ -65,7 +65,9 @@ GirManager::load_namespace (const std::string& gi_namespace,
 	this->_typelibs.push_back (r);
 }
 
-/* Try to find typelib information about the function. */
+/* Try to find typelib information about the function.
+ * Note: This returns a reference which needs freeing using
+ * g_base_info_unref(). */
 GIBaseInfo*
 GirManager::find_function_info (const std::string& func_name) const
 {
@@ -95,6 +97,20 @@ GirManager::find_function_info (const std::string& func_name) const
 			/* Successfully found an entry in the typelib. */
 			break;
 		}
+	}
+
+	/* Double-check that this isn’t a shadowed function, since the parameter
+	 * information from shadowed functions doesn’t match up with what Clang
+	 * has parsed. */
+	if (info != NULL &&
+	    g_base_info_get_type (info) == GI_INFO_TYPE_FUNCTION &&
+	    func_name != g_function_info_get_symbol (info)) {
+		DEBUG ("Ignoring function " << func_name << "() due to "
+		       "mismatch with C symbol ‘" <<
+		       g_function_info_get_symbol (info) << "’.");
+
+		g_base_info_unref (info);
+		info = NULL;
 	}
 
 	return info;
