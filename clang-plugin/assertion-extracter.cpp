@@ -741,6 +741,7 @@ _assertion_is_explicit_nonnull_check (Expr& assertion_expr,
 				                            Expr::NullPointerConstantValueDependence::NPC_ValueDependentIsNotNull);
 			if (k != Expr::NullPointerConstantKind::NPCK_NotNull &&
 			    bin_expr.getLHS ()->IgnoreParenCasts ()->getStmtClass () == Expr::DeclRefExprClass) {
+				DEBUG ("Found non-NULL check.");
 				ret.insert (cast<DeclRefExpr> (bin_expr.getLHS ()->IgnoreParenCasts ())->getDecl ());
 				return 1;
 			}
@@ -775,6 +776,7 @@ _assertion_is_explicit_nonnull_check (Expr& assertion_expr,
 		Expr* sub_expr = cast_expr.getSubExpr ()->IgnoreParenCasts ();
 
 		if (sub_expr->getStmtClass () == Expr::DeclRefExprClass) {
+			DEBUG ("Found non-NULL check.");
 			ret.insert (cast<DeclRefExpr> (sub_expr)->getDecl ());
 			return 1;
 		}
@@ -786,6 +788,7 @@ _assertion_is_explicit_nonnull_check (Expr& assertion_expr,
 	case Expr::DeclRefExprClass: {
 		/* A variable reference, which will implicitly become a non-NULL
 		 * check. */
+		DEBUG ("Found non-NULL check.");
 		DeclRefExpr& decl_ref_expr = cast<DeclRefExpr> (assertion_expr);
 		ret.insert (decl_ref_expr.getDecl ());
 		return 1;

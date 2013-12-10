@@ -49,7 +49,7 @@ static void
 _handle_assertion (FunctionDecl& func, Expr& assertion_expr,
                    const ASTContext& context)
 {
-	DEBUG ("Handling assertion.");
+	DEBUG_EXPR ("Handling assertion: ", assertion_expr);
 
 	/* If the assertion is a non-NULL check, add nonnull attributes to the
 	 * function’s parameters accordingly. */

@@ -76,10 +76,6 @@ GirManager::find_function_info (const std::string& func_name) const
 	     ie = this->_typelibs.end (); it != ie; ++it) {
 		const Nspace r = *it;
 
-		DEBUG ("Looking for function " << func_name <<
-		       " in repository " << r.nspace << " (version " <<
-		       r.version << ", C prefix ‘" << r.c_prefix << "’).");
-
 		/* The func_name includes the namespace, which needs stripping.
 		 * e.g. g_irepository_find_by_name → find_by_name. */
 		if (func_name.compare (0, r.c_prefix.size (),
@@ -88,8 +84,6 @@ GirManager::find_function_info (const std::string& func_name) const
 				r.c_prefix.size () + 1 /* underscore */;
 			func_name_stripped = func_name.substr (prefix_len);
 		} else {
-			DEBUG ("\tDoesn’t match C prefix ‘" << r.c_prefix <<
-			       "’.");
 			continue;
 		}
 
@@ -99,7 +93,6 @@ GirManager::find_function_info (const std::string& func_name) const
 
 		if (info != NULL) {
 			/* Successfully found an entry in the typelib. */
-			DEBUG ("Found info!");
 			break;
 		}
 	}

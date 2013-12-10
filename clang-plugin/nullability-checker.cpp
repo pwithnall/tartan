@@ -87,9 +87,21 @@ NullabilityVisitor::TraverseFunctionDecl (FunctionDecl* func)
 		return true;
 	}
 
+	DEBUG ("Examining " << func->getNameAsString ());
+
 	/* For each parameter, check whether it has an (allow-none) annotation,
 	 * a nonnull attribute, and a non-NULL assertion. */
 	NonNullAttr* nonnull_attr = func->getAttr<NonNullAttr> ();
+
+	if (nonnull_attr != NULL) {
+		DEBUG ("nonnull attribute indices:");
+		for (NonNullAttr::args_iterator it = nonnull_attr->args_begin (),
+		     ie = nonnull_attr->args_end (); it != ie; ++it) {
+			DEBUG ("\t" << *it);
+		}
+	} else {
+		DEBUG ("No nonnull attribute.");
+	}
 
 	/* Try to find typelib information about the function. */
 	std::string func_name = func->getNameAsString ();  /* TODO: expensive? */
@@ -108,7 +120,6 @@ NullabilityVisitor::TraverseFunctionDecl (FunctionDecl* func)
 	}
 
 	/* Parse the function’s body for assertions. */
-	DEBUG ("Examining " << func->getNameAsString ());
 	std::unordered_set<const ValueDecl*> asserted_parms;
 	ASTContext& context = func->getASTContext ();
 
