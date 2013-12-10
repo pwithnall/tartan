@@ -61,7 +61,6 @@ EXTRA_DIST += \
 EXTRA_DIST += \
 	autogen.sh \
 	HACKING \
-	gtk-doc.make \
 	gnome-clang.doap \
 	$(NULL)
 
