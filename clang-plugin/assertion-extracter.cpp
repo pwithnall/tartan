@@ -388,11 +388,12 @@ AssertionExtracter::is_assertion_stmt (Stmt& stmt, const ASTContext& context)
 
 		return is_assertion_stmt (*sub_stmt, context);
 	}
+	case Stmt::StmtClass::ImplicitCastExprClass:
 	case Stmt::StmtClass::CStyleCastExprClass: {
-		/* Handle an explicit cast.
+		/* Handle an explicit or implicit cast.
 		 * Transformations:
 		 *     (T) S ↦ calc(S) */
-		CStyleCastExpr& cast_expr = cast<CStyleCastExpr> (stmt);
+		CastExpr& cast_expr = cast<CastExpr> (stmt);
 
 		Stmt* sub_expr = cast_expr.getSubExpr ();
 		if (sub_expr == NULL)
