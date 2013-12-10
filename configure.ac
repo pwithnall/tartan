@@ -2,7 +2,7 @@ AC_PREREQ(2.65)
 
 # gnome-clang release version
 m4_define(gnome_clang_version_major, 0)
-m4_define(gnome_clang_version_minor, 1)
+m4_define(gnome_clang_version_minor, 2)
 m4_define(gnome_clang_version_micro, 0)
 
 AC_INIT([gnome-clang],[gnome_clang_version_major.gnome_clang_version_minor.gnome_clang_version_micro],
