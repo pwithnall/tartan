@@ -60,11 +60,6 @@ clang_plugin_libclang_gnome_la_LDFLAGS = \
 # Clang wrapper script
 dist_bin_SCRIPTS = scripts/gnome-clang
 
-# Website
-EXTRA_DIST += \
-	website/index.html \
-	$(NULL)
-
 # Cleaning
 EXTRA_DIST += \
 	autogen.sh \
