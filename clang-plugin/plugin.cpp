@@ -39,21 +39,7 @@ namespace {
  */
 class GnomeAction : public PluginASTAction {
 private:
-	std::unique_ptr<GirAttributesConsumer> _gir_consumer;
-	std::unique_ptr<GAssertAttributesConsumer> _gassert_consumer;
-
 	GirManager _gir_manager;
-
-public:
-	GnomeAction ()
-	{
-		this->_gir_consumer =
-			std::unique_ptr<GirAttributesConsumer> (
-				new GirAttributesConsumer (this->_gir_manager));
-		this->_gassert_consumer =
-			std::unique_ptr<GAssertAttributesConsumer> (
-				new GAssertAttributesConsumer ());
-	}
 
 protected:
 	/* Note: This is called before ParseArgs, and must transfer ownership
@@ -62,8 +48,9 @@ protected:
 	CreateASTConsumer (CompilerInstance &CI, llvm::StringRef)
 	{
 		std::vector<ASTConsumer*> consumers;
-		consumers.push_back (this->_gir_consumer.release ());
-		consumers.push_back (this->_gassert_consumer.release ());
+		consumers.push_back (
+			new GirAttributesConsumer (this->_gir_manager));
+		consumers.push_back (new GAssertAttributesConsumer ());
 
 		return new MultiplexConsumer (consumers);
 	}
