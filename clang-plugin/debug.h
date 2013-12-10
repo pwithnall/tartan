@@ -23,6 +23,12 @@
 #ifndef GNOME_CLANG_DEBUG_H
 #define GNOME_CLANG_DEBUG_H
 
+#include <clang/Basic/Diagnostic.h>
+#include <clang/Frontend/CompilerInstance.h>
+
+using namespace clang;
+
+namespace Debug {
 #ifdef ENABLE_DEBUG
 #define DEBUG(M) llvm::errs () << M << "\n"
 #define DEBUG_EXPR(M, E) llvm::errs () << M; \
@@ -33,6 +39,20 @@
 #define DEBUG_EXPR(M, E)
 #endif
 
+/* For use with internal errors, such as unexpected precondition failures or
+ * states reached in the plugin internals. Not for user code warnings. */
 #define WARN(M) llvm::errs () << "Warning: " << M << "\n"
+
+	DiagnosticBuilder emit_report (DiagnosticsEngine::Level level,
+	                               const std::string& message,
+	                               CompilerInstance& compiler,
+	                               SourceLocation location);
+	DiagnosticBuilder emit_error (const std::string& message,
+	                              CompilerInstance& compiler,
+	                              SourceLocation location);
+	DiagnosticBuilder emit_warning (const std::string& message,
+	                                CompilerInstance& compiler,
+	                                SourceLocation location);
+}
 
 #endif /* !GNOME_CLANG_DEBUG_H */

@@ -12,6 +12,7 @@ clang_LTLIBRARIES = clang-plugin/libclang-gnome.la
 
 clang_plugin_libclang_gnome_la_SOURCES = \
 	clang-plugin/assertion-extracter.cpp \
+	clang-plugin/debug.cpp \
 	clang-plugin/plugin.cpp \
 	clang-plugin/gir-attributes.cpp \
 	clang-plugin/gassert-attributes.cpp \
