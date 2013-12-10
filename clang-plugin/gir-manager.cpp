@@ -53,7 +53,7 @@ GirManager::load_namespace (const std::string& gi_namespace,
 		g_irepository_get_c_prefix (this->_repo,
 		                            gi_namespace.c_str ());
 
-	Nspace r = Nspace ();
+	Nspace r;
 	r.nspace = gi_namespace;
 	r.version = gi_version;
 	r.c_prefix = std::string (c_prefix);
@@ -72,9 +72,9 @@ GirManager::find_function_info (const std::string& func_name) const
 	GIBaseInfo *info = NULL;
 	std::string func_name_stripped;
 
-	for (std::vector<Nspace>::const_iterator it = this->_typelibs.begin ();
-	     it != this->_typelibs.end (); ++it) {
-		Nspace r = *it;
+	for (std::vector<Nspace>::const_iterator it = this->_typelibs.begin (),
+	     ie = this->_typelibs.end (); it != ie; ++it) {
+		const Nspace r = *it;
 
 		DEBUG ("Looking for function " << func_name <<
 		       " in repository " << r.nspace << " (version " <<

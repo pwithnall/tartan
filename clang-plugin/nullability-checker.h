@@ -35,14 +35,14 @@ using namespace clang;
 class NullabilityVisitor : public RecursiveASTVisitor<NullabilityVisitor> {
 public:
 	explicit NullabilityVisitor (CompilerInstance& compiler,
-	                             const GirManager& gir_manager) :
+	                             std::shared_ptr<const GirManager> gir_manager) :
 		_compiler (compiler), _context (compiler.getASTContext ()),
 		_gir_manager (gir_manager) {}
 
 private:
 	CompilerInstance& _compiler;
 	const ASTContext& _context;
-	const GirManager& _gir_manager;
+	std::shared_ptr<const GirManager> _gir_manager;
 
 public:
 	bool TraverseFunctionDecl (FunctionDecl* func);
@@ -51,7 +51,7 @@ public:
 class NullabilityConsumer : public ASTConsumer {
 public:
 	NullabilityConsumer (CompilerInstance& compiler,
-	                     const GirManager& gir_manager) :
+	                     std::shared_ptr<const GirManager> gir_manager) :
 		_visitor (compiler, gir_manager) {}
 
 private:

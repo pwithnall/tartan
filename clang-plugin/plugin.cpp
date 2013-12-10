@@ -40,11 +40,14 @@ namespace {
  */
 class GnomeAction : public PluginASTAction {
 private:
-	GirManager _gir_manager;
+	std::shared_ptr<GirManager> _gir_manager =
+		std::make_shared<GirManager> ();
 
 protected:
 	/* Note: This is called before ParseArgs, and must transfer ownership
-	 * of the ASTConsumer. */
+	 * of the ASTConsumer. The GnomeAction object is destroyed immediately
+	 * after this function call returns, so must be careful not to retain
+	 * state which is needed by the consumers. */
 	ASTConsumer *
 	CreateASTConsumer (CompilerInstance &compiler, llvm::StringRef in_file)
 	{
@@ -104,8 +107,9 @@ private:
 		/* Load the repository. */
 		GError *error = NULL;
 
-		this->_gir_manager.load_namespace (gi_namespace, gi_version,
-		                                   &error);
+		this->_gir_manager.get ()->load_namespace (gi_namespace,
+		                                           gi_version,
+		                                           &error);
 		if (error != NULL) {
 			DiagnosticsEngine &d = CI.getDiagnostics ();
 			unsigned int id = d.getCustomDiagID (

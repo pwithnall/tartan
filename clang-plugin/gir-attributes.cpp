@@ -103,7 +103,7 @@ GirAttributesConsumer::_handle_function_decl (FunctionDecl& func)
 
 	/* Try to find typelib information about the function. */
 	const std::string func_name = func.getNameAsString ();  /* TODO: expensive? */
-	GIBaseInfo *info = this->_gir_manager.find_function_info (func_name);
+	GIBaseInfo *info = this->_gir_manager.get ()->find_function_info (func_name);
 
 	if (info == NULL)
 		return;

@@ -35,11 +35,12 @@ using namespace clang;
 class GirAttributesConsumer : public ASTConsumer {
 
 public:
-	explicit GirAttributesConsumer (const GirManager& gir_manager) :
+	explicit GirAttributesConsumer (
+		std::shared_ptr<const GirManager> gir_manager) :
 		_gir_manager (gir_manager) {}
 
 private:
-	const GirManager& _gir_manager;
+	std::shared_ptr<const GirManager> _gir_manager;
 
 	void _handle_function_decl (FunctionDecl& func);
 public:
