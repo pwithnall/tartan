@@ -1,5 +1,8 @@
 Initial release of gnome-clang 0.1.0
-==================================
+====================================
 
 Major changes:
  • Initial version of the project
+ • Support for nullability checking
+ • Support for assertion extraction
+ • Support for use of GIR metadata
