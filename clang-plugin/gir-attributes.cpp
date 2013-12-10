@@ -43,6 +43,23 @@ _type_should_be_const (GITransfer transfer, GITypeTag type_tag)
 	         type_tag == GI_TYPE_TAG_ERROR));
 }
 
+/* Determine whether an argument is definitely required to be non-NULL given
+ * its (allow-none) annotation, direction annotation and type.
+ *
+ * If it’s an array type, it may be NULL if its associated length parameter is
+ * 0. Since we can’t currently analyse array bounds, assume that all C array
+ * parameters may be NULL. (Other array types are structs, so may not be
+ * NULL.) */
+static bool
+_arg_is_nonnull (GIArgInfo arg, GITypeInfo type_info)
+{
+	return ((g_type_info_is_pointer (&type_info) ||
+	         g_arg_info_get_direction (&arg) == GI_DIRECTION_OUT) &&
+	        !g_arg_info_may_be_null (&arg) &&
+	        !(g_type_info_get_tag (&type_info) == GI_TYPE_TAG_ARRAY &&
+	          g_type_info_get_array_type (&type_info) == GI_ARRAY_TYPE_C));
+}
+
 /* Make the return type of a FunctionType const. This will go one level of
  * typing below the return type, so it won’t constify the top-level pointer
  * return. e.g.:
@@ -138,8 +155,31 @@ GirAttributesConsumer::_handle_function_decl (FunctionDecl& func)
 			transfer = g_arg_info_get_ownership_transfer (&arg);
 			type_tag = g_type_info_get_tag (&type_info);
 
-			if (!g_arg_info_may_be_null (&arg) &&
-			    g_type_info_is_pointer (&type_info)) {
+			int array_type =
+				(g_type_info_get_tag (&type_info) ==
+				 GI_TYPE_TAG_ARRAY) ?
+					g_type_info_get_array_type (&type_info) :
+					-1;
+			DEBUG ("GirAttributes: " << func_name << "(" << j <<
+			       ")\n"
+			       "\tTransfer: " << transfer << "\n"
+			       "\tDirection: " <<
+			       g_arg_info_get_direction (&arg) << "\n"
+			       "\tAllow-none: " <<
+			       g_arg_info_may_be_null (&arg) << "\n"
+			       "\tIs pointer: " <<
+			       g_type_info_is_pointer (&type_info) << "\n"
+			       "\tType tag: " <<
+			       g_type_tag_to_string (
+			           g_type_info_get_tag (&type_info)) << "\n"
+			       "\tArray type: " <<
+			       array_type << "\n"
+			       "\tArray length: " <<
+			       g_type_info_get_array_length (&type_info) << "\n"
+			       "\tArray fixed size: " <<
+			       g_type_info_get_array_fixed_size (&type_info));
+
+			if (_arg_is_nonnull (arg, type_info)) {
 				DEBUG ("Got nonnull arg " << j << " from GIR.");
 				non_null_args.push_back (j);
 			}
