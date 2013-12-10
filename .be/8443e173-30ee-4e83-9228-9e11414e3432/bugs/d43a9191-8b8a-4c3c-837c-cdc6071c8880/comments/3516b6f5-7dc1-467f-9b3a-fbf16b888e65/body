@@ -1,0 +1,3 @@
+Add an analyser which uses GIR (array) annotations to tag array variables with their bounds (constant, NULL-delimited or stored in a variable).
+
+See what Clang’s existing bounds checking analysis can achieve when given this information.

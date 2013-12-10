@@ -1,0 +1,1 @@
+Similarly, if a (transfer none) annotation exists for a function return type, emit a warning if the return type is not const-qualified.

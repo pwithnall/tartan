@@ -1,0 +1,1 @@
+Blue-sky idea: Add a static checker for GVariant type strings (e.g. as taken by g_variant_new()) which checks the types of the varargs passed into the function.

@@ -1,0 +1,1 @@
+Add a checker which tests whether the warn_unused_result attribute is present on functions which have (transfer [full|container]) annotations on their return types. If the attribute is not present, emit a warning.

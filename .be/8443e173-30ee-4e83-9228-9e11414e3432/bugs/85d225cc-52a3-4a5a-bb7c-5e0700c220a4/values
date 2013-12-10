@@ -1,0 +1,50 @@
+{
+
+
+
+
+
+
+    "creator": "Philip Withnall <philip.withnall@collabora.co.uk>", 
+
+
+
+
+
+
+    "reporter": "Philip Withnall <philip.withnall@collabora.co.uk>", 
+
+
+
+
+
+
+    "severity": "minor", 
+
+
+
+
+
+
+    "status": "open", 
+
+
+
+
+
+
+    "summary": "Add a GVariant type string checker", 
+
+
+
+
+
+
+    "time": "Tue, 10 Dec 2013 15:41:32 +0000"
+
+
+
+
+
+
+}

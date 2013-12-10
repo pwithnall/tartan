@@ -1,0 +1,7 @@
+Add an analyser to the plugin which assumes the initial state of (error == NULL || *error == NULL) for all GErrors.
+
+The intention of this analyser would be to:
+ • Prevent unchecked dereferences of GErrors (since they may always be NULL).
+ • Prevent overwriting of GErrors (setting one GError on top of another).
+
+This is fairly poorly-defined at the moment, and needs more thought.

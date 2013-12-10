@@ -1,0 +1,4 @@
+Also, it would be nice to check that:
+ • If an error is set, NULL is returned from the function.
+ • If NULL is returned from the function, an error is set.
+   (At least in the case of functions without (allow-none) return types.)

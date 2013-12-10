@@ -1,0 +1,50 @@
+{
+
+
+
+
+
+
+    "creator": "Philip Withnall <philip.withnall@collabora.co.uk>", 
+
+
+
+
+
+
+    "reporter": "Philip Withnall <philip.withnall@collabora.co.uk>", 
+
+
+
+
+
+
+    "severity": "minor", 
+
+
+
+
+
+
+    "status": "open", 
+
+
+
+
+
+
+    "summary": "Check for (transfer none) on const-qualified function parameters", 
+
+
+
+
+
+
+    "time": "Tue, 10 Dec 2013 15:25:04 +0000"
+
+
+
+
+
+
+}

@@ -1,0 +1,3 @@
+Add a checker which warns if a precondition assertion which references a GError** function parameter doesn’t follow the standard form:
+    g_return[_val]_if_fail(error == NULL || *error == NULL);
+e.g. If the assertion doesn’t check (*error == NULL), emit a warning.

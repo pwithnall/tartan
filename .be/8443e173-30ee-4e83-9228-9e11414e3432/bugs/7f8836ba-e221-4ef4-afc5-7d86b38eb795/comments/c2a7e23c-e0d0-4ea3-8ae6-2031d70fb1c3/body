@@ -1,0 +1,5 @@
+Implement a checker which tests that, if a function’s return value is *not* annotated with (allow-none), all its return paths must not return NULL.
+
+If they do, emit a warning suggesting that an (allow-none) annotation be added.
+
+This must be careful to ignore assertion error paths.

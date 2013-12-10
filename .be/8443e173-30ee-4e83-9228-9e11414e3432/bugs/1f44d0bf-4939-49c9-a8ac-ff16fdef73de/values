@@ -1,0 +1,50 @@
+{
+
+
+
+
+
+
+    "creator": "Philip Withnall <philip.withnall@collabora.co.uk>", 
+
+
+
+
+
+
+    "reporter": "Philip Withnall <philip.withnall@collabora.co.uk>", 
+
+
+
+
+
+
+    "severity": "minor", 
+
+
+
+
+
+
+    "status": "open", 
+
+
+
+
+
+
+    "summary": "Check for warn_unused_result attribute on (transfer [full|container]) function return types", 
+
+
+
+
+
+
+    "time": "Tue, 10 Dec 2013 15:26:58 +0000"
+
+
+
+
+
+
+}

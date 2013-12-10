@@ -1,0 +1,4 @@
+Add a checker which emits a warning if a function which accepts a GError** parameter doesn’t have the standard GError precondition assertion:
+    g_return[_val]_if_fail (error == NULL || *error == NULL);
+
+This might even be an error, rather than a warning, depending on the level of false positives.

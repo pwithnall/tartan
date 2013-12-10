@@ -1,0 +1,50 @@
+{
+
+
+
+
+
+
+    "creator": "Philip Withnall <philip.withnall@collabora.co.uk>", 
+
+
+
+
+
+
+    "reporter": "Philip Withnall <philip.withnall@collabora.co.uk>", 
+
+
+
+
+
+
+    "severity": "minor", 
+
+
+
+
+
+
+    "status": "open", 
+
+
+
+
+
+
+    "summary": "Check for standard GError precondition assertion if a GError parameter exists", 
+
+
+
+
+
+
+    "time": "Tue, 10 Dec 2013 15:31:43 +0000"
+
+
+
+
+
+
+}

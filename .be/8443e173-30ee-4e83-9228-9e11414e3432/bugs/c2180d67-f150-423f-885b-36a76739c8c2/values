@@ -1,0 +1,50 @@
+{
+
+
+
+
+
+
+    "creator": "Philip Withnall <philip.withnall@collabora.co.uk>", 
+
+
+
+
+
+
+    "reporter": "Philip Withnall <philip.withnall@collabora.co.uk>", 
+
+
+
+
+
+
+    "severity": "minor", 
+
+
+
+
+
+
+    "status": "open", 
+
+
+
+
+
+
+    "summary": "Add a g_object_new() type checker", 
+
+
+
+
+
+
+    "time": "Tue, 10 Dec 2013 15:46:02 +0000"
+
+
+
+
+
+
+}

@@ -1,0 +1,50 @@
+{
+
+
+
+
+
+
+    "creator": "Philip Withnall <philip.withnall@collabora.co.uk>", 
+
+
+
+
+
+
+    "reporter": "Philip Withnall <philip.withnall@collabora.co.uk>", 
+
+
+
+
+
+
+    "severity": "minor", 
+
+
+
+
+
+
+    "status": "open", 
+
+
+
+
+
+
+    "summary": "Check for Deprecated: gtk-doc tag on deprecated functions", 
+
+
+
+
+
+
+    "time": "Tue, 10 Dec 2013 15:27:51 +0000"
+
+
+
+
+
+
+}

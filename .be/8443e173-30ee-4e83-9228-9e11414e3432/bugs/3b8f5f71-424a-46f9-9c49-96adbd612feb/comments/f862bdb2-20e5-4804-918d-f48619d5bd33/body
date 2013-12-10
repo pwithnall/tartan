@@ -1,0 +1,1 @@
+Blue-sky idea: perform static analysis of the types of GObject variables and thus type-check casts, method calls and parameter passing.

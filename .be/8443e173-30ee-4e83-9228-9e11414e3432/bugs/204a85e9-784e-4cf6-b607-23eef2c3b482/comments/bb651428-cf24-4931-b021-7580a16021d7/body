@@ -1,0 +1,1 @@
+Add a checker which emits a warning if a (constructor)-annotated function doesn’t have a ‘malloc’ attribute.

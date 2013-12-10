@@ -1,0 +1,1 @@
+Add a checker which tests whether a (transfer none) annotation exists for the function return type if the type is const-qualified. If it doesn’t, emit a warning.

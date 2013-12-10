@@ -1,0 +1,11 @@
+Blue-sky idea: Add a reference count checker for GObjects, checking for the following two conditions:
+ • Leaked reference.
+ • Double-unref.
+
+This may be feasible to perform by block-level analysis, asserting that the number of reference increments and decrements on each object instance within each block is equal, taking any reference transfers into or out of the block into account.
+
+This may come up against difficulties when taking data flow into account (e.g. one object instance passing between multiple variables). I’ll have to give it a try and see.
+
+Even more blue-sky idea: Integrate this with threading analysis to check for the condition:
+ • (transfer none) transfer to another execution context which may cause destruction of the object.
+   With the aim of suggesting that the programmer wraps the transfer in a reference increment/decrement pair (or changes it to (transfer full)).

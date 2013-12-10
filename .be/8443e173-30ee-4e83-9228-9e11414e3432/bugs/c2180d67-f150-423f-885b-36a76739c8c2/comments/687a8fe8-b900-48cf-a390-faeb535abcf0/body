@@ -1,0 +1,1 @@
+Add a checker which warns if the types of vararg parameters passed into g_object_new() don’t match the types of the new object’s properties.

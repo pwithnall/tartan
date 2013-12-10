@@ -1,0 +1,3 @@
+Add a checker which tests whether a Deprecated: gtk-doc tag is present for functions which have a ‘deprecated’ attribute. If a function has the attribute but not a tag, emit a warning.
+
+Similarly, if a function has the gtk-doc tag but not the attribute, emit a warning.
