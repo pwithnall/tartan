@@ -1,0 +1,50 @@
+{
+
+
+
+
+
+
+    "creator": "Philip Withnall <philip.withnall@collabora.co.uk>", 
+
+
+
+
+
+
+    "reporter": "Philip Withnall <philip.withnall@collabora.co.uk>", 
+
+
+
+
+
+
+    "severity": "minor", 
+
+
+
+
+
+
+    "status": "open", 
+
+
+
+
+
+
+    "summary": "Improve error reporting when GNOME_CLANG_GIRS is missing", 
+
+
+
+
+
+
+    "time": "Mon, 21 Apr 2014 07:50:32 +0000"
+
+
+
+
+
+
+}

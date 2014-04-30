@@ -1,0 +1,1 @@
+Especially when running ./configure in a project. It fails silently saying the C compiler cannot create executables. Looking config.log shows that gnome-clang is complaining about missing --gi-repository arguments.
