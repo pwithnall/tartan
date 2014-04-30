@@ -58,6 +58,9 @@ protected:
 		consumers.push_back (
 			new NullabilityConsumer (compiler,
 			                         this->_gir_manager));
+		consumers.push_back (
+			new GirAttributesChecker (compiler,
+			                          this->_gir_manager));
 
 		return new MultiplexConsumer (consumers);
 	}

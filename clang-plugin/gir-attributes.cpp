@@ -60,6 +60,20 @@ _arg_is_nonnull (GIArgInfo arg, GITypeInfo type_info)
 	          g_type_info_get_array_type (&type_info) == GI_ARRAY_TYPE_C));
 }
 
+/* Determine whether a return type is constant. Typically, this will be used
+ * for constant pointer types, in which case pointer_type will be non-NULL. */
+static bool
+_function_return_type_is_const (FunctionDecl& func)
+{
+	QualType type = func.getResultType ();
+
+	const PointerType* pointer_type = dyn_cast<PointerType> (type);
+	if (pointer_type == NULL)
+		return type.isConstQualified ();
+
+	return (pointer_type->getPointeeType ().isConstQualified () || type.isConstQualified ());
+}
+
 /* Make the return type of a FunctionType const. This will go one level of
  * typing below the return type, so it won’t constify the top-level pointer
  * return. e.g.:
@@ -298,6 +312,133 @@ GirAttributesConsumer::_handle_function_decl (FunctionDecl& func)
 
 bool
 GirAttributesConsumer::HandleTopLevelDecl (DeclGroupRef decl_group)
+{
+	DeclGroupRef::iterator i, e;
+
+	for (i = decl_group.begin (), e = decl_group.end (); i != e; i++) {
+		Decl *decl = *i;
+		FunctionDecl *func = dyn_cast<FunctionDecl> (decl);
+
+		/* We’re only interested in function declarations. */
+		if (func == NULL)
+			continue;
+
+		this->_handle_function_decl (*func);
+	}
+
+	return true;
+}
+
+
+void
+GirAttributesChecker::_handle_function_decl (FunctionDecl& func)
+{
+	/* TODO: Factor this out and share it with the implementation above. */
+	/* Ignore static functions immediately; they shouldn’t have any
+	 * GIR data, and searching for it massively slows down
+	 * compilation. */
+	StorageClass sc = func.getStorageClass ();
+	if (sc != SC_None && sc != SC_Extern)
+		return;
+
+	/* Try to find typelib information about the function. */
+	const std::string func_name = func.getNameAsString ();  /* TODO: expensive? */
+	GIBaseInfo *info = this->_gir_manager.get ()->find_function_info (func_name);
+
+	if (info == NULL)
+		return;
+
+	/* Extract information from the GIBaseInfo and check AST attributes
+	 * accordingly. */
+	switch (g_base_info_get_type (info)) {
+	case GI_INFO_TYPE_FUNCTION: {
+		GICallableInfo *callable_info = (GICallableInfo *) info;
+
+		/* GError formal parameters aren’t included in the number of
+		 * callable arguments. */
+		unsigned int k = g_callable_info_get_n_args (callable_info);
+		unsigned int err_params =
+			(g_function_info_get_flags (callable_info) &
+			 GI_FUNCTION_THROWS) ? 1 : 0;
+
+		/* Sanity check. */
+		if (k + err_params != func.getNumParams ()) {
+			WARN ("Number of GIR callable parameters (" << k << ") "
+			      "differs from number of C formal parameters (" <<
+			      func.getNumParams () << "). Ignoring function " <<
+			      func_name << "().");
+			break;
+		}
+
+		/* Process the function’s return type. */
+		GITypeInfo return_type_info;
+		GITransfer return_transfer;
+		GITypeTag return_type_tag;
+
+		g_callable_info_load_return_type (info, &return_type_info);
+		return_transfer = g_callable_info_get_caller_owns (info);
+		return_type_tag = g_type_info_get_tag (&return_type_info);
+
+		/* If the return type is const-qualified but no (transfer none)
+		 * annotation exists, emit a warning.
+		 *
+		 * Similarly, if a (transfer none) annotation exists but the
+		 * return type is not const-qualified, emit a warning. */
+		if (_function_return_type_is_const (func) &&
+		    return_transfer != GI_TRANSFER_NOTHING) {
+			Debug::emit_error (
+				"Missing (transfer none) annotation on the "
+				"return value of function " +
+				func.getNameAsString () + "() "
+				"(already has a const modifier).",
+				this->_compiler,
+				func.getLocStart ());
+		} else if (return_transfer == GI_TRANSFER_NOTHING &&
+		           _type_should_be_const (return_transfer,
+		                                  return_type_tag) &&
+		           !_function_return_type_is_const (func)) {
+			Debug::emit_error (
+				"Missing const modifier on the return value of "
+				"function " +
+				func.getNameAsString () + "() "
+				"(already has a (transfer none) annotation).",
+				this->_compiler,
+				func.getLocStart ());
+		}
+
+		break;
+	}
+	case GI_INFO_TYPE_CALLBACK:
+	case GI_INFO_TYPE_STRUCT:
+	case GI_INFO_TYPE_BOXED:
+	case GI_INFO_TYPE_ENUM:
+	case GI_INFO_TYPE_FLAGS:
+	case GI_INFO_TYPE_OBJECT:
+	case GI_INFO_TYPE_INTERFACE:
+	case GI_INFO_TYPE_CONSTANT:
+	case GI_INFO_TYPE_INVALID_0:
+	case GI_INFO_TYPE_UNION:
+	case GI_INFO_TYPE_VALUE:
+	case GI_INFO_TYPE_SIGNAL:
+	case GI_INFO_TYPE_VFUNC:
+	case GI_INFO_TYPE_PROPERTY:
+	case GI_INFO_TYPE_FIELD:
+	case GI_INFO_TYPE_ARG:
+	case GI_INFO_TYPE_TYPE:
+	case GI_INFO_TYPE_UNRESOLVED:
+	case GI_INFO_TYPE_INVALID:
+	default:
+		llvm::errs () << "Error: Unhandled GI type " <<
+		                 g_base_info_get_type (info) <<
+		                 " in introspection info for function ‘" <<
+		                 func_name << "’.\n";
+	}
+
+	g_base_info_unref (info);
+}
+
+bool
+GirAttributesChecker::HandleTopLevelDecl (DeclGroupRef decl_group)
 {
 	DeclGroupRef::iterator i, e;
 

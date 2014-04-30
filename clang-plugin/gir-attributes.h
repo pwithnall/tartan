@@ -25,6 +25,7 @@
 
 #include <clang/AST/AST.h>
 #include <clang/AST/ASTConsumer.h>
+#include <clang/Frontend/CompilerInstance.h>
 
 #include <girepository.h>
 
@@ -40,6 +41,24 @@ public:
 		_gir_manager (gir_manager) {}
 
 private:
+	std::shared_ptr<const GirManager> _gir_manager;
+
+	void _handle_function_decl (FunctionDecl& func);
+public:
+	virtual bool HandleTopLevelDecl (DeclGroupRef decl_group);
+};
+
+
+class GirAttributesChecker : public ASTConsumer {
+
+public:
+	explicit GirAttributesChecker (
+		CompilerInstance& compiler,
+		std::shared_ptr<const GirManager> gir_manager) :
+		_compiler (compiler), _gir_manager (gir_manager) {}
+
+private:
+	CompilerInstance& _compiler;
 	std::shared_ptr<const GirManager> _gir_manager;
 
 	void _handle_function_decl (FunctionDecl& func);
