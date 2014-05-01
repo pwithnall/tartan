@@ -1,0 +1,130 @@
+#!/bin/sh
+
+# Take an input file which contains one or more sections of the form:
+# /*
+# [Error message|‘No error’]
+# */
+# {
+#     [Code]
+# }
+#
+# Sections are separated by ‘/*’ on a line of its own. The code must not contain
+# C-style comments (‘/* … */’), but can contain C++-style ones (‘// …’).
+#
+# The wrapper script takes each section and wraps the code in a main() function
+# with some standard variables and reference count handling. It then compiles
+# the code using Clang with gnome-clang, and checks the compiler output against
+# the expected error message. If the expected error message is ‘No error’ it
+# asserts there’s no error.
+
+input_filename=$1
+temp_dir=`mktemp -d`
+
+echo "Reading input from ${input_filename}."
+echo "Using temporary directory ${temp_dir}."
+echo ""
+
+test_status=0
+
+# Before starting, work out the compiler’s system include paths.
+# Thanks to: http://stackoverflow.com/a/17940271/2931197
+system_includes=`echo | cpp -Wp,-v 2>&1 | grep '^[[:space:]]' | \
+	sed -e 's/^[[:space:]]*/-isystem/' | tr "\n" ' '`
+
+# Split the input file up into sections, delimiting on ‘/*’ on a line by itself.
+csplit --keep-files --elide-empty-files --silent \
+	--prefix="${temp_dir}/${input_filename}_" \
+	--suffix-format='%02d.c' \
+	"${input_filename}" '/\/\*/' '{*}'
+
+num=0
+while [[ -f `printf "${temp_dir}/${input_filename}_%02d.c" ${num}` ]]; do
+	section_filename=`printf ${temp_dir}/${input_filename}_%02d.c ${num}`
+	expected_error_filename=`printf ${temp_dir}/${input_filename}_%02d.expected ${num}`
+	actual_error_filename=`printf ${temp_dir}/${input_filename}_%02d.actual ${num}`
+
+	echo "${section_filename}:"
+	echo "-------"
+	echo ""
+	echo " - Building section file ${section_filename}."
+	echo " - Outputting to error files ${expected_error_filename} and ${actual_error_filename}."
+
+	# Wrap the section’s code with a prefix and suffix.
+	(cat << EOF
+#include <glib.h>
+
+int
+main (void)
+{
+	GVariant *floating_variant = NULL;
+EOF
+	cat $section_filename
+	cat << EOF
+	if (floating_variant != NULL)
+		g_variant_unref (floating_variant);
+}
+EOF
+) > $section_filename.tmp
+	mv -f $section_filename.tmp $section_filename
+
+	num=$((num + 1))
+
+	# Extract the expected comment.
+	sed -n '/^\/\*/n; s/^ \* \(.*\)/\1/p' < $section_filename > $expected_error_filename
+
+	if [[ $(<"${expected_error_filename}") == "No error" ]]; then
+		echo " - Expecting no error"
+		expect_error=false
+	else
+		echo " - Expecting an error"
+		expect_error=true
+	fi
+
+	# Run the compiler.
+	# TODO: Get rid of the hard-coding.
+	gnome-clang -cc1 -analyze -std=c89 -Wno-visibility \
+		`pkg-config --cflags glib-2.0` \
+		$system_includes \
+		$section_filename > $actual_error_filename 2>&1
+
+	# Compare the errors.
+	if $expect_error; then
+		# Expecting an error. Check that the expected errors are a
+		# subset of the actual errors, to allow for spurious Clang
+		# warnings because generated code is hard.
+		grep -F "$(<${expected_error_filename})" "${actual_error_filename}" >/dev/null
+		grep_status=$?
+
+		if [ $grep_status -ne 0 ]; then
+			echo " * Error: Expected compiler error was not seen." 1>&2
+
+			echo " - Expected:" 1>&2
+			cat "${expected_error_filename}" 1>&2
+			echo "" 1>&2
+			echo " - Actual:" 1>&2
+			cat "${actual_error_filename}" 1>&2
+
+			test_status=1
+		fi
+	else
+		# Expecting no error.
+		if [[ -s "${actual_error_filename}" ]]; then
+			echo " * Error: Compiler error when none was expected." 1>&2
+
+			echo " - Actual:" 1>&2
+			cat "${actual_error_filename}" 1>&2
+
+			test_status=1
+		fi
+	fi
+
+	echo ""
+	echo ""
+done
+
+# Exit status. Leave the temporary directory alone on failure.
+if [[ $test_status -eq 0 ]]; then
+	rm -rf ${temp_dir}
+fi
+
+exit $test_status

@@ -30,6 +30,7 @@
 #include "debug.h"
 #include "gir-attributes.h"
 #include "gassert-attributes.h"
+#include "gvariant-checker.h"
 #include "nullability-checker.h"
 
 using namespace clang;
@@ -59,6 +60,8 @@ protected:
 		consumers.push_back (
 			new NullabilityConsumer (compiler,
 			                         this->_gir_manager));
+		consumers.push_back (
+			new GVariantConsumer (compiler));
 		consumers.push_back (
 			new GirAttributesChecker (compiler,
 			                          this->_gir_manager));

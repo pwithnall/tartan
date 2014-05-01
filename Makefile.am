@@ -1,4 +1,4 @@
-SUBDIRS = . po
+SUBDIRS = . po tests
 
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 
@@ -24,6 +24,8 @@ clang_plugin_libclang_gnome_la_SOURCES = \
 	clang-plugin/gir-manager.h \
 	clang-plugin/gassert-attributes.cpp \
 	clang-plugin/gassert-attributes.h \
+	clang-plugin/gvariant-checker.cpp \
+	clang-plugin/gvariant-checker.h \
 	clang-plugin/nullability-checker.cpp \
 	clang-plugin/nullability-checker.h \
 	$(NULL)
