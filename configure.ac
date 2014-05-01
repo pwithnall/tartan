@@ -78,6 +78,16 @@ AC_SUBST([LLVM_LDFLAGS])
 AC_SUBST([LLVM_LIBS])
 AC_SUBST([LLVM_VERSION])
 
+# Clang dependency (e.g. the clang-devel package on Fedora)
+AC_LANG_PUSH([C++])
+old_cppflags="$CPPFLAGS"
+CPPFLAGS="$LLVM_CPPFLAGS $CPPFLAGS"
+AC_CHECK_HEADER([clang/AST/Expr.h],[],[
+	AC_MSG_ERROR([Clang headers version $LLVM_REQS or later needed.])
+])
+CPPFLAGS="$old_cppflags"
+AC_LANG_POP([C++])
+
 # Internationalisation
 GETTEXT_PACKAGE=AC_PACKAGE_NAME
 AC_SUBST([GETTEXT_PACKAGE])
