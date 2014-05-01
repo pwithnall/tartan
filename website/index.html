@@ -127,11 +127,17 @@ of the gnome-clang invocation may change in future:</p>
 <p>The easiest way to use gnome-clang with the Clang static analyser directly is
 to use the <span class="program-name">gnome-clang</span> wrapper script,
 e.g.:<br/>
-<span class="command">clang -cc1 -analyze -std=c89 my-project/*.c</span><br/>
+<span class="command">clang -cc1 -analyze -std=c89 $system_includes my-project/*.c</span><br/>
 becomes:<br/>
-<span class="command">gnome-clang -cc1 -analyze -std=c89 my-project/*.c</span><br/>
+<span class="command">gnome-clang -cc1 -analyze -std=c89 $system_includes my-project/*.c</span><br/>
 which wraps the normal Clang compiler and automatically loads the correct
-plugin.</p>
+plugin. The system includes should be set using:<br />
+<span class="command">system_includes=`echo | cpp -Wp,-v 2>&amp;1 |
+grep '^[[:space:]]' | sed -e 's/^[[:space:]]*/-isystem/' |
+tr "\n" ' '`</span><br />
+You should also specify your project’s include flags, for example using
+<span class="command">pkg-config</span>:<br />
+<span class="command">gnome-clang -cc1 -analyze -std=c89 $system_includes `pkg-config --cflags glib-2.0` my-project/*.c</span></p>
 
 <p>The <span class="program-name">gnome-clang</span> script looks for the
 <span class="program-name">clang</span> binary in the same directory as itself,
