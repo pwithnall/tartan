@@ -1,0 +1,6 @@
+Also allow checking of GVariant reference counts, including support for floating references.
+
+For example, the following code should be flagged as invalid because the floating reference is consumed by g_variant_new():
+	GVariant *some_var = g_variant_new_boolean (FALSE);
+	owned_variant = g_variant_new ("v", some_var);
+	g_variant_unref (some_var);
