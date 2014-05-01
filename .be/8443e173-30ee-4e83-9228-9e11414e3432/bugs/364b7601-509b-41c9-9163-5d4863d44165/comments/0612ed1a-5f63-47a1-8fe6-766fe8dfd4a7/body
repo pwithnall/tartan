@@ -1,0 +1,3 @@
+Clang allows diagnostic messages (e.g. warnings and errors) to be accompanied by a ‘fix-it hint’ which suggests a code modification to the user which will fix a problem. Adding support for fix-it hints to gnome-clang would be useful, but should only be done in situations where we’re sure the suggested fix is the single correct fix.
+
+http://clang.llvm.org/doxygen/classclang_1_1FixItHint.html
