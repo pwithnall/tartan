@@ -27,6 +27,7 @@
 #include <clang/Frontend/MultiplexConsumer.h>
 #include <llvm/Support/raw_ostream.h>
 
+#include "debug.h"
 #include "gir-attributes.h"
 #include "gassert-attributes.h"
 #include "nullability-checker.h"
@@ -66,39 +67,14 @@ protected:
 	}
 
 private:
-	/* Command line parser helper for loading GI namespaces. */
 	bool
-	_gi_repository_helper (const CompilerInstance &CI,
-	                       std::vector<std::string>::const_iterator it,
-	                       std::vector<std::string>::const_iterator end)
+	_load_typelib (const CompilerInstance &CI,
+	               const std::string& gi_namespace_and_version)
 	{
-		if (it + 1 >= end) {
-			DiagnosticsEngine &d = CI.getDiagnostics ();
-			unsigned int id = d.getCustomDiagID (
-				DiagnosticsEngine::Error,
-				"--gi-repository requires a "
-				"[namespace]-[version] argument (e.g. "
-				"--gi-repository GLib-2.0).");
-			d.Report (id);
-
-			return false;
-		}
-
-		std::advance (it, 1);  /* skip --gi-repository */
-		std::string gi_namespace_and_version = *it;
-
-		/* Try and split up the namespace and version.
-		 * e.g. ‘GLib-2.0’ becomes ‘GLib’ and ‘2.0’. */
 		std::string::size_type p = gi_namespace_and_version.find ("-");
-		if (p == std::string::npos) {
-			DiagnosticsEngine &d = CI.getDiagnostics ();
-			unsigned int id = d.getCustomDiagID (
-				DiagnosticsEngine::Error,
-				"--gi-repository requires a "
-				"[namespace]-[version] argument (e.g. "
-				"--gi-repository GLib-2.0).");
-			d.Report (id);
 
+		if (p == std::string::npos) {
+			/* Ignore it — probably a non-typelib file. */
 			return false;
 		}
 
@@ -107,13 +83,17 @@ private:
 		std::string gi_version =
 			gi_namespace_and_version.substr (p + 1);
 
+		DEBUG ("Loading typelib " + gi_namespace + " " + gi_version);
+
 		/* Load the repository. */
 		GError *error = NULL;
 
 		this->_gir_manager.get ()->load_namespace (gi_namespace,
 		                                           gi_version,
 		                                           &error);
-		if (error != NULL) {
+		if (error != NULL &&
+		    !g_error_matches (error, G_IREPOSITORY_ERROR,
+		                      G_IREPOSITORY_ERROR_NAMESPACE_VERSION_CONFLICT)) {
 			DiagnosticsEngine &d = CI.getDiagnostics ();
 			unsigned int id = d.getCustomDiagID (
 				DiagnosticsEngine::Error,
@@ -122,7 +102,69 @@ private:
 				error->message);
 			d.Report (id);
 
+			g_error_free (error);
+
 			return false;
+		}
+
+		g_clear_error (&error);
+
+		return true;
+	}
+
+	/* Load all the GI typelibs we can find. This shouldn’t take long, and
+	 * saves the user having to specify which typelibs to use (or us having
+	 * to try and work out which ones the user’s code uses by looking at
+	 * #included files). */
+	bool
+	_load_gi_repositories (const CompilerInstance &CI)
+	{
+		GSList/*<unowned string>*/ *typelib_paths, *l;
+
+		typelib_paths = g_irepository_get_search_path ();
+
+		for (l = typelib_paths; l != NULL; l = l->next) {
+			GDir *dir;
+			const gchar *typelib_path, *typelib_filename;
+			GError *error = NULL;
+
+			typelib_path = (const gchar *) l->data;
+			dir = g_dir_open (typelib_path, 0, &error);
+
+			if (error != NULL) {
+				/* Warn about the bogus include path and
+				 * continue. */
+				gchar *error_msg;
+				DiagnosticsEngine &d = CI.getDiagnostics ();
+
+				error_msg = g_strdup_printf (
+					"Error opening typelib path ‘%s’: %s",
+					typelib_path, error->message);
+
+				unsigned int id = d.getCustomDiagID (
+					DiagnosticsEngine::Warning, error_msg);
+				d.Report (id);
+
+				g_free (error_msg);
+
+				continue;
+			}
+
+			while ((typelib_filename = g_dir_read_name (dir)) != NULL) {
+				/* Load the typelib. Ignore failure. */
+
+				std::string _typelib_filename (typelib_filename);
+				std::string::size_type last_dot = _typelib_filename.find_last_of (".");
+				if (last_dot == std::string::npos) {
+					/* No ‘.typelib’ suffix — ignore. */
+					continue;
+				}
+
+				std::string gi_namespace_and_version = _typelib_filename.substr (0, last_dot);
+				this->_load_typelib (CI, gi_namespace_and_version);
+			}
+
+			g_dir_close (dir);
 		}
 
 		return true;
@@ -135,31 +177,16 @@ protected:
 	ParseArgs (const CompilerInstance &CI,
 	           const std::vector<std::string>& args)
 	{
-		unsigned int n_repos = 0;
+		/* Load all typelibs. */
+		this->_load_gi_repositories (CI);
 
 		for (std::vector<std::string>::const_iterator it = args.begin();
 		     it != args.end (); ++it) {
 			std::string arg = *it;
 
-			if (arg == "--gi-repository") {
-				if (!this->_gi_repository_helper (CI, it,
-				                                  args.end ()))
-					return false;
-				n_repos++;
-			} else if (arg == "--help") {
+			if (arg == "--help") {
 				this->PrintHelp (llvm::errs ());
 			}
-		}
-
-		if (n_repos == 0) {
-			DiagnosticsEngine &d = CI.getDiagnostics ();
-			unsigned int id = d.getCustomDiagID (
-				DiagnosticsEngine::Error,
-				"At least one --gi-repository "
-				"[namespace]-[version] argument is required.");
-			d.Report (id);
-
-			return false;
 		}
 
 		return true;
@@ -174,20 +201,9 @@ protected:
 		       "warnings for C code which uses GLib, by making use of "
 		       "GIR metadata and other GLib coding conventions.\n"
 		       "\n"
-		       "Arguments:\n"
-		       "    --gi-repository [namespace]-[version]\n"
-		       "        Load the GIR metadata for the given version of "
-		               "the given namespace.\n"
-		       "        Both namespace and "
-		               "version are required parameters.\n"
-		       "\n"
 		       "Usage:\n"
 		       "    clang -cc1 -load /path/to/libclang-gnome.so "
-		           "-add-plugin gnome \\\n"
-		       "        -plugin-arg-gnome --gi-repository\n"
-		       "        -plugin-arg-gnome GLib-2.0\n"
-		       "        -plugin-arg-gnome --gi-repository\n"
-		       "        -plugin-arg-gnome GnomeDesktop-3.0\n";
+		           "-add-plugin gnome\n";
 	}
 
 	bool
