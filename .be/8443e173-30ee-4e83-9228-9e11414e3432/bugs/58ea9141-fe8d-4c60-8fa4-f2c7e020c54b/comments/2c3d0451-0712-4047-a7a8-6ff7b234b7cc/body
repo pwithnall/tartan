@@ -1,0 +1,6 @@
+Currently the wrapper-compiler-errors script operates as a LOG_COMPILER. Instead, it should operate as a LOG_DRIVER. That would:
+ • Allow it to expose the different unit tests in a given C file as individual tests on the command line.
+ • Parallelise execution of each unit test (which should hopefully speed up `make check` considerably).
+ • Handle logging better.
+
+https://www.gnu.org/software/automake/manual/html_node/Custom-Test-Drivers.html#Custom-Test-Drivers

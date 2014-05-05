@@ -1,0 +1,50 @@
+{
+
+
+
+
+
+
+    "creator": "Philip Withnall <philip.withnall@collabora.co.uk>", 
+
+
+
+
+
+
+    "reporter": "Philip Withnall <philip.withnall@collabora.co.uk>", 
+
+
+
+
+
+
+    "severity": "minor", 
+
+
+
+
+
+
+    "status": "open", 
+
+
+
+
+
+
+    "summary": "Port wrapper-compiler-errors to be a custom test driver", 
+
+
+
+
+
+
+    "time": "Mon, 05 May 2014 08:15:01 +0000"
+
+
+
+
+
+
+}
