@@ -235,15 +235,14 @@ NullabilityVisitor::TraverseFunctionDecl (FunctionDecl* func)
 		} else if (!has_allow_none && !has_assertion) {
 			switch (has_nonnull) {
 			case EXPLICIT_NULLABLE:
-				/* TODO: Say the nonnull attribute is implicit
-				 * if it was added by the GirConsumer. */
 				Debug::emit_warning (
 					"Missing (allow-none) annotation on "
 					"the ‘" +
 					parm_decl->getNameAsString () +
 					"’ parameter of function " +
 					func->getNameAsString () + "() "
-					"(already has a nonnull attribute).",
+					"(already has a nonnull attribute or "
+					"no (allow-none) annotation).",
 					this->_compiler,
 					parm_decl->getLocStart ());
 				break;
@@ -259,15 +258,14 @@ NullabilityVisitor::TraverseFunctionDecl (FunctionDecl* func)
 					parm_decl->getLocStart ());
 				break;
 			case EXPLICIT_NONNULL:
-				/* TODO: Say the nonnull attribute is implicit
-				 * if it was added by the GirConsumer. */
 				Debug::emit_warning (
 					"Missing non-NULL precondition "
 					"assertion on the ‘" +
 					parm_decl->getNameAsString () +
 					"’ parameter of function " +
 					func->getNameAsString () + "() "
-					"(already has a nonnull attribute).",
+					"(already has a nonnull attribute or "
+					"no (allow-none) annotation).",
 					this->_compiler,
 					parm_decl->getLocStart ());
 				break;
