@@ -757,24 +757,25 @@ _check_basic_format_string (const gchar **format_str,
 
 		/* Effectively hard-code the table from
 		 * §Convenience Conversions. */
-		if (strcmp (*format_str, "as") == 0 ||
-		    strcmp (*format_str, "ao") == 0) {
+#define CONVENIENCE_FORMAT(STR_PTR, F) (strncmp (STR_PTR, F, strlen (F)) == 0)
+		if (CONVENIENCE_FORMAT (*format_str, "as") ||
+		    CONVENIENCE_FORMAT (*format_str, "ao")) {
 			expected_type = context.getPointerType (char_array);
 			skip = 2;
-		} else if (strcmp (*format_str, "a&s") == 0 ||
-		           strcmp (*format_str, "a&o") == 0) {
+		} else if (CONVENIENCE_FORMAT (*format_str, "a&s") ||
+		           CONVENIENCE_FORMAT (*format_str, "a&o")) {
 			expected_type = context.getPointerType (const_char_array);
 			skip = 3;
-		} else if (strcmp (*format_str, "aay") == 0) {
+		} else if (CONVENIENCE_FORMAT (*format_str, "aay")) {
 			expected_type = context.getPointerType (char_array);
 			skip = 3;
-		} else if (strcmp (*format_str, "ay") == 0) {
+		} else if (CONVENIENCE_FORMAT (*format_str, "ay")) {
 			expected_type = char_array;
 			skip = 2;
-		} else if (strcmp (*format_str, "&ay") == 0) {
+		} else if (CONVENIENCE_FORMAT (*format_str, "&ay")) {
 			expected_type = const_char_array;
 			skip = 3;
-		} else if (strcmp (*format_str, "a&ay") == 0) {
+		} else if (CONVENIENCE_FORMAT (*format_str, "a&ay")) {
 			expected_type = context.getPointerType (const_char_array);
 			skip = 4;
 		} else {
@@ -786,6 +787,7 @@ _check_basic_format_string (const gchar **format_str,
 				format_arg_str->getLocStart ());
 			return false;
 		}
+#undef CONVENIENCE_FORMAT
 
 		*format_str = *format_str + skip;
 
@@ -980,12 +982,15 @@ _check_gvariant_format_param (const CallExpr& call,
 	}
 
 	/* Check the string. Parse it hand-in-hand with iterating through the
-	 * varargs list. */
+	 * varargs list. Take a copy of the format_str because StringRef.str()
+	 * only uses a temporary internal buffer. */
 	DEBUG ("Checking GVariant format string ‘" <<
 	       format_arg_str->getString () << "’ with " <<
 	       call.getNumArgs () << " variadic arguments.");
 
-	const gchar *format_str = format_arg_str->getString ().data ();
+	gchar *whole_format_str;
+	whole_format_str = g_strdup (format_arg_str->getString ().str ().c_str ());
+	const gchar *format_str = whole_format_str;
 	CallExpr::const_arg_iterator args_begin = call.arg_begin ();
 	CallExpr::const_arg_iterator args_end = call.arg_end ();
 
@@ -1007,6 +1012,7 @@ _check_gvariant_format_param (const CallExpr& call,
 
 	if (!_check_format_string (&format_str, &args_begin, &args_end,
 	                           flags, compiler, format_arg_str, context)) {
+		g_free (whole_format_str);
 		return false;
 	}
 
@@ -1022,14 +1028,17 @@ _check_gvariant_format_param (const CallExpr& call,
 		                         "using multiple format strings, they "
 		                         "should be enclosed in brackets to "
 		                         "create a tuple (e.g. ‘(%s)’).",
-		                         format_str,
-		                         format_arg_str->getString ().data ());
+		                         format_str, whole_format_str);
 		Debug::emit_error (error, compiler,
 		                   format_arg_str->getLocStart ());
 		g_free (error);
 
+		g_free (whole_format_str);
+
 		return false;
 	}
+
+	g_free (whole_format_str);
 
 	/* Sanity check that we’ve consumed all arguments. */
 	bool retval = true;
