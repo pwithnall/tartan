@@ -56,10 +56,12 @@ while [[ -f `printf "${temp_dir}/${input_filename}_%02d.c" ${num}` ]]; do
 int
 main (void)
 {
-	GVariant *floating_variant = NULL;
+	GVariant *floating_variant = NULL, *existing_variant;
+	existing_variant = g_variant_new_boolean (FALSE);  /* arbitrary */
 EOF
 	cat $section_filename
 	cat << EOF
+	g_variant_unref (existing_variant);
 	if (floating_variant != NULL)
 		g_variant_unref (floating_variant);
 }

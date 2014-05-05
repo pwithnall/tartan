@@ -895,7 +895,7 @@
  * No error
  */
 {
-	floating_variant = g_variant_new ("^&ay", "some byte string");
+	floating_variant = g_variant_new ("^&ay", (const char *) "some byte string");
 }
 
 /*

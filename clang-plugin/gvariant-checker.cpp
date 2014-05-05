@@ -88,20 +88,22 @@ typedef struct {
 	unsigned int first_vararg_param_index;
 	/* Whether the function takes a va_list instead of varargs. */
 	bool uses_va_list;
+	/* True if the argument direction is in; false if it’s out. */
+	bool args_in;
 } VariantFuncInfo;
 
 static const VariantFuncInfo gvariant_format_funcs[] = {
-	{ "g_variant_new", 0, 1, false },
-	{ "g_variant_new_va", 0, 2, true },
-/* TODO:
-	{ "g_variant_get", 1, 2, false },
-	{ "g_variant_get_va", 1, 3, true },
-	{ "g_variant_get_child", 2, 3, false },
-	{ "g_variant_lookup", 2, 3, false },
-	{ "g_variant_iter_next", 1, 2, false },
-	{ "g_variant_iter_loop", 1, 2, false },
-	{ "g_variant_builder_add", 1, 2, false },
-	{ "g_variant_builder_add_parsed", 1, 2, false },
+	{ "g_variant_new", 0, 1, false, true },
+	{ "g_variant_new_va", 0, 2, true, true },
+	{ "g_variant_get", 1, 2, false, false },
+	{ "g_variant_get_va", 1, 3, true, false },
+/*
+	{ "g_variant_get_child", 2, 3, false, false },
+	{ "g_variant_lookup", 2, 3, false, false },
+	{ "g_variant_iter_next", 1, 2, false, false },
+	{ "g_variant_iter_loop", 1, 2, false, false },
+	{ "g_variant_builder_add", 1, 2, false, true },
+	{ "g_variant_builder_add_parsed", 1, 2, false, true },
 */
 };
 
@@ -114,8 +116,17 @@ static const VariantFuncInfo gvariant_format_funcs[] = {
  * variadic argument to be consumed to be GVariantBuilder*.
  * @CHECK_FLAG_FORCE_VALIST: Force the expected type of the next variadic
  * argument to be consumed to be va_list*.
+ * @CHECK_FLAG_FORCE_GVARIANTITER: Force the expected type of the next variadic
+ * argument to be consumed to be GVariantIter*.
+ * @CHECK_FLAG_REQUIRE_CONST: Require that the pointee of the expected type (if
+ * it is a pointer type) must be constant. This is ignored it
+ * %CHECK_FLAG_DIRECTION_OUT is not set.
+ * @CHECK_FLAG_DIRECTION_OUT: Expect the argument to be out-bound, so an extra
+ * level of pointer indirection will be expected on the expected type. If
+ * %CHECK_FLAG_ALLOW_MAYBE is also set, the top-most pointer can be %NULL.
  * @CHECK_FLAG_ALLOW_MAYBE: Allow the next variadic argument to be consumed to
- * be potentially %NULL.
+ * be potentially %NULL. This always examines the top-most argument, not the
+ * value it points to if it’s a pointer.
  * @CHECK_FLAG_CONSUME_ARGS: Consume variadic arguments when parsing. If this
  * is not specified, the argument pointer will never be advanced, and all
  * GVariant format strings for a given call will be checked against the same
@@ -128,7 +139,9 @@ typedef enum {
 	CHECK_FLAG_FORCE_GVARIANT = 1 << 0,
 	CHECK_FLAG_FORCE_GVARIANTBUILDER = 1 << 1,
 	CHECK_FLAG_FORCE_VALIST = 1 << 2,
-	/* … */
+	CHECK_FLAG_FORCE_GVARIANTITER = 1 << 3,
+	CHECK_FLAG_REQUIRE_CONST = 1 << 4,
+	CHECK_FLAG_DIRECTION_OUT = 1 << 5,
 	CHECK_FLAG_ALLOW_MAYBE = 1 << 6,
 	CHECK_FLAG_CONSUME_ARGS = 1 << 7,
 } VariantCheckFlags;
@@ -152,13 +165,68 @@ _func_uses_gvariant_format (const FunctionDecl& func)
 	return NULL;
 }
 
+/*
+ * Return true if @actual_type and @expected_type compare equal, taking
+ * qualifications into account as specified by @flags.
+ *
+ * Check that @actual_type and @expected_type are equal. For inbound arguments,
+ * we need to compare the unqualified (with const, volatile, restrict removed)
+ * types, plus the unqualified pointee types if the normal types are pointers,
+ * plus the unqualified pointee pointee types, etc.
+ *
+ * .e.g.
+ *    char* ≡ const char*
+ *    int ≡ int
+ *    char* ≡ char*
+ *    GVariant* ≡ const GVariant*
+ *    char** ≡ const char * const *
+ *
+ * For outbound arguments, we must compare qualified types.
+ */
+static bool
+_compare_types (const QualType actual_type, const QualType expected_type,
+                unsigned int /* VariantCheckFlags */ flags, ASTContext& context)
+{
+	DEBUG ("Comparing type ‘" << actual_type.getAsString () << "’ with ‘" <<
+	       expected_type.getAsString () << "’.");
+
+	/* Fast path: Simple comparison. */
+	if (context.hasSameType (actual_type, expected_type)) {
+		return true;
+	}
+
+	/* Slow path: Strip pointers off and remove qualifiers for inbound
+	 * actual types. */
+	const PointerType *actual_pointer_type = dyn_cast<PointerType> (actual_type);
+	const PointerType *expected_pointer_type = dyn_cast<PointerType> (expected_type);
+
+	if (actual_pointer_type == NULL || expected_pointer_type == NULL) {
+		return false;
+	}
+
+	QualType actual_pointee_type, expected_pointee_type;
+
+	actual_pointee_type = actual_pointer_type->getPointeeType ();
+	expected_pointee_type = expected_pointer_type->getPointeeType ();
+
+	/* Inbound arguments can be const or not. It’s a bit trickier for
+	 * outbound arguments. */
+	if (!(flags & CHECK_FLAG_DIRECTION_OUT)) {
+		actual_pointee_type = actual_pointee_type.getUnqualifiedType ();
+	}
+
+	return _compare_types (actual_pointee_type, expected_pointee_type,
+	                       flags, context);
+}
+
 /* Consume a single variadic argument from the varargs array, checking that one
  * exists and has the given @expected_type. If %CHECK_FLAG_FORCE_GVARIANT is
  * set, the expected type is forced to be GVariant*. (This is necessary because
  * I can find no way to represent GVariant* as a QualType. If someone can fix
  * that, the boolean argument can be removed.) Same for
- * %CHECK_FLAG_FORCE_GVARIANTBUILDER, but with GVariantBuilder*; and
- * %CHECK_FLAG_FORCE_VALIST, but with va_list*.
+ * %CHECK_FLAG_FORCE_GVARIANTBUILDER, but with GVariantBuilder*;
+ * %CHECK_FLAG_FORCE_VALIST, but with va_list*; and
+ * %CHECK_FLAG_FORCE_GVARIANTITER, but with GVariantIter*.
  *
  * Iff %CHECK_FLAG_ALLOW_MAYBE is set, the variadic argument may be NULL.
  *
@@ -172,29 +240,49 @@ _consume_variadic_argument (QualType expected_type,
                             const StringLiteral *format_arg_str,
                             ASTContext& context)
 {
-	DEBUG ("Consuming variadic argument with expected type ‘" <<
-	       expected_type.getAsString () << "’.");
-
 	std::string expected_type_str;
 
 	if (flags & CHECK_FLAG_FORCE_GVARIANTBUILDER) {
 		/* Note: Stricter checking is implemented below. */
-		DEBUG ("Forcing expected type to ‘GVariantBuilder*’.");
 		expected_type = context.VoidPtrTy;
 		expected_type_str = std::string ("GVariantBuilder *");
 	} else if (flags & CHECK_FLAG_FORCE_GVARIANT) {
 		/* Note: Stricter checking is implemented below. */
-		DEBUG ("Forcing expected type to ‘GVariant*’.");
 		expected_type = context.VoidPtrTy;
 		expected_type_str = std::string ("GVariant *");
 	} else if (flags & CHECK_FLAG_FORCE_VALIST) {
 		/* Note: Stricter checking is implemented below. */
-		DEBUG ("Forcing expected type to ‘va_list*’.");
 		expected_type = context.VoidPtrTy;
 		expected_type_str = std::string ("va_list *");
+	} else if (flags & CHECK_FLAG_FORCE_GVARIANTITER) {
+		/* Note: Stricter checking is implemented below. */
+		expected_type = context.VoidPtrTy;
+		expected_type_str = std::string ("GVariantIter *");
 	} else {
 		expected_type_str = expected_type.getAsString ();
 	}
+
+	/* Handle const-ness of out arguments. We have to insert the const one
+	 * layer of pointer indirection down. i.e. char* becomes const char*. */
+	if ((flags & CHECK_FLAG_DIRECTION_OUT) &&
+	    (flags & CHECK_FLAG_REQUIRE_CONST) &&
+	    expected_type->isPointerType ()) {
+		const PointerType *expected2_type = dyn_cast<PointerType> (expected_type);
+		QualType expected_pointee_type = expected2_type->getPointeeType ();
+		expected_pointee_type = context.getConstType (expected_pointee_type);
+		expected_type = context.getPointerType (expected_pointee_type);
+		expected_type_str = "const " + expected_type_str;
+	}
+
+	/* Handle in/out arguments. This must be done after constness. */
+	if ((flags & CHECK_FLAG_DIRECTION_OUT) &&
+	    !(flags & CHECK_FLAG_FORCE_VALIST)) {
+		expected_type = context.getPointerType (expected_type);
+		expected_type_str = expected_type_str + "*";
+	}
+
+	DEBUG ("Consuming variadic argument with expected type ‘" <<
+	       expected_type.getAsString () << "’.");
 
 	if (*args_begin == *args_end) {
 		gchar *error;
@@ -232,7 +320,8 @@ _consume_variadic_argument (QualType expected_type,
 	} else if (!is_null_constant &&
 	           (flags & (CHECK_FLAG_FORCE_GVARIANT |
 	                     CHECK_FLAG_FORCE_GVARIANTBUILDER |
-	                     CHECK_FLAG_FORCE_VALIST))) {
+	                     CHECK_FLAG_FORCE_VALIST |
+	                     CHECK_FLAG_FORCE_GVARIANTITER))) {
 		/* Special case handling for GVariant[Builder]* types, because I
 		 * can’t find a reasonable way of retrieving the QualType for
 		 * the GVariant or GVariantBuilder typedefs; so we use this
@@ -254,12 +343,43 @@ _consume_variadic_argument (QualType expected_type,
 		}
 
 		QualType actual_pointee_type = actual_pointer_type->getPointeeType ();
+
+		/* Inbound arguments can be const or not. It’s a bit trickier
+		 * for outbound arguments. Outbound arguments must have an extra
+		 * level of pointer indirection stripped off. */
+		if (!(flags & CHECK_FLAG_DIRECTION_OUT)) {
+			actual_pointee_type = actual_pointee_type.getUnqualifiedType ();
+		} else if (!(flags & CHECK_FLAG_FORCE_VALIST)) {
+			const PointerType *actual_pointer2_type = dyn_cast<PointerType> (actual_pointee_type);
+			if (actual_pointer2_type == NULL) {
+				gchar *error;
+
+				error = g_strdup_printf (
+					"Expected a GVariant variadic argument "
+					"of type ‘%s’ but saw one of type "
+					"‘%s’.",
+					expected_type_str.c_str (),
+					actual_type.getAsString ().c_str ());
+				Debug::emit_error (error, compiler,
+				                   arg->getLocStart ());
+				g_free (error);
+
+				return false;
+			}
+
+			actual_pointee_type = actual_pointer2_type->getPointeeType ();
+		}
+
+		std::string actual_pointee_type_str = actual_pointee_type.getAsString ();
+
 		if (!(flags & CHECK_FLAG_FORCE_GVARIANTBUILDER &&
-		      actual_pointee_type.getUnqualifiedType ().getAsString () == "GVariantBuilder") &&
+		      actual_pointee_type_str == "GVariantBuilder") &&
 		    !(flags & CHECK_FLAG_FORCE_GVARIANT &&
-		      actual_pointee_type.getUnqualifiedType ().getAsString () == "GVariant") &&
+		      actual_pointee_type_str == "GVariant") &&
 		    !(flags & CHECK_FLAG_FORCE_VALIST &&
-		      actual_pointee_type.getUnqualifiedType ().getAsString () == "va_list")) {
+		      actual_pointee_type_str == "va_list") &&
+		     !(flags & CHECK_FLAG_FORCE_GVARIANTITER &&
+		      actual_pointee_type_str == "GVariantIter")) {
 			gchar *error;
 
 			error = g_strdup_printf (
@@ -276,54 +396,11 @@ _consume_variadic_argument (QualType expected_type,
 	} else if (!is_null_constant &&
 	           !(flags & (CHECK_FLAG_FORCE_GVARIANT |
 	                      CHECK_FLAG_FORCE_GVARIANTBUILDER |
-	                      CHECK_FLAG_FORCE_VALIST))) {
+	                      CHECK_FLAG_FORCE_VALIST |
+	                      CHECK_FLAG_FORCE_GVARIANTITER))) {
 		/* Normal non-GVariant, non-GVariantBuilder case. */
-		const PointerType *actual_pointer_type = dyn_cast<PointerType> (actual_type);
-		const PointerType *actual_pointer2_type = NULL;
-		QualType actual_pointee_type, actual_pointee2_type;
-
-		if (actual_pointer_type != NULL) {
-			actual_pointee_type = actual_pointer_type->getPointeeType ();
-
-			actual_pointer2_type = dyn_cast<PointerType> (actual_pointee_type);
-			if (actual_pointer2_type != NULL) {
-				actual_pointee2_type = actual_pointer2_type->getPointeeType ();
-			}
-		}
-
-		const PointerType *expected_pointer_type = dyn_cast<PointerType> (expected_type);
-		const PointerType *expected_pointer2_type = NULL;
-		QualType expected_pointee_type, expected_pointee2_type;
-
-		if (expected_pointer_type != NULL) {
-			expected_pointee_type = expected_pointer_type->getPointeeType ();
-
-			expected_pointer2_type = dyn_cast<PointerType> (expected_pointee_type);
-			if (expected_pointer2_type != NULL) {
-				expected_pointee2_type = expected_pointer2_type->getPointeeType ();
-			}
-		}
-
-		/* Check it’s of @expected_type. We need to compare the
-		 * unqualified (with const, volatile, restrict removed) types,
-		 * plus the unqualified pointee types if the normal types are
-		 * pointers, plus the unqualified pointee pointee types.
-		 * .e.g
-		 *    char* ≡ const char*
-		 *    int ≡ int
-		 *    char* ≡ char*
-		 *    GVariant* ≡ const GVariant*
-		 *    char** ≡ const char * const * */
-		if (!context.hasSameUnqualifiedType (actual_type,
-		                                     expected_type) &&
-		    (actual_pointer_type == NULL ||
-		     expected_pointer_type == NULL ||
-		     !context.hasSameUnqualifiedType (actual_pointee_type,
-		                                      expected_pointee_type)) &&
-		    (actual_pointer2_type == NULL ||
-		     expected_pointer2_type == NULL ||
-		     !context.hasSameUnqualifiedType (actual_pointee2_type,
-		                                      expected_pointee2_type))) {
+		if (!_compare_types (actual_type, expected_type,
+		                     flags, context)) {
 			gchar *error;
 
 			error = g_strdup_printf (
@@ -437,7 +514,8 @@ _check_basic_type_string (const gchar **type_str,
 	 *  • GVariant Format Strings, §Numeric Types
 	 *  • ISO/IEC 9899, §6.5.2.2¶6
 	 */
-	if (**type_str == 'y' || **type_str == 'n' || **type_str == 'q') {
+	if (!(flags & CHECK_FLAG_DIRECTION_OUT) &&
+	    (**type_str == 'y' || **type_str == 'n' || **type_str == 'q')) {
 		assert (expected_type->isPromotableIntegerType ());
 		expected_type = context.IntTy;
 	}
@@ -484,25 +562,29 @@ _check_type_string (const gchar **type_str,
 		/* Consume the ‘a’. */
 		*type_str = *type_str + 1;
 
+		/* Update flags for the array element type.
+		 *
+		 * FIXME: ALLOW_MAYBE only for definite types */
+		flags |= CHECK_FLAG_ALLOW_MAYBE;
+
+		if (flags & CHECK_FLAG_DIRECTION_OUT) {
+			flags |= CHECK_FLAG_FORCE_GVARIANTITER;
+		} else {
+			flags |= CHECK_FLAG_FORCE_GVARIANTBUILDER;
+		}
+
 		/* Check and consume the type string for the array element
 		 * type. */
 		if (!_check_type_string (type_str, args_begin, args_end,
-		                         (flags |
-		                          CHECK_FLAG_FORCE_GVARIANTBUILDER |
-		                          CHECK_FLAG_ALLOW_MAYBE) &
-		                         ~CHECK_FLAG_CONSUME_ARGS,
-		                         compiler, format_arg_str, context)) {
+		                         flags & ~CHECK_FLAG_CONSUME_ARGS,
+		                         compiler, format_arg_str,  context)) {
 			return false;
 		}
 
-		/* Consume the single GVariantBuilder for the array.
-		 * FIXME: ALLOW_MAYBE only for definite types */
+		/* Consume the single GVariantBuilder for the array. */
 		return _consume_variadic_argument (context.VoidPtrTy,
 		                                   args_begin, args_end,
-		                                   flags |
-		                                   CHECK_FLAG_FORCE_GVARIANTBUILDER |
-		                                   CHECK_FLAG_ALLOW_MAYBE,
-		                                   compiler,
+		                                   flags, compiler,
 		                                   format_arg_str, context);
 	/* Maybe Types */
 	case 'm':
@@ -654,18 +736,22 @@ _check_basic_format_string (const gchar **format_str,
 		                                   compiler, format_arg_str,
 		                                   context);
 	case '&':
-		/* Ignore it. */
+		/* Ignore it for inbound arguments; require that outbound
+		 * arguments are const. */
 		*format_str = *format_str + 1;
 		return _check_basic_type_string (format_str, args_begin,
 		                                 args_end,
-		                                 flags, compiler,
-		                                 format_arg_str, context);
+		                                 flags |
+		                                 CHECK_FLAG_REQUIRE_CONST,
+		                                 compiler, format_arg_str,
+		                                 context);
 	case '^': {
 		/* Various different hard-coded types. */
 		*format_str = *format_str + 1;
 
 		QualType expected_type;
 		QualType char_array = context.getPointerType (context.CharTy);
+		QualType const_char_array = context.getPointerType (context.getConstType (context.CharTy));
 		guint skip;
 
 		/* Effectively hard-code the table from
@@ -675,18 +761,20 @@ _check_basic_format_string (const gchar **format_str,
 			expected_type = context.getPointerType (char_array);
 			skip = 2;
 		} else if (strcmp (*format_str, "a&s") == 0 ||
-		           strcmp (*format_str, "a&o") == 0 ||
-		           strcmp (*format_str, "aay") == 0) {
+		           strcmp (*format_str, "a&o") == 0) {
+			expected_type = context.getPointerType (const_char_array);
+			skip = 3;
+		} else if (strcmp (*format_str, "aay") == 0) {
 			expected_type = context.getPointerType (char_array);
 			skip = 3;
 		} else if (strcmp (*format_str, "ay") == 0) {
 			expected_type = char_array;
 			skip = 2;
 		} else if (strcmp (*format_str, "&ay") == 0) {
-			expected_type = char_array;
+			expected_type = const_char_array;
 			skip = 3;
 		} else if (strcmp (*format_str, "a&ay") == 0) {
-			expected_type = context.getPointerType (char_array);
+			expected_type = context.getPointerType (const_char_array);
 			skip = 4;
 		} else {
 			Debug::emit_error (
@@ -831,11 +919,12 @@ _check_format_string (const gchar **format_str,
 
 		return true;
 	case '&':
-		/* Ignore it. */
+		/* Ignore it for inbound arguments; require that outbound
+		 * arguments are const. */
 		*format_str = *format_str + 1;
 		return _check_type_string (format_str, args_begin, args_end,
-		                           flags, compiler,
-		                           format_arg_str, context);
+		                           flags | CHECK_FLAG_REQUIRE_CONST,
+		                           compiler, format_arg_str, context);
 	case '^':
 		/* Handled by the basic format string parser. */
 		return _check_basic_format_string (format_str, args_begin,
@@ -909,6 +998,11 @@ _check_gvariant_format_param (const CallExpr& call,
 		flags |= CHECK_FLAG_CONSUME_ARGS;
 	else
 		flags |= CHECK_FLAG_FORCE_VALIST;
+
+	/* Outbound arguments may always be NULL to skip that GVariant
+	 * element. */
+	if (!func_info->args_in)
+		flags |= (CHECK_FLAG_DIRECTION_OUT | CHECK_FLAG_ALLOW_MAYBE);
 
 	if (!_check_format_string (&format_str, &args_begin, &args_end,
 	                           flags, compiler, format_arg_str, context)) {
