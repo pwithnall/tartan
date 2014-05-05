@@ -369,6 +369,14 @@ AssertionExtracter::is_assertion_stmt (Stmt& stmt, const ASTContext& context)
 			                context.getLogicalOperationType (),
 			                SourceLocation ());
 	}
+	case Stmt::StmtClass::IntegerLiteralClass: {
+		/* Handle an integer literal. This doesn’t modify program state,
+		 * and evaluates directly to a boolean.
+		 * Transformations:
+		 *     0 ↦ FALSE
+		 *     I ↦ TRUE */
+		return dyn_cast<Expr> (&stmt);
+	}
 	case Stmt::StmtClass::ParenExprClass: {
 		/* Handle a parenthesised expression.
 		 * Transformations:
@@ -675,6 +683,7 @@ _assertion_is_gobject_type_check (Expr& assertion_expr,
 	case Expr::IntegerLiteralClass:
 	case Expr::BinaryOperatorClass:
 	case Expr::UnaryOperatorClass:
+	case Expr::ConditionalOperatorClass:
 	case Expr::CallExprClass:
 	case Expr::ImplicitCastExprClass: {
 		/* These can’t be type checks. */
@@ -763,6 +772,17 @@ _assertion_is_explicit_nonnull_check (Expr& assertion_expr,
 		 *     !(my_var == NULL)
 		 * or (more weirdly):
 		 *     ~(my_var == NULL)
+		 */
+		return 0;
+	}
+	case Expr::ConditionalOperatorClass: {
+		/* A conditional operator. For the moment, assume this isn’t a
+		 * non-null check.
+		 *
+		 * FIXME: In the future, define a proper program transformation
+		 * to check for non-null checks, since we could have expressions
+		 * like:
+		 *     (x == NULL) ? TRUE : FALSE
 		 */
 		return 0;
 	}
