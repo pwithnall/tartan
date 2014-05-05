@@ -23,21 +23,21 @@
 /**
  * GVariantVisitor:
  *
- * This is a checker for GVariant format strings and varargs. For GVariant
+ * This is a checker for #GVariant format strings and varargs. For #GVariant
  * methods which accept varargs, it validates the type and nullability of each
- * vararg against the corresponding element in the GVariant format string (if
+ * vararg against the corresponding element in the #GVariant format string (if
  * a constant format string is provided — non-constant format strings cannot be
- * validated, but the user should probably be using GVariantBuilder directly if
+ * validated, but the user should probably be using #GVariantBuilder directly if
  * they’re dynamically generating a format string).
  *
- * For GVariant methods with format strings but no varargs, the format string is
- * validated.
+ * For #GVariant methods with format strings but no varargs, the format string
+ * is validated.
  *
  * The format string is parsed and varargs are consumed in parallel. The static
  * type of the varargs is used, so if a weird cast is used (e.g. casting a
  * string literal to an integer and passing it to a ‘u’ format string), no error
  * will be raised. One limitation on the current checker is that the types of
- * GVariants passed in are not checked. e.g. No error is emitted for the
+ * #GVariants passed in are not checked. e.g. No error is emitted for the
  * following invalid code:
  *     g_variant_new ('@s', g_variant_new_boolean (FALSE));
  *
@@ -51,16 +51,17 @@
  * error messages should try to avoid this.
  *
  * FIXME: Future work could be to implement:
- *  • Reference counting validation of GVariants (might be better placed in a
+ *  • Reference counting validation of #GVariants (might be better placed in a
  *    general reference counting checker).
- *  • GVariant print format parsing (for g_variant_new_parsed()).
+ *  • #GVariant print format parsing (for g_variant_new_parsed() and
+ *    g_variant_builder_add_parsed()).
  *  • Character-granularity error diagnostic locations, e.g. pointing to the
  *    erroneous character in a format string, not just to the start of the
  *    format string argument itself.
  *
  * FIXME: If Clang’s DiagnosticsEngine gains support for multiple
  * SourceLocations, it would be great to highlight both the relevant character
- * of the GVariant format string, and the erroneous variadic arguments in the
+ * of the #GVariant format string, and the erroneous variadic arguments in the
  * function call, when an error is printed. At the moment we have to just pick
  * the most important of the two and highlight that.
  */
