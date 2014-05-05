@@ -98,14 +98,11 @@ static const VariantFuncInfo gvariant_format_funcs[] = {
 	{ "g_variant_new_va", 0, 2, true, true },
 	{ "g_variant_get", 1, 2, false, false },
 	{ "g_variant_get_va", 1, 3, true, false },
-/*
 	{ "g_variant_get_child", 2, 3, false, false },
 	{ "g_variant_lookup", 2, 3, false, false },
 	{ "g_variant_iter_next", 1, 2, false, false },
 	{ "g_variant_iter_loop", 1, 2, false, false },
 	{ "g_variant_builder_add", 1, 2, false, true },
-	{ "g_variant_builder_add_parsed", 1, 2, false, true },
-*/
 };
 
 /**

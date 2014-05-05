@@ -6,8 +6,12 @@ TEST_EXTENSIONS = .c
 C_LOG_COMPILER = ./wrapper-compiler-errors
 
 TESTS = \
-	gvariant-new.c \
+	gvariant-builder.c \
 	gvariant-get.c \
+	gvariant-get-child.c \
+	gvariant-iter.c \
+	gvariant-lookup.c \
+	gvariant-new.c \
 	$(NULL)
 
 -include $(top_srcdir)/git.mk

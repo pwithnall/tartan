@@ -35,7 +35,7 @@ system_includes=`echo | cpp -Wp,-v 2>&1 | grep '^[[:space:]]' | \
 csplit --keep-files --elide-empty-files --silent \
 	--prefix="${temp_dir}/${input_filename}_" \
 	--suffix-format='%02d.c' \
-	"${input_filename}" '/\/\*/' '{*}'
+	"${input_filename}" '/^\/\*/' '{*}'
 
 num=0
 while [[ -f `printf "${temp_dir}/${input_filename}_%02d.c" ${num}` ]]; do
@@ -51,6 +51,8 @@ while [[ -f `printf "${temp_dir}/${input_filename}_%02d.c" ${num}` ]]; do
 
 	# Wrap the section’s code with a prefix and suffix.
 	(cat << EOF
+#include <stdio.h>
+
 #include <glib.h>
 
 int
