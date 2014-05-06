@@ -148,6 +148,13 @@
  * No error
  */
 {
+	floating_variant = g_variant_new ("i", 16);
+}
+
+/*
+ * No error
+ */
+{
 	gint32 some_var = -5;
 	floating_variant = g_variant_new ("i", some_var);
 }
@@ -166,6 +173,13 @@
  */
 {
 	floating_variant = g_variant_new ("u", G_MAXUINT);
+}
+
+/*
+ * No error
+ */
+{
+	floating_variant = g_variant_new ("u", 16);
 }
 
 /*

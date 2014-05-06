@@ -299,9 +299,21 @@ _consume_variadic_argument (QualType expected_type,
 	const Expr *arg = **args_begin;
 
 	/* Check its nullability. */
-	const QualType& actual_type = arg->getType ();
+	QualType actual_type = arg->getType ();
 	bool is_null_constant = arg->isNullPointerConstant (context,
 	                                                    Expr::NPC_ValueDependentIsNull);
+
+	/* Check for int → uint promotions. */
+	llvm::APSInt int_constant_value;
+	bool is_int_constant = arg->isIntegerConstantExpr (int_constant_value,
+	                                                   context);
+
+	if (is_int_constant && int_constant_value.isNonNegative () &&
+	    expected_type->isUnsignedIntegerType () &&
+	    actual_type->hasSignedIntegerRepresentation ()) {
+		/* Magically promote the int to a uint. */
+		actual_type = context.getCorrespondingUnsignedType (actual_type);
+	}
 
 	if (is_null_constant && !(flags & CHECK_FLAG_ALLOW_MAYBE) &&
 	    expected_type->isPointerType ()) {
