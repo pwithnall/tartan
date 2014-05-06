@@ -10,8 +10,8 @@ if [ "x$GNOME_CLANG_CC" != "x" ]; then
 	real_clang="$GNOME_CLANG_CC"
 elif [ -f "$clang_prefix/bin/clang" ]; then
 	real_clang="$clang_prefix/bin/clang"
-elif [ -f /usr/bin/clang ]; then
-	real_clang=/usr/bin/clang
+elif [ -f `which clang` ]; then
+	real_clang=`which clang`
 else
 	echo "Error: Could not find clang executable. Set GNOME_CLANG_CC to the absolute path of the real clang executable." >& 2
 fi
