@@ -455,8 +455,8 @@ AssertionExtracter::is_assertion_stmt (Stmt& stmt, const ASTContext& context)
 	}
 	case Stmt::StmtClass::NoStmtClass:
 	default:
-		WARN (__func__ << "() can’t handle statements of type " <<
-		      stmt.getStmtClassName ());
+		WARN_EXPR (__func__ << "() can’t handle statements of type " <<
+		           stmt.getStmtClassName (), stmt);
 		return NULL;
 	}
 }
@@ -691,8 +691,8 @@ _assertion_is_gobject_type_check (Expr& assertion_expr,
 	}
 	case Stmt::StmtClass::NoStmtClass:
 	default:
-		WARN (__func__ << "() can’t handle expressions of type " <<
-		      assertion_expr.getStmtClassName ());
+		WARN_EXPR (__func__ << "() can’t handle expressions of type " <<
+		           assertion_expr.getStmtClassName (), assertion_expr);
 		return 0;
 	}
 }
@@ -825,8 +825,8 @@ _assertion_is_explicit_nonnull_check (Expr& assertion_expr,
 	}
 	case Stmt::StmtClass::NoStmtClass:
 	default:
-		WARN (__func__ << "() can’t handle expressions of type " <<
-		      assertion_expr.getStmtClassName ());
+		WARN_EXPR (__func__ << "() can’t handle expressions of type " <<
+		           assertion_expr.getStmtClassName (), assertion_expr);
 		return 0;
 	}
 }
