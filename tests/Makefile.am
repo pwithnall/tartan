@@ -3,9 +3,9 @@
 # with gnome-clang (and -Werror).
 
 TEST_EXTENSIONS = .c
-C_LOG_COMPILER = ./wrapper-compiler-errors
+C_LOG_COMPILER = $(top_srcdir)/tests/wrapper-compiler-errors
 
-TESTS = \
+c_tests = \
 	assertion-extraction.c \
 	assertion-extraction-return.c \
 	gvariant-builder.c \
@@ -28,6 +28,11 @@ templates = \
 	gvariant.tail.c \
 	$(NULL)
 
-EXTRA_DIST = $(templates)
+TESTS = $(c_tests)
+EXTRA_DIST = \
+	$(templates) \
+	$(c_tests) \
+	wrapper-compiler-errors \
+	$(NULL)
 
 -include $(top_srcdir)/git.mk
