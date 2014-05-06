@@ -12,6 +12,7 @@ TESTS = \
 	gvariant-iter.c \
 	gvariant-lookup.c \
 	gvariant-new.c \
+	nonnull.c \
 	$(NULL)
 
 -include $(top_srcdir)/git.mk

@@ -56,6 +56,7 @@ _arg_is_nonnull (GIArgInfo arg, GITypeInfo type_info)
 	return ((g_type_info_is_pointer (&type_info) ||
 	         g_arg_info_get_direction (&arg) == GI_DIRECTION_OUT) &&
 	        !g_arg_info_may_be_null (&arg) &&
+	        !g_arg_info_is_optional (&arg) &&
 	        !(g_type_info_get_tag (&type_info) == GI_TYPE_TAG_ARRAY &&
 	          g_type_info_get_array_type (&type_info) == GI_ARRAY_TYPE_C));
 }
@@ -194,8 +195,10 @@ GirAttributesConsumer::_handle_function_decl (FunctionDecl& func)
 			       "\tTransfer: " << transfer << "\n"
 			       "\tDirection: " <<
 			       g_arg_info_get_direction (&arg) << "\n"
-			       "\tAllow-none: " <<
+			       "\tNullable: " <<
 			       g_arg_info_may_be_null (&arg) << "\n"
+			       "\tOptional: " <<
+			       g_arg_info_is_optional (&arg) << "\n"
 			       "\tIs pointer: " <<
 			       g_type_info_is_pointer (&type_info) << "\n"
 			       "\tType tag: " <<

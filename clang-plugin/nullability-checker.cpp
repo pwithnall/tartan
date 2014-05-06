@@ -186,7 +186,8 @@ NullabilityVisitor::TraverseFunctionDecl (FunctionDecl* func)
 			(nonnull_attr == NULL) ? MAYBE :
 			(nonnull_attr->isNonNull (idx)) ?
 				EXPLICIT_NONNULL: EXPLICIT_NULLABLE;
-		bool has_allow_none = g_arg_info_may_be_null (&arg);
+		bool has_allow_none = (g_arg_info_may_be_null (&arg) ||
+		                       g_arg_info_is_optional (&arg));
 		bool has_assertion = (asserted_parms.count (parm_decl) > 0);
 
 		/* Analysis:
