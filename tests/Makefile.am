@@ -6,6 +6,8 @@ TEST_EXTENSIONS = .c
 C_LOG_COMPILER = ./wrapper-compiler-errors
 
 TESTS = \
+	assertion-extraction.c \
+	assertion-extraction-return.c \
 	gvariant-builder.c \
 	gvariant-get.c \
 	gvariant-get-child.c \
@@ -16,6 +18,10 @@ TESTS = \
 	$(NULL)
 
 templates = \
+	assertion.head.c \
+	assertion.tail.c \
+	assertion-return.head.c \
+	assertion-return.tail.c \
 	generic.head.c \
 	generic.tail.c \
 	gvariant.head.c \
