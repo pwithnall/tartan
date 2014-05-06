@@ -2,6 +2,12 @@ Overview of changes from gnome-clang 0.1.0 to gnome-clang 0.2.0
 ===============================================================
 
 Major changes:
+ • Check (transfer none) against const parameters and return values
+ • Improve configure checks (including downgrading LLVM dependency to 3.4)
+ • Remove GNOME_CLANG_GIRS (now unnecessary)
+ • Add GVariant format string checking against varargs
+ • Add unit tests
+ • Support running gnome-clang uninstalled
 
 
 Initial release of gnome-clang 0.1.0
