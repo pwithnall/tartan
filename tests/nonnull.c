@@ -1,3 +1,5 @@
+/* Template: generic */
+
 /*
  * No error
  */

@@ -15,4 +15,13 @@ TESTS = \
 	nonnull.c \
 	$(NULL)
 
+templates = \
+	generic.head.c \
+	generic.tail.c \
+	gvariant.head.c \
+	gvariant.tail.c \
+	$(NULL)
+
+EXTRA_DIST = $(templates)
+
 -include $(top_srcdir)/git.mk

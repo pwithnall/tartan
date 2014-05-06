@@ -1,3 +1,5 @@
+/* Template: gvariant */
+
 /*
  * No error
  */

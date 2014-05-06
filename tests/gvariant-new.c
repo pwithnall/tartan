@@ -1,3 +1,5 @@
+/* Template: gvariant */
+
 /*
  * Expected a GVariant variadic argument of type ‘char *’ but saw one of type ‘guint’.
  *         floating_variant = g_variant_new ("(sss)", "hello", my_string, a_little_int_short_and_stout);
