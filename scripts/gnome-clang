@@ -4,7 +4,8 @@ clang_bin_dir=`dirname "$0"`
 clang_prefix="$clang_bin_dir/.."
 
 # Try and find the real Clang executable. $GNOME_CLANG_CC trumps everything.
-# Otherwise assume clang is in the same directory as this script.
+# Otherwise assume clang is in the same directory as this script if they’re both
+# installed. Failing that, use a hard-coded Clang path.
 if [ "x$GNOME_CLANG_CC" != "x" ]; then
 	real_clang="$GNOME_CLANG_CC"
 elif [ -f "$clang_prefix/bin/clang" ]; then
@@ -25,9 +26,14 @@ clang_version=`"$real_clang" --version | head -n1 | cut -f3 -d ' '`
 # Try and find the gnome-clang plugin. $GNOME_CLANG_PLUGIN trumps everything.
 if [ "x$GNOME_CLANG_PLUGIN" != "x" ]; then
 	plugin_path="$GNOME_CLANG_PLUGIN"
+elif [ -f "$clang_bin_dir/clang-plugin/.libs/libclang-gnome.so" ]; then
+	# Uninstalled, from the source directory.
+	plugin_path="$clang_bin_dir/clang-plugin/.libs/libclang-gnome.so"
 elif [ -f "$clang_prefix/lib64/gnome-clang/$clang_version/libclang-gnome.so" ]; then
+	# 64-bit installed.
 	plugin_path="$clang_prefix/lib64/gnome-clang/$clang_version/libclang-gnome.so"
 elif [ -f "$clang_prefix/lib/gnome-clang/$clang_version/libclang-gnome.so" ]; then
+	# 32-bit installed.
 	plugin_path="$clang_prefix/lib/gnome-clang/$clang_version/libclang-gnome.so"
 else
 	echo "Error: Could not find libclang-gnome.so. Set GNOME_CLANG_PLUGIN to the absolute path of the gnome-clang plugin." >& 2

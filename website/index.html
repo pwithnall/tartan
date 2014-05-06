@@ -111,8 +111,20 @@ not enable GLib-specific warnings.</p>
 
 <h3 id="usage-standalone">Standalone usage</h3>
 
-<p>The easiest way to use gnome-clang with the Clang static analyser directly is
-to use the <span class="program-name">gnome-clang</span> wrapper script,
+<p>The easiest way to use gnome-clang standalone is with the
+<span class="program-name">scan-build</span> script which comes with Clang.
+e.g.:<br/>
+<span class="command">scan-build --use-analyzer=/path/to/bin/gnome-clang -v ./autogen.sh</span><br/>
+where <span class="command">./autogen.sh</span> is the command to configure or
+build your project (though if a project is configured under
+<span class="program-name">scan-build</span>, you only need to run
+<span class="command">make</span> normally to perform the static analysis.</p>
+
+<p>The <span class="program-name">gnome-clang</span> script can be used
+installed or uninstalled, straight from the source directory.</p>
+
+<p>To use gnome-clang with the Clang static analyser directly, use the
+<span class="program-name">gnome-clang</span> wrapper script by itself,
 e.g.:<br/>
 <span class="command">clang -cc1 -analyze -std=c89 $system_includes my-project/*.c</span><br/>
 becomes:<br/>
