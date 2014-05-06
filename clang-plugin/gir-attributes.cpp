@@ -20,6 +20,8 @@
  *     Philip Withnall <philip.withnall@collabora.co.uk>
  */
 
+#include <cstring>
+
 #include <girepository.h>
 #include <gitypes.h>
 
@@ -121,6 +123,33 @@ _constify_function_return_type (FunctionDecl& func)
 		       t.getAsString ());
 		func_decl->setType (t);
 	}
+}
+
+/* Determine whether the given function should be excluded from having extra
+ * nonnull attributes added due to being GLib-internal. Such functions are
+ * exported as symbols from libglib-2.0.so, but are deliberately not in the GIR
+ * file — and hence we can’t pick up annotations on them. */
+static bool
+_ignore_glib_internal_func (const std::string func_name)
+{
+	static const char *internal_funcs[] = {
+		"g_assertion_message",
+		"g_assertion_message_cmpnum",
+		"g_assertion_message_cmpstr",
+		"g_assertion_message_error",
+		"g_assertion_message_expr",
+		"g_test_trap_assertions",
+		"g_return_if_fail_warning",
+		"g_warn_message",
+	};
+
+	for (unsigned int i = 0; i < G_N_ELEMENTS (internal_funcs); i++) {
+		if (strcmp (func_name.c_str (), internal_funcs[i]) == 0) {
+			return true;
+		}
+	}
+
+	return false;
 }
 
 void
@@ -225,7 +254,8 @@ GirAttributesConsumer::_handle_function_decl (FunctionDecl& func)
 			}
 		}
 
-		if (non_null_args.size () > 0) {
+		if (non_null_args.size () > 0 &&
+		    !_ignore_glib_internal_func (func_name)) {
 			nonnull_attr = ::new (func.getASTContext ())
 				NonNullAttr (func.getSourceRange (),
 				             func.getASTContext (),
