@@ -303,7 +303,8 @@ _consume_variadic_argument (QualType expected_type,
 	bool is_null_constant = arg->isNullPointerConstant (context,
 	                                                    Expr::NPC_ValueDependentIsNull);
 
-	if (is_null_constant && !(flags & CHECK_FLAG_ALLOW_MAYBE)) {
+	if (is_null_constant && !(flags & CHECK_FLAG_ALLOW_MAYBE) &&
+	    expected_type->isPointerType ()) {
 		gchar *error;
 
 		error = g_strdup_printf (

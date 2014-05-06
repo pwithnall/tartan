@@ -177,6 +177,14 @@
 }
 
 /*
+ * No error
+ */
+{
+	// This could be interpreted as a NULL pointer constant.
+	floating_variant = g_variant_new ("u", 0);
+}
+
+/*
  *  Expected a GVariant variadic argument of type ‘long’ but saw one of type ‘char *’.
  *         floating_variant = g_variant_new ("x", "nope");
  *                                                ^
