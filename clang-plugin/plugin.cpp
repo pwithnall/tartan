@@ -99,8 +99,8 @@ private:
 		                      G_IREPOSITORY_ERROR_NAMESPACE_VERSION_CONFLICT)) {
 			DiagnosticsEngine &d = CI.getDiagnostics ();
 			unsigned int id = d.getCustomDiagID (
-				DiagnosticsEngine::Error,
-				"Error loading GI repository ‘" + gi_namespace +
+				DiagnosticsEngine::Warning,
+				"Fail to load GI repository ‘" + gi_namespace +
 				"’ (version " + gi_version + "): " +
 				error->message);
 			d.Report (id);
