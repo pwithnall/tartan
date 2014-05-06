@@ -22,9 +22,14 @@
 
 input_filename=$1
 temp_dir=`mktemp -d`
+tests_dir=`dirname $0`
+gnome_clang=${tests_dir}/../scripts/gnome-clang
+gnome_clang_plugin=${tests_dir}/../clang-plugin/.libs/libclang-gnome.so
 
 echo "Reading input from ${input_filename}."
 echo "Using temporary directory ${temp_dir}."
+echo "Using gnome-clang from ${gnome_clang}."
+echo "Using plugin from ${gnome_clang_plugin}."
 
 test_status=0
 
@@ -82,8 +87,9 @@ while [[ -f `printf "${temp_dir}/${input_filename}_%02d.c" ${num}` ]]; do
 	fi
 
 	# Run the compiler.
-	# TODO: Get rid of the hard-coding.
-	gnome-clang -cc1 -analyze -std=c89 -Wno-visibility \
+	GNOME_CLANG_PLUGIN=$gnome_clang_plugin \
+	$gnome_clang \
+		-cc1 -analyze -std=c89 -Wno-visibility \
 		`pkg-config --cflags glib-2.0` \
 		$system_includes \
 		$section_filename > $actual_error_filename 2>&1
