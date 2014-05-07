@@ -243,7 +243,7 @@ NullabilityVisitor::TraverseFunctionDecl (FunctionDecl* func)
 					"’ parameter of function " +
 					func->getNameAsString () + "() "
 					"(already has a nonnull attribute or "
-					"no (allow-none) annotation).",
+					"no non-NULL precondition assertion).",
 					this->_compiler,
 					parm_decl->getLocStart ());
 				break;
