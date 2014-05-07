@@ -23,6 +23,9 @@
 #ifndef TARTAN_GIR_MANAGER_H
 #define TARTAN_GIR_MANAGER_H
 
+#include <string>
+#include <vector>
+
 #include <girepository.h>
 
 class GirManager {
