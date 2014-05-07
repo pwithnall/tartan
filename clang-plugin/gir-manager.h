@@ -34,6 +34,7 @@ private:
 		/* All non-NULL. */
 		std::string nspace;
 		std::string version;
+		std::string c_prefix_lower;
 		std::string c_prefix;
 
 		GITypelib* typelib;  /* unowned */
@@ -50,6 +51,8 @@ public:
 	                     GError** error);
 
 	GIBaseInfo* find_function_info (const std::string& func_name) const;
+	GIBaseInfo* find_object_info (const std::string& type_name) const;
+	std::string get_c_name_for_type (GIBaseInfo *base_info) const;
 };
 
 #endif /* !TARTAN_GIR_MANAGER_H */

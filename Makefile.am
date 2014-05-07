@@ -24,6 +24,8 @@ clang_plugin_libtartan_la_SOURCES = \
 	clang-plugin/gir-manager.h \
 	clang-plugin/gassert-attributes.cpp \
 	clang-plugin/gassert-attributes.h \
+	clang-plugin/gsignal-checker.cpp \
+	clang-plugin/gsignal-checker.h \
 	clang-plugin/gvariant-checker.cpp \
 	clang-plugin/gvariant-checker.h \
 	clang-plugin/nullability-checker.cpp \

@@ -30,6 +30,7 @@
 #include "debug.h"
 #include "gir-attributes.h"
 #include "gassert-attributes.h"
+#include "gsignal-checker.h"
 #include "gvariant-checker.h"
 #include "nullability-checker.h"
 
@@ -62,6 +63,8 @@ protected:
 			                         this->_gir_manager));
 		consumers.push_back (
 			new GVariantConsumer (compiler));
+		consumers.push_back (
+			new GSignalConsumer (compiler, this->_gir_manager));
 		consumers.push_back (
 			new GirAttributesChecker (compiler,
 			                          this->_gir_manager));

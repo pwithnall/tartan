@@ -8,6 +8,7 @@ C_LOG_COMPILER = $(top_srcdir)/tests/wrapper-compiler-errors
 c_tests = \
 	assertion-extraction.c \
 	assertion-extraction-return.c \
+	gsignal-connect.c \
 	gvariant-builder.c \
 	gvariant-get.c \
 	gvariant-get-child.c \
@@ -24,6 +25,8 @@ templates = \
 	assertion-return.tail.c \
 	generic.head.c \
 	generic.tail.c \
+	gsignal.head.c \
+	gsignal.tail.c \
 	gvariant.head.c \
 	gvariant.tail.c \
 	$(NULL)

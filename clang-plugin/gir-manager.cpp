@@ -57,10 +57,11 @@ GirManager::load_namespace (const std::string& gi_namespace,
 	r.nspace = gi_namespace;
 	r.version = gi_version;
 	r.c_prefix = std::string (c_prefix);
+	r.c_prefix_lower = std::string (c_prefix);
 	r.typelib = typelib;
 
-	std::transform (r.c_prefix.begin (), r.c_prefix.end (),
-	                r.c_prefix.begin (), ::tolower);
+	std::transform (r.c_prefix_lower.begin (), r.c_prefix_lower.end (),
+	                r.c_prefix_lower.begin (), ::tolower);
 
 	this->_typelibs.push_back (r);
 }
@@ -80,10 +81,10 @@ GirManager::find_function_info (const std::string& func_name) const
 
 		/* The func_name includes the namespace, which needs stripping.
 		 * e.g. g_irepository_find_by_name → find_by_name. */
-		if (func_name.compare (0, r.c_prefix.size (),
-		                       r.c_prefix) == 0) {
+		if (func_name.compare (0, r.c_prefix_lower.size (),
+		                       r.c_prefix_lower) == 0) {
 			size_t prefix_len =
-				r.c_prefix.size () + 1 /* underscore */;
+				r.c_prefix_lower.size () + 1 /* underscore */;
 			func_name_stripped = func_name.substr (prefix_len);
 		} else {
 			continue;
@@ -114,4 +115,65 @@ GirManager::find_function_info (const std::string& func_name) const
 	}
 
 	return info;
+}
+
+/* Try to find typelib information about the type.
+ * Note: This returns a reference which needs freeing using
+ * g_base_info_unref(). The GIBaseInfo* is guaranteed to be a valid
+ * GIObjectInfo*. */
+GIBaseInfo*
+GirManager::find_object_info (const std::string& type_name) const
+{
+	GIBaseInfo *info = NULL;
+	std::string type_name_stripped;
+
+	for (std::vector<Nspace>::const_iterator it = this->_typelibs.begin (),
+	     ie = this->_typelibs.end (); it != ie; ++it) {
+		const Nspace r = *it;
+
+		type_name_stripped = std::string (type_name);
+
+		/* The type_name includes the namespace, which needs stripping.
+		 * e.g. GObject → Object. */
+		if (type_name_stripped.compare (0, r.c_prefix.size (),
+		                                r.c_prefix) == 0) {
+			size_t prefix_len = r.c_prefix.size ();
+			type_name_stripped = type_name.substr (prefix_len);
+		} else {
+			continue;
+		}
+
+		info = g_irepository_find_by_name (this->_repo,
+		                                   r.nspace.c_str (),
+		                                   type_name_stripped.c_str ());
+
+		if (info != NULL) {
+			/* Successfully found an entry in the typelib. */
+			break;
+		}
+	}
+
+	/* Check it is actually a GObject. */
+	if (info != NULL &&
+	    g_base_info_get_type (info) != GI_INFO_TYPE_OBJECT) {
+		DEBUG ("Ignoring type " << type_name << " as its GI info "
+		       "indicates it’s not a GObject.");
+
+		g_base_info_unref (info);
+		info = NULL;
+	}
+
+	return info;
+}
+
+/* Return the full C name of a type. For example, this is ‘GObject’ for a
+ * GObject. The prefix in this case is ‘G’ and the symbol name is ‘Object’. */
+std::string
+GirManager::get_c_name_for_type (GIBaseInfo *base_info) const
+{
+	std::string prefix (g_irepository_get_c_prefix (this->_repo,
+	                                                g_base_info_get_namespace (base_info)));
+	std::string symbol_name (g_base_info_get_name (base_info));
+
+	return prefix + symbol_name;
 }
