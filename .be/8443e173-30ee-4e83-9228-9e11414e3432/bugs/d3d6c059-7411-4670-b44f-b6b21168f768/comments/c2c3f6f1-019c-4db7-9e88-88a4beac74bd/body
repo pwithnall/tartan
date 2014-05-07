@@ -1,0 +1,3 @@
+Integrate gnome-clang into gnome-code-assistance and gedit-code-assistance so that the new warnings appear in gedit. This looks like it currently isn’t possible due to libclang not having a way of loading Clang plugins. I’ve filed a bug upstream about adding support for this:
+
+http://llvm.org/bugs/show_bug.cgi?id=19672
