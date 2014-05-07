@@ -1,0 +1,13 @@
+Check that the type of the closure passed to a function matches the type of the closure used in the callback function.
+
+e.g. Check that in this code:
+g_timeout_add (1, (GSourceFunc) my_callback, (X *) user_data);
+
+static gboolean
+my_callback (gpointer user_data)
+{
+	Y *data = user_data;
+	/* … */
+}
+
+X is compatible with Y.

@@ -1,0 +1,1 @@
+Check that the function pointers passed to g_signal_connect() and friends match the type of the named signal.
