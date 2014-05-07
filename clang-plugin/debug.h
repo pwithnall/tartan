@@ -29,7 +29,7 @@
 using namespace clang;
 
 namespace Debug {
-#ifdef GNOME_ENABLE_DEBUG
+#ifdef ENABLE_DEBUG
 #define DEBUG(M) llvm::errs () << M << "\n"
 #define DEBUG_EXPR(M, E) llvm::errs () << M; \
 	(E).printPretty (llvm::errs (), NULL, context.getPrintingPolicy ()); \
