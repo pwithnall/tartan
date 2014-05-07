@@ -9,10 +9,10 @@ EXTRA_DIST =
 GITIGNOREFILES =
 
 # clang-plugin library
-clangdir = $(libdir)/gnome-clang/$(LLVM_VERSION)/
-clang_LTLIBRARIES = clang-plugin/libclang-gnome.la
+clangdir = $(libdir)/tartan/$(LLVM_VERSION)/
+clang_LTLIBRARIES = clang-plugin/libtartan.la
 
-clang_plugin_libclang_gnome_la_SOURCES = \
+clang_plugin_libtartan_la_SOURCES = \
 	clang-plugin/assertion-extracter.cpp \
 	clang-plugin/assertion-extracter.h \
 	clang-plugin/debug.cpp \
@@ -30,28 +30,28 @@ clang_plugin_libclang_gnome_la_SOURCES = \
 	clang-plugin/nullability-checker.h \
 	$(NULL)
 
-clang_plugin_libclang_gnome_la_CPPFLAGS = \
+clang_plugin_libtartan_la_CPPFLAGS = \
 	$(AM_CPPFLAGS) \
 	-I$(top_srcdir) \
 	$(DISABLE_DEPRECATED) \
 	$(LLVM_CPPFLAGS) \
 	$(NULL)
 
-clang_plugin_libclang_gnome_la_CXXFLAGS = \
+clang_plugin_libtartan_la_CXXFLAGS = \
 	$(AM_CXXFLAGS) \
 	-std=c++0x -pedantic \
-	$(GNOME_CLANG_CFLAGS) \
+	$(TARTAN_CFLAGS) \
 	$(LLVM_CXXFLAGS) \
 	$(WARN_CXXFLAGS) \
 	$(NULL)
 
-clang_plugin_libclang_gnome_la_LIBADD = \
+clang_plugin_libtartan_la_LIBADD = \
 	$(AM_LIBADD) \
-	$(GNOME_CLANG_LIBS) \
+	$(TARTAN_LIBS) \
 	$(LLVM_LIBS) \
 	$(NULL)
 
-clang_plugin_libclang_gnome_la_LDFLAGS = \
+clang_plugin_libtartan_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
 	$(LLVM_LDFLAGS) \
 	-avoid-version \
@@ -60,13 +60,13 @@ clang_plugin_libclang_gnome_la_LDFLAGS = \
 	$(NULL)
 
 # Clang wrapper script
-dist_bin_SCRIPTS = scripts/gnome-clang
+dist_bin_SCRIPTS = scripts/tartan
 
 # Cleaning
 EXTRA_DIST += \
 	autogen.sh \
 	HACKING \
-	gnome-clang.doap \
+	tartan.doap \
 	$(NULL)
 
 CLEANFILES += \

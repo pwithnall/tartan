@@ -16,20 +16,20 @@
 # The wrapper script takes each section and wraps the code in a main() function
 # with some standard variables and reference count handling provided by the
 # named template. It then compiles
-# the code using Clang with gnome-clang, and checks the compiler output against
+# the code using Clang with Tartan, and checks the compiler output against
 # the expected error message. If the expected error message is ‘No error’ it
 # asserts there’s no error.
 
 input_filename=$1
 temp_dir=`mktemp -d`
 tests_dir=`dirname $0`
-gnome_clang=${tests_dir}/../scripts/gnome-clang
-gnome_clang_plugin=${tests_dir}/../clang-plugin/.libs/libclang-gnome.so
+tartan=${tests_dir}/../scripts/tartan
+tartan_plugin=${tests_dir}/../clang-plugin/.libs/libtartan.so
 
 echo "Reading input from ${input_filename}."
 echo "Using temporary directory ${temp_dir}."
-echo "Using gnome-clang from ${gnome_clang}."
-echo "Using plugin from ${gnome_clang_plugin}."
+echo "Using Tartan from ${tartan}."
+echo "Using plugin from ${tartan_plugin}."
 
 test_status=0
 
@@ -87,8 +87,8 @@ while [[ -f `printf "${temp_dir}/${input_filename}_%02d.c" ${num}` ]]; do
 	fi
 
 	# Run the compiler.
-	GNOME_CLANG_PLUGIN=$gnome_clang_plugin \
-	$gnome_clang \
+	TARTAN_PLUGIN=$tartan_plugin \
+	$tartan \
 		-cc1 -analyze -std=c89 -Wno-visibility \
 		`pkg-config --cflags glib-2.0` \
 		$system_includes \

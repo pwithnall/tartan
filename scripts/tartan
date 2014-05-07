@@ -1,0 +1,76 @@
+#!/bin/sh
+
+clang_bin_dir=`dirname "$0"`
+clang_prefix="$clang_bin_dir/.."
+
+# Try and find the real Clang executable. $TARTAN_CC trumps everything.
+# Otherwise assume clang is in the same directory as this script if they’re both
+# installed. Failing that, use a hard-coded Clang path.
+if [ "x$TARTAN_CC" != "x" ]; then
+	real_clang="$TARTAN_CC"
+elif [ "x$GNOME_CLANG_CC" != "x" ]; then
+	# Fallback from before project rename
+	real_clang="$GNOME_CLANG_CC"
+elif [ -f "$clang_prefix/bin/clang" ]; then
+	real_clang="$clang_prefix/bin/clang"
+elif [ -f `which clang` ]; then
+	real_clang=`which clang`
+else
+	echo "Error: Could not find clang executable. Set TARTAN_CC to the absolute path of the real clang executable." >& 2
+fi
+
+# Extract the clang version.
+# clang --version returns something like:
+#     clang version 3.3 (tags/RELEASE_33/rc3)
+#     Target: x86_64-redhat-linux-gnu
+#     Thread model: posix
+clang_version=`"$real_clang" --version | head -n1 | cut -f3 -d ' '`
+
+# Try and find the Tartan plugin. $TARTAN_PLUGIN trumps everything.
+if [ "x$TARTAN_PLUGIN" != "x" ]; then
+	plugin_path="$TARTAN_PLUGIN"
+elif [ "x$GNOME_CLANG_PLUGIN" != "x" ]; then
+	# Fallback from before project rename
+	plugin_path="$GNOME_CLANG_PLUGIN"
+elif [ -f "$clang_bin_dir/clang-plugin/.libs/libtartan.so" ]; then
+	# Uninstalled, from the source directory.
+	plugin_path="$clang_bin_dir/clang-plugin/.libs/libtartan.so"
+elif [ -f "$clang_prefix/lib64/tartan/$clang_version/libtartan.so" ]; then
+	# 64-bit installed.
+	plugin_path="$clang_prefix/lib64/tartan/$clang_version/libtartan.so"
+elif [ -f "$clang_prefix/lib/tartan/$clang_version/libtartan.so" ]; then
+	# 32-bit installed.
+	plugin_path="$clang_prefix/lib/tartan/$clang_version/libtartan.so"
+else
+	echo "Error: Could not find libtartan.so. Set TARTAN_PLUGIN to the absolute path of the Tartan plugin." >& 2
+fi
+
+plugin_name=tartan
+
+# Process TARTAN_OPTIONS, prefixing everything with -plugin-arg-tartan to
+# ensure Clang passes it to (only) the plugin. Also do GNOME_CLANG_OPTIONS as
+# a fallback from before the project rename.
+plugin_options=()
+for arg in $GNOME_CLANG_OPTIONS; do
+	plugin_options+=( '-plugin-arg-tartan' )
+	plugin_options+=( "$arg" )
+done
+for arg in $TARTAN_OPTIONS; do
+	plugin_options+=( '-plugin-arg-tartan' )
+	plugin_options+=( "$arg" )
+done
+
+# Clang can’t accept -load as the first argument.
+first_arg=$1
+shift
+
+# Exec Clang with the plugin loaded.
+exec "$real_clang" \
+	"$first_arg" \
+	-load "$plugin_path" \
+	-add-plugin "$plugin_name" \
+	${plugin_gir_options[@]} \
+	${plugin_options[@]} \
+	$GNOME_CLANG_CFLAGS \
+	$TARTAN_CFLAGS \
+	"$@"

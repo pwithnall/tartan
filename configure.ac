@@ -1,13 +1,14 @@
 AC_PREREQ(2.65)
 
-# gnome-clang release version
-m4_define(gnome_clang_version_major, 0)
-m4_define(gnome_clang_version_minor, 3)
-m4_define(gnome_clang_version_micro, 0)
+# Tartan release version
+m4_define(tartan_version_major, 0)
+m4_define(tartan_version_minor, 3)
+m4_define(tartan_version_micro, 0)
 
-AC_INIT([gnome-clang],[gnome_clang_version_major.gnome_clang_version_minor.gnome_clang_version_micro],
-        [http://people.collabora.com/~pwith/gnome-clang/],[gnome-clang],
-        [http://people.collabora.com/~pwith/gnome-clang/])
+AC_INIT([Tartan],
+        [tartan_version_major.tartan_version_minor.tartan_version_micro],
+        [http://people.collabora.com/~pwith/tartan/],[tartan],
+        [http://people.collabora.com/~pwith/tartan/])
 
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([build-aux])
@@ -29,19 +30,19 @@ GLIB_REQS=2.38  # TODO
 GIO_REQS=2.38  # TODO
 GIR_REQS=1.38.0  # TODO
 
-# gnome-clang versioning
-AC_SUBST([GNOME_CLANG_VERSION_MAJOR],gnome_clang_version_major)
-AC_SUBST([GNOME_CLANG_VERSION_MINOR],gnome_clang_version_minor)
-AC_SUBST([GNOME_CLANG_VERSION_MICRO],gnome_clang_version_micro)
+# Tartan versioning
+AC_SUBST([TARTAN_VERSION_MAJOR],tartan_version_major)
+AC_SUBST([TARTAN_VERSION_MINOR],tartan_version_minor)
+AC_SUBST([TARTAN_VERSION_MICRO],tartan_version_micro)
 
-# gnome-clang pkg-config dependencies
-GNOME_CLANG_PACKAGES="gobject-2.0 glib-2.0 >= $GLIB_REQS gio-2.0 >= $GIO_REQS \
-                      gobject-introspection-1.0 >= $GIR_REQS"
-AC_SUBST([GNOME_CLANG_PACKAGES])
+# Tartan pkg-config dependencies
+TARTAN_PACKAGES="gobject-2.0 glib-2.0 >= $GLIB_REQS gio-2.0 >= $GIO_REQS \
+                 gobject-introspection-1.0 >= $GIR_REQS"
+AC_SUBST([TARTAN_PACKAGES])
 
-PKG_CHECK_MODULES([GNOME_CLANG],[$GNOME_CLANG_PACKAGES])
+PKG_CHECK_MODULES([TARTAN],[$TARTAN_PACKAGES])
 
-# gnome-clang LLVM dependency
+# Tartan LLVM dependency
 AC_PATH_PROG([LLVM_CONFIG],[llvm-config],"failed")
 AS_IF([test $LLVM_CONFIG = "failed"],[
 	AC_MSG_ERROR([LLVM version $LLVM_REQS or later needed.])

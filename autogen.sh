@@ -4,7 +4,7 @@
 srcdir=`dirname $0`
 test -z "$srcdir" && srcdir=.
 
-PKG_NAME=gnome-clang
+PKG_NAME=tartan
 
 (test -f $srcdir/configure.ac) || {
     echo "**Error**: Directory "\`$srcdir\'" does not look like the top-level $PKG_NAME directory"

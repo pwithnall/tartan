@@ -1,20 +1,20 @@
 /* -*- Mode: C++; indent-tabs-mode: t; c-basic-offset: 8; tab-width: 8 -*- */
 /*
- * gnome-clang
+ * Tartan
  * Copyright © 2013 Collabora Ltd.
  *
- * gnome-clang is free software: you can redistribute it and/or modify
+ * Tartan is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * gnome-clang is distributed in the hope that it will be useful,
+ * Tartan is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with gnome-clang.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Tartan.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authors:
  *     Philip Withnall <philip.withnall@collabora.co.uk>
@@ -40,14 +40,14 @@ namespace {
 /**
  * Plugin core.
  */
-class GnomeAction : public PluginASTAction {
+class TartanAction : public PluginASTAction {
 private:
 	std::shared_ptr<GirManager> _gir_manager =
 		std::make_shared<GirManager> ();
 
 protected:
 	/* Note: This is called before ParseArgs, and must transfer ownership
-	 * of the ASTConsumer. The GnomeAction object is destroyed immediately
+	 * of the ASTConsumer. The TartanAction object is destroyed immediately
 	 * after this function call returns, so must be careful not to retain
 	 * state which is needed by the consumers. */
 	ASTConsumer *
@@ -205,8 +205,8 @@ protected:
 		       "GIR metadata and other GLib coding conventions.\n"
 		       "\n"
 		       "Usage:\n"
-		       "    clang -cc1 -load /path/to/libclang-gnome.so "
-		           "-add-plugin gnome\n";
+		       "    clang -cc1 -load /path/to/libtartan.so "
+		           "-add-plugin tartan\n";
 	}
 
 	bool
@@ -219,7 +219,7 @@ protected:
 
 
 /* Register the plugin with LLVM. */
-static FrontendPluginRegistry::Add<GnomeAction>
-X("gnome", "add attributes and warnings using GNOME-specific metadata");
+static FrontendPluginRegistry::Add<TartanAction>
+X("tartan", "add attributes and warnings using GLib-specific metadata");
 
 } /* namespace */

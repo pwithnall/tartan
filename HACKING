@@ -1,4 +1,4 @@
-Hacking on gnome-clang
+Hacking on Tartan
 ======================
 
 A very basic and incomplete guide.
@@ -7,7 +7,7 @@ A very basic and incomplete guide.
 Plugins
 -------
 
-gnome-clang currently provides a single plugin to be loaded by the Clang static
+Tartan currently provides a single plugin to be loaded by the Clang static
 analyser. In the future, it may provide several plugins, but the number of such
 should be limited to reduce the length of command lines needed for compilation.
 For example, it would be reasonable to have one plugin specific to GLib, one
@@ -17,7 +17,7 @@ to libsoup, one to libgdata, etc.
 Concepts
 --------
 
-The code in gnome-clang can be split up into three types of module.
+The code in Tartan can be split up into three types of module.
 
 Annotaters:
     Annotaters consume metadata (such as GIR annotation data or precondition
@@ -48,7 +48,7 @@ Analysers:
 Measurement
 -----------
 
-Any changes made to the checking or reporting in gnome-clang should be carefully
+Any changes made to the checking or reporting in Tartan should be carefully
 measured by running the modified plugin against a large number of GNOME modules,
 and analysing how the error counts of those modules change. Avoiding false
 positives is highly preferred over avoiding false negatives, on the principle

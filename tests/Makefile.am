@@ -1,6 +1,6 @@
 # Tests are implemented as a series of example C files, each of which should
-# compile successfully without gnome-clang, and which should fail compilation
-# with gnome-clang (and -Werror).
+# compile successfully without Tartan, and which should fail compilation
+# with Tartan (and -Werror).
 
 TEST_EXTENSIONS = .c
 C_LOG_COMPILER = $(top_srcdir)/tests/wrapper-compiler-errors

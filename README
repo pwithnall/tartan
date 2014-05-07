@@ -1,8 +1,8 @@
-gnome-clang
-===========
+Tartan
+======
 
-gnome-clang is a set of tools and plugins for Clang which aim to improve its
-usefulness for developing GNOME applications and libraries.
+Tartan is a set of tools and plugins for Clang which aim to improve its
+usefulness for developing GLib and GNOME applications and libraries.
 
 The first plugin in this set is a static analysis plugin to
 utilise GObject introspection annotations to automatically add attributes to
@@ -22,10 +22,10 @@ Dependencies
 Licensing
 =========
 
-gnome-clang is licensed under the GPL; see COPYING for more details.
+Tartan is licensed under the GPL; see COPYING for more details.
 
 Contact
 =======
 
 Philip Withnall <philip.withnall@collabora.co.uk>
-http://people.collabora.com/~pwith/gnome-clang/
+http://people.collabora.com/~pwith/tartan/
