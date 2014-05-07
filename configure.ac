@@ -96,11 +96,21 @@ AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE],"$GETTEXT_PACKAGE",
                    [The name of the gettext domain])
 IT_PROG_INTLTOOL([0.40.0])
 
-# General GNOME macros
-GNOME_DEBUG_CHECK
+# Debugging
+AC_ARG_ENABLE([debug],
+              AS_HELP_STRING([--enable-debug],
+                             [turn on debugging]),,
+              [enable_debug=no])
+
+AS_IF([test "$enable_debug" = "yes"],[
+	AC_DEFINE([ENABLE_DEBUG],[1],
+	          [Enable additional debugging output])
+])
+
+# Compiler warnings
+m4_include([m4/gnome-compiler-flags.m4])
 GNOME_COMPILE_WARNINGS([maximum])
 GNOME_CXX_WARNINGS([yes])
-GNOME_MAINTAINER_MODE_DEFINES
 
 AC_SUBST([AM_CPPFLAGS])
 AC_SUBST([AM_CFLAGS])

@@ -67,6 +67,7 @@ EXTRA_DIST += \
 	autogen.sh \
 	HACKING \
 	tartan.doap \
+	m4/gnome-compiler-flags.m4 \
 	$(NULL)
 
 CLEANFILES += \
