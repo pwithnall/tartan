@@ -42,7 +42,7 @@ namespace Debug {
 /* For use with internal errors, such as unexpected precondition failures or
  * states reached in the plugin internals. Not for user code warnings. */
 #define WARN(M) llvm::errs () << "Warning: " << M << "\n"
-#define WARN_EXPR(M, E) llvm::errs () << "Warrning: " << M << " in:\n\t"; \
+#define WARN_EXPR(M, E) llvm::errs () << "Warning: " << M << " in:\n\t"; \
 	(E).printPretty (llvm::errs (), NULL, context.getPrintingPolicy ()); \
 	llvm::errs () << "\n"
 
