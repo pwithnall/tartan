@@ -276,7 +276,10 @@ _consume_variadic_argument (QualType expected_type,
 	if ((flags & CHECK_FLAG_DIRECTION_OUT) &&
 	    !(flags & CHECK_FLAG_FORCE_VALIST)) {
 		expected_type = context.getPointerType (expected_type);
-		expected_type_str = expected_type_str + "*";
+		if (expected_type_str.at (expected_type_str.length () - 1) != '*')
+			expected_type_str = expected_type_str + " *";
+		else
+			expected_type_str = expected_type_str + "*";
 	}
 
 	DEBUG ("Consuming variadic argument with expected type ‘" <<
