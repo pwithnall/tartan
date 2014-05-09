@@ -465,21 +465,16 @@ _check_signal_callback_type (const Expr *expr,
 
 		if (value_type->isFunctionNoProtoType ()) {
 			/* Warning. */
-			gchar *error;
 
 			/* TODO: Emit expected type of signal callback? */
-			std::string c_type (gir_manager.get_c_name_for_type (static_gobject_info));
-			error = g_strdup_printf ("Could not check type of "
-			                         "handler for signal "
-			                         "‘%s::%s’. Callback function "
-			                         "declaration does not contain "
-			                         "parameter types.",
-			                         c_type.c_str (),
-			                         g_base_info_get_name (signal_info));
-			Debug::emit_warning (error, compiler, expr->getLocStart ())
+			Debug::emit_warning ("Could not check type of handler "
+			                     "for signal ‘%0::%1’. Callback "
+			                     "function declaration does not "
+			                     "contain parameter types.",
+			                     compiler, expr->getLocStart ())
+			<< gir_manager.get_c_name_for_type (static_gobject_info)
+			<< g_base_info_get_name (signal_info)
 			<< decl_range;
-
-			g_free (error);
 
 			return false;
 		} else if (!value_type->isFunctionProtoType ()) {
@@ -533,20 +528,17 @@ _check_signal_callback_type (const Expr *expr,
 
 	if (n_args != callback_type->getNumArgs ()) {
 		/* Error. */
-		gchar *error;
 
 		/* TODO: Emit expected type of signal callback? */
-		std::string c_type (gir_manager.get_c_name_for_type (static_gobject_info));
-		error = g_strdup_printf ("Incorrect number of arguments in "
-		                         "signal handler for signal "
-		                         "‘%s::%s’. Expected %u but saw %u.",
-		                         c_type.c_str (),
-		                         g_base_info_get_name (signal_info),
-		                         n_args, callback_type->getNumArgs ());
-		Debug::emit_error (error, compiler, expr->getLocStart ())
+		Debug::emit_error ("Incorrect number of arguments in signal "
+		                   "handler for signal ‘%0::%1’. Expected %2 "
+		                   "but saw %3.",
+		                   compiler, expr->getLocStart ())
+		<< gir_manager.get_c_name_for_type (static_gobject_info)
+		<< g_base_info_get_name (signal_info)
+		<< n_args
+		<< callback_type->getNumArgs ()
 		<< decl_range;
-
-		g_free (error);
 
 		return false;
 	}
@@ -578,24 +570,20 @@ _check_signal_callback_type (const Expr *expr,
 
 			if (actual_type_info == NULL) {
 				/* Error. */
-				gchar *error;
 
 				/* TODO: Emit expected type of signal callback? */
-				error = g_strdup_printf ("Failed to resolve "
-				                         "type of argument "
-				                         "‘%s’ in signal "
-				                         "handler for signal "
-				                         "‘%s::%s’. Cannot "
-				                         "find type with name "
-				                         "‘%s’.",
-				                         arg_name, c_type.c_str (),
-				                         g_base_info_get_name (signal_info),
-				                         actual_type_str.c_str ());
-				Debug::emit_warning (error, compiler,
+				Debug::emit_warning ("Failed to resolve type "
+				                     "of argument ‘%0’ in "
+				                     "signal handler for "
+				                     "signal ‘%1::%2’. Cannot "
+				                     "find type with name "
+				                     "‘%3’.", compiler,
 				                     expr->getLocStart ())
+				<< arg_name
+				<< c_type
+				<< g_base_info_get_name (signal_info)
+				<< actual_type_str
 				<< decl_range;
-
-				g_free (error);
 
 				continue;
 			}
@@ -652,25 +640,20 @@ _check_signal_callback_type (const Expr *expr,
 
 			if (expected_type.isNull ()) {
 				/* Error. */
-				gchar *error;
 
 				/* TODO: Emit expected type of signal callback? */
-				std::string c_type (gir_manager.get_c_name_for_type (static_gobject_info));
-				error = g_strdup_printf ("Failed to resolve "
-				                         "type of argument "
-				                         "‘%s’ in signal "
-				                         "handler for signal "
-				                         "‘%s::%s’. Cannot "
-				                         "find type with name "
-				                         "‘%s’.",
-				                         arg_name, c_type.c_str (),
-				                         g_base_info_get_name (signal_info),
-				                         g_base_info_get_name (&expected_type_info));
-				Debug::emit_warning (error, compiler,
+				Debug::emit_warning ("Failed to resolve type "
+				                     "of argument ‘%0’ in "
+				                     "signal handler for "
+				                     "signal ‘%1::%2’. Cannot "
+				                     "find type with name "
+				                     "‘%3’.", compiler,
 				                     expr->getLocStart ())
+				<< arg_name
+				<< gir_manager.get_c_name_for_type (static_gobject_info)
+				<< g_base_info_get_name (signal_info)
+				<< g_base_info_get_name (&expected_type_info)
 				<< decl_range;
-
-				g_free (error);
 
 				continue;
 			}
@@ -690,23 +673,19 @@ _check_signal_callback_type (const Expr *expr,
 		 * so further errors would just be noise. */
 		if (type_error) {
 			/* Error. */
-			gchar *error;
 
 			/* TODO: Emit expected type of signal callback? */
-			std::string c_type (gir_manager.get_c_name_for_type (static_gobject_info));
-			error = g_strdup_printf ("Incorrect type for argument "
-			                         "‘%s’ in signal handler for "
-			                         "signal ‘%s::%s’. Expected "
-			                         "‘%s’ but saw ‘%s’.",
-			                         arg_name, c_type.c_str (),
-			                         g_base_info_get_name (signal_info),
-			                         expected_type.getAsString ().c_str (),
-			                         actual_type.getAsString ().c_str ());
-			Debug::emit_error (error, compiler,
+			Debug::emit_error ("Incorrect type for argument ‘%0’ "
+			                   "in signal handler for signal "
+			                   "‘%1::%2’. Expected ‘%3’ but saw "
+			                   "‘%4’.", compiler,
 			                   expr->getLocStart ())
+			<< arg_name
+			<< gir_manager.get_c_name_for_type (static_gobject_info)
+			<< g_base_info_get_name (signal_info)
+			<< expected_type.getAsString ()
+			<< actual_type.getAsString ()
 			<< decl_range;
-
-			g_free (error);
 
 			return false;
 		}
@@ -719,43 +698,32 @@ _check_signal_callback_type (const Expr *expr,
 	                                    gir_manager);
 	if (expected_type.isNull ()) {
 		/* Error. */
-		gchar *error;
 
 		/* TODO: Emit expected type of signal callback? */
-		std::string c_type (gir_manager.get_c_name_for_type (static_gobject_info));
-		error = g_strdup_printf ("Failed to resolve return type in "
-		                         "signal handler for signal ‘%s::%s’. "
-		                         "Cannot find type with name ‘%s’.",
-		                         c_type.c_str (),
-		                         g_base_info_get_name (signal_info),
-		                         g_base_info_get_name (&expected_type_info));
-		Debug::emit_warning (error, compiler,
+		Debug::emit_warning ("Failed to resolve return type in signal "
+		                     "handler for signal ‘%0::%1’. Cannot find "
+		                     "type with name ‘%2’.", compiler,
 		                     expr->getLocStart ())
+		<< gir_manager.get_c_name_for_type (static_gobject_info)
+		<< g_base_info_get_name (signal_info)
+		<< g_base_info_get_name (&expected_type_info)
 		<< decl_range;
-
-		g_free (error);
 
 		return false;
 	}
 
 	if (!context.hasSameType (actual_type, expected_type)) {
 		/* Error. */
-		gchar *error;
 
 		/* TODO: Emit expected type of signal callback? */
-		std::string c_type (gir_manager.get_c_name_for_type (static_gobject_info));
-		error = g_strdup_printf ("Incorrect return type from "
-		                         "signal handler for signal ‘%s::%s’. "
-		                         "Expected ‘%s’ but saw ‘%s’.",
-		                         c_type.c_str (),
-		                         g_base_info_get_name (signal_info),
-		                         expected_type.getAsString ().c_str (),
-		                         actual_type.getAsString ().c_str ());
-		Debug::emit_error (error, compiler,
-		                   expr->getLocStart ())
+		Debug::emit_error ("Incorrect return type from signal handler "
+		                   "for signal ‘%0::%1’. Expected ‘%2’ but saw "
+		                   "‘%3’.", compiler, expr->getLocStart ())
+		<< gir_manager.get_c_name_for_type (static_gobject_info)
+		<< g_base_info_get_name (signal_info)
+		<< expected_type.getAsString ()
+		<< actual_type.getAsString ()
 		<< decl_range;
-
-		g_free (error);
 
 		return false;
 	}
@@ -825,20 +793,15 @@ _check_gsignal_callback_type (const CallExpr &call,
 	                                              context, gir_manager);
 	if (dynamic_gobject_info == NULL) {
 		/* Warning. */
-		gchar *error;
-
-		error = g_strdup_printf ("Could not find GObject subclass for "
-		                         "expression when connecting to signal "
-		                         "‘%s’. To improve static analysis, "
-		                         "add a typecast to the GObject "
-		                         "parameter of %s().",
-		                         signal_name.c_str (),
-		                         func_info->func_name);
-		Debug::emit_warning (error, compiler, call.getLocStart ())
+		Debug::emit_warning ("Could not find GObject subclass for "
+		                     "expression when connecting to signal "
+		                     "‘%0’. To improve static analysis, add a "
+		                     "typecast to the GObject parameter of "
+		                     "%1().", compiler, call.getLocStart ())
+		<< signal_name
+		<< func_info->func_name
 		<< gobject_arg->getSourceRange ()
 		<< signal_name_arg->getSourceRange ();
-
-		g_free (error);
 
 		return false;
 	}
@@ -857,20 +820,16 @@ _check_gsignal_callback_type (const CallExpr &call,
 	                                       signal_name.c_str ());
 	if (signal_info == NULL) {
 		/* Warning. */
-		gchar *error;
-
-		std::string c_type (gir_manager.get_c_name_for_type (dynamic_gobject_info));
-		error = g_strdup_printf ("No signal named ‘%s’ in GObject "
-		                         "class ‘%s’. To improve static "
-		                         "analysis, add a typecast to the "
-		                         "GObject parameter of %s().",
-		                         signal_name.c_str (), c_type.c_str (),
-		                         func_info->func_name);
-		Debug::emit_warning (error, compiler, call.getLocStart ())
+		Debug::emit_warning ("No signal named ‘%0’ in GObject class "
+		                     "‘%1’. To improve static analysis, add a "
+		                     "typecast to the GObject parameter of "
+		                     "%2().", compiler, call.getLocStart ())
+		<< signal_name
+		<< gir_manager.get_c_name_for_type (dynamic_gobject_info)
+		<< func_info->func_name
 		<< gobject_arg->getSourceRange ()
 		<< signal_name_arg->getSourceRange ();
 
-		g_free (error);
 		g_base_info_unref (dynamic_gobject_info);
 
 		return false;

@@ -421,22 +421,22 @@ GirAttributesChecker::_handle_function_decl (FunctionDecl& func)
 		    return_transfer != GI_TRANSFER_NOTHING) {
 			Debug::emit_error (
 				"Missing (transfer none) annotation on the "
-				"return value of function " +
-				func.getNameAsString () + "() "
-				"(already has a const modifier).",
+				"return value of function %0() (already has a "
+				"const modifier).",
 				this->_compiler,
-				func.getLocStart ());
+				func.getLocStart ())
+			<< func.getNameAsString ();
 		} else if (return_transfer == GI_TRANSFER_NOTHING &&
 		           _type_should_be_const (return_transfer,
 		                                  return_type_tag) &&
 		           !_function_return_type_is_const (func)) {
 			Debug::emit_error (
 				"Missing const modifier on the return value of "
-				"function " +
-				func.getNameAsString () + "() "
-				"(already has a (transfer none) annotation).",
+				"function %0() (already has a (transfer none) "
+				"annotation).",
 				this->_compiler,
-				func.getLocStart ());
+				func.getLocStart ())
+			<< func.getNameAsString ();
 		}
 
 		break;

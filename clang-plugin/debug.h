@@ -47,13 +47,13 @@ namespace Debug {
 	llvm::errs () << "\n"
 
 	DiagnosticBuilder emit_report (DiagnosticsEngine::Level level,
-	                               const std::string& message,
+	                               const char *format_string,
 	                               CompilerInstance& compiler,
 	                               SourceLocation location);
-	DiagnosticBuilder emit_error (const std::string& message,
+	DiagnosticBuilder emit_error (const char *format_string,
 	                              CompilerInstance& compiler,
 	                              SourceLocation location);
-	DiagnosticBuilder emit_warning (const std::string& message,
+	DiagnosticBuilder emit_warning (const char *format_string,
 	                                CompilerInstance& compiler,
 	                                SourceLocation location);
 }

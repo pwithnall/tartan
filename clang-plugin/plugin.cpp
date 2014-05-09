@@ -140,18 +140,14 @@ private:
 			if (error != NULL) {
 				/* Warn about the bogus include path and
 				 * continue. */
-				gchar *error_msg;
 				DiagnosticsEngine &d = CI.getDiagnostics ();
 
-				error_msg = g_strdup_printf (
-					"Error opening typelib path ‘%s’: %s",
-					typelib_path, error->message);
-
 				unsigned int id = d.getCustomDiagID (
-					DiagnosticsEngine::Warning, error_msg);
-				d.Report (id);
-
-				g_free (error_msg);
+					DiagnosticsEngine::Warning,
+					"Error opening typelib path ‘%0’: %1");
+				d.Report (id)
+					<< typelib_path
+					<< error->message;
 
 				continue;
 			}

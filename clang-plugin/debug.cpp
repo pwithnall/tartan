@@ -29,7 +29,7 @@ using namespace clang;
 
 /* Build and emit a warning or error report about the user’s code. */
 DiagnosticBuilder
-Debug::emit_report (DiagnosticsEngine::Level level, const std::string& message,
+Debug::emit_report (DiagnosticsEngine::Level level, const char *format_string,
                     CompilerInstance& compiler, SourceLocation location)
 {
 	DiagnosticsEngine& engine = compiler.getDiagnostics ();
@@ -43,31 +43,33 @@ Debug::emit_report (DiagnosticsEngine::Level level, const std::string& message,
 	    engine.getErrorsAsFatal ())
 		level = DiagnosticsEngine::Fatal;
 
-	const std::string prefixed_message = "[tartan]: " + message;
+	/* Add a prefix. */
+	std::string prefixed_format_string =
+		"[tartan]: " + std::string (format_string);
+
+	unsigned diag_id = engine.getCustomDiagID (level,
+	                                           prefixed_format_string);
 
 	if (!location.isValid ()) {
-		return engine.Report (engine.getCustomDiagID (level,
-		                                              prefixed_message));
+		return engine.Report (diag_id);
 	}
 
-	return engine.Report (location,
-	                      engine.getCustomDiagID (level,
-	                                              prefixed_message));
+	return engine.Report (location, diag_id);
 }
 
 /* Convenience wrappers. */
 DiagnosticBuilder
-Debug::emit_error (const std::string& message, CompilerInstance& compiler,
+Debug::emit_error (const char *format_string, CompilerInstance& compiler,
                    SourceLocation location)
 {
-	return Debug::emit_report (DiagnosticsEngine::Error, message,
+	return Debug::emit_report (DiagnosticsEngine::Error, format_string,
 	                           compiler, location);
 }
 
 DiagnosticBuilder
-Debug::emit_warning (const std::string& message, CompilerInstance& compiler,
+Debug::emit_warning (const char *format_string, CompilerInstance& compiler,
                      SourceLocation location)
 {
-	return Debug::emit_report (DiagnosticsEngine::Warning, message,
+	return Debug::emit_report (DiagnosticsEngine::Warning, format_string,
 	                           compiler, location);
 }

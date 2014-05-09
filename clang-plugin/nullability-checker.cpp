@@ -218,80 +218,77 @@ NullabilityVisitor::TraverseFunctionDecl (FunctionDecl* func)
 		if (has_nonnull == EXPLICIT_NONNULL && has_allow_none) {
 			Debug::emit_error (
 				"Conflict between nonnull attribute and "
-				"(allow-none) annotation on the ‘" +
-				parm_decl->getNameAsString () +
-				"’ parameter of function " +
-				func->getNameAsString () + "().",
+				"(allow-none) annotation on the ‘%0’ parameter "
+				"of function %1().",
 				this->_compiler,
-				parm_decl->getLocStart ());
+				parm_decl->getLocStart ())
+			<< parm_decl->getNameAsString ()
+			<< func->getNameAsString ();
 		} else if (has_allow_none && has_assertion) {
 			Debug::emit_error (
 				"Conflict between (allow-none) annotation and "
-				"non-NULL precondition assertion on the ‘" +
-				parm_decl->getNameAsString () +
-				"’ parameter of function " +
-				func->getNameAsString () + "().",
+				"non-NULL precondition assertion on the ‘%0’ "
+				"parameter of function %1().",
 				this->_compiler,
-				parm_decl->getLocStart ());
+				parm_decl->getLocStart ())
+			<< parm_decl->getNameAsString ()
+			<< func->getNameAsString ();
 		} else if (!has_allow_none && !has_assertion) {
 			switch (has_nonnull) {
 			case EXPLICIT_NULLABLE:
 				Debug::emit_warning (
 					"Missing (allow-none) annotation on "
-					"the ‘" +
-					parm_decl->getNameAsString () +
-					"’ parameter of function " +
-					func->getNameAsString () + "() "
+					"the ‘%0’ parameter of function %1() "
 					"(already has a nonnull attribute or "
 					"no non-NULL precondition assertion).",
 					this->_compiler,
-					parm_decl->getLocStart ());
+					parm_decl->getLocStart ())
+				<< parm_decl->getNameAsString ()
+				<< func->getNameAsString ();
 				break;
 			case MAYBE:
 				Debug::emit_warning (
 					"Missing (allow-none) annotation or "
 					"non-NULL precondition assertion on "
-					"the ‘" +
-					parm_decl->getNameAsString () +
-					"’ parameter of function " +
-					func->getNameAsString () + "().",
+					"the ‘%0’ parameter of function %1().",
 					this->_compiler,
-					parm_decl->getLocStart ());
+					parm_decl->getLocStart ())
+				<< parm_decl->getNameAsString ()
+				<< func->getNameAsString ();
 				break;
 			case EXPLICIT_NONNULL:
 				Debug::emit_warning (
 					"Missing non-NULL precondition "
-					"assertion on the ‘" +
-					parm_decl->getNameAsString () +
-					"’ parameter of function " +
-					func->getNameAsString () + "() "
-					"(already has a nonnull attribute or "
-					"no (allow-none) annotation).",
+					"assertion on the ‘%0’ parameter of "
+					"function %1() (already has a nonnull "
+					"attribute or no (allow-none) "
+					"annotation).",
 					this->_compiler,
-					parm_decl->getLocStart ());
+					parm_decl->getLocStart ())
+				<< parm_decl->getNameAsString ()
+				<< func->getNameAsString ();
 				break;
 			}
 		} else if (has_nonnull == EXPLICIT_NULLABLE && has_assertion) {
 			Debug::emit_warning (
 				"Conflict between nonnull attribute and "
-				"non-NULL precondition annotation on the ‘" +
-				parm_decl->getNameAsString () +
-				"’ parameter of function " +
-				func->getNameAsString () + "().",
+				"non-NULL precondition annotation on the ‘%0’ "
+				"parameter of function %1().",
 				this->_compiler,
-				parm_decl->getLocStart ());
+				parm_decl->getLocStart ())
+			<< parm_decl->getNameAsString ()
+			<< func->getNameAsString ();
 		} else if (has_nonnull == MAYBE && has_assertion) {
 			/* TODO: Make this a soft warning (disabled by default)
 			 * if it comes up with too many false positives. */
 			Debug::emit_warning (
-				"Missing nonnull attribute for the ‘" +
-				parm_decl->getNameAsString () +
-				"’ parameter of function " +
-				func->getNameAsString () + "() "
-				"(already has a non-NULL precondition "
-				"assertion).",
+				"Missing nonnull attribute for the ‘%0’ "
+				"parameter of function %1() (already has a "
+				"non-NULL precondition assertion).",
 				this->_compiler,
-				parm_decl->getLocStart ());
+				parm_decl->getLocStart ())
+			<< parm_decl->getNameAsString ()
+			<< func->getNameAsString ();
 		}
 	}
 

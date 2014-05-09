@@ -286,15 +286,10 @@ _consume_variadic_argument (QualType expected_type,
 	       expected_type.getAsString () << "’.");
 
 	if (*args_begin == *args_end) {
-		gchar *error;
-
-		error = g_strdup_printf (
-			"Expected a GVariant variadic argument of type ‘%s’ "
-			"but there wasn’t one.",
-			expected_type_str.c_str ());
-		Debug::emit_error (error, compiler,
-		                   format_arg_str->getLocStart ());
-		g_free (error);
+		Debug::emit_error ("Expected a GVariant variadic argument of "
+		                   "type ‘%0’ but there wasn’t one.", compiler,
+		                   format_arg_str->getLocStart ())
+		<< expected_type_str;
 
 		return false;
 	}
@@ -320,15 +315,10 @@ _consume_variadic_argument (QualType expected_type,
 
 	if (is_null_constant && !(flags & CHECK_FLAG_ALLOW_MAYBE) &&
 	    expected_type->isPointerType ()) {
-		gchar *error;
-
-		error = g_strdup_printf (
-			"Expected a GVariant variadic argument of type ‘%s’ "
-			"but saw NULL instead.",
-			expected_type_str.c_str ());
-		Debug::emit_error (error, compiler,
-		                   arg->getLocStart ());
-		g_free (error);
+		Debug::emit_error ("Expected a GVariant variadic argument of "
+		                   "type ‘%0’ but saw NULL instead.", compiler,
+		                   arg->getLocStart ())
+		<< expected_type_str;
 
 		return false;
 	} else if (!is_null_constant &&
@@ -342,16 +332,12 @@ _consume_variadic_argument (QualType expected_type,
 		 * hacky approach instead. */
 		const PointerType *actual_pointer_type = dyn_cast<PointerType> (actual_type);
 		if (actual_pointer_type == NULL) {
-			gchar *error;
-
-			error = g_strdup_printf (
-				"Expected a GVariant variadic argument of type "
-				"‘%s’ but saw one of type ‘%s’.",
-				expected_type_str.c_str (),
-				actual_type.getAsString ().c_str ());
-			Debug::emit_error (error, compiler,
-			                   arg->getLocStart ());
-			g_free (error);
+			Debug::emit_error ("Expected a GVariant variadic "
+			                   "argument of type ‘%0’ but saw one "
+			                   "of type ‘%1’.", compiler,
+			                   arg->getLocStart ())
+			<< expected_type_str
+			<< actual_type;
 
 			return false;
 		}
@@ -366,17 +352,13 @@ _consume_variadic_argument (QualType expected_type,
 		} else if (!(flags & CHECK_FLAG_FORCE_VALIST)) {
 			const PointerType *actual_pointer2_type = dyn_cast<PointerType> (actual_pointee_type);
 			if (actual_pointer2_type == NULL) {
-				gchar *error;
-
-				error = g_strdup_printf (
-					"Expected a GVariant variadic argument "
-					"of type ‘%s’ but saw one of type "
-					"‘%s’.",
-					expected_type_str.c_str (),
-					actual_type.getAsString ().c_str ());
-				Debug::emit_error (error, compiler,
-				                   arg->getLocStart ());
-				g_free (error);
+				Debug::emit_error ("Expected a GVariant "
+				                   "variadic argument of type "
+				                   "‘%0’ but saw one of type "
+				                   "‘%1’.", compiler,
+				                   arg->getLocStart ())
+				<< expected_type_str
+				<< actual_type;
 
 				return false;
 			}
@@ -394,16 +376,12 @@ _consume_variadic_argument (QualType expected_type,
 		      actual_pointee_type_str == "va_list") &&
 		     !(flags & CHECK_FLAG_FORCE_GVARIANTITER &&
 		      actual_pointee_type_str == "GVariantIter")) {
-			gchar *error;
-
-			error = g_strdup_printf (
-				"Expected a GVariant variadic argument of type "
-				"‘%s’ but saw one of type ‘%s’.",
-				expected_type_str.c_str (),
-				actual_type.getAsString ().c_str ());
-			Debug::emit_error (error, compiler,
-			                   arg->getLocStart ());
-			g_free (error);
+			Debug::emit_error ("Expected a GVariant variadic "
+			                   "argument of type ‘%0’ but saw one "
+			                   "of type ‘%1’.", compiler,
+			                   arg->getLocStart ())
+			<< expected_type_str
+			<< actual_type;
 
 			return false;
 		}
@@ -415,16 +393,12 @@ _consume_variadic_argument (QualType expected_type,
 		/* Normal non-GVariant, non-GVariantBuilder case. */
 		if (!_compare_types (actual_type, expected_type,
 		                     flags, context)) {
-			gchar *error;
-
-			error = g_strdup_printf (
-				"Expected a GVariant variadic argument of type "
-				"‘%s’ but saw one of type ‘%s’.",
-				expected_type.getAsString ().c_str (),
-				actual_type.getAsString ().c_str ());
-			Debug::emit_error (error, compiler,
-			                   arg->getLocStart ());
-			g_free (error);
+			Debug::emit_error ("Expected a GVariant variadic "
+			                   "argument of type ‘%0’ but saw one "
+			                   "of type ‘%1’.", compiler,
+			                   arg->getLocStart ())
+			<< expected_type
+			<< actual_type;
 
 			return false;
 		}
@@ -504,13 +478,10 @@ _check_basic_type_string (const gchar **type_str,
 		flags |= CHECK_FLAG_FORCE_GVARIANT;
 		break;
 	default:
-		gchar *error;
-
-		error = g_strdup_printf ("Expected a GVariant basic type "
-		                         "string but saw ‘%c’.", **type_str);
-		Debug::emit_error (error, compiler,
-		                   format_arg_str->getLocStart ());
-		g_free (error);
+		Debug::emit_error ("Expected a GVariant basic type string but "
+		                   "saw ‘%0’.", compiler,
+		                   format_arg_str->getLocStart ())
+		<< **type_str;
 
 		return false;
 	}
@@ -620,11 +591,10 @@ _check_type_string (const gchar **type_str,
 		}
 
 		if (**type_str != ')') {
-			Debug::emit_error (
-				"Invalid GVariant type string: tuple "
-				"did not end with ‘)’.",
-				compiler,
-				format_arg_str->getLocStart ());
+			Debug::emit_error ("Invalid GVariant type string: "
+			                   "tuple did not end with ‘)’.",
+			                   compiler,
+			                   format_arg_str->getLocStart ());
 			return false;
 		}
 
@@ -985,12 +955,12 @@ _check_gvariant_format_param (const CallExpr& call,
 	const StringLiteral *format_arg_str = dyn_cast<StringLiteral> (format_arg);
 	if (format_arg_str == NULL) {
 		Debug::emit_warning (
-			"Non-literal GVariant format string in call to " +
-			func.getNameAsString () +
-			"(). Cannot check format string correctness. Instead "
+			"Non-literal GVariant format string in call to %0(). "
+			"Cannot check format string correctness. Instead "
 			"of a non-literal format string, use GVariantBuilder.",
 			compiler,
-			format_arg->getLocStart ());
+			format_arg->getLocStart ())
+		<< func.getNameAsString ();
 		return false;
 	}
 
@@ -1034,17 +1004,13 @@ _check_gvariant_format_param (const CallExpr& call,
 	 * string. Don’t emit any error messages about unpaired variadic
 	 * arguments because that would just confuse things. */
 	if (*format_str != '\0') {
-		gchar *error;
-
-		error = g_strdup_printf ("Unexpected GVariant format strings "
-		                         "‘%s’ with unpaired arguments. If "
-		                         "using multiple format strings, they "
-		                         "should be enclosed in brackets to "
-		                         "create a tuple (e.g. ‘(%s)’).",
-		                         format_str, whole_format_str);
-		Debug::emit_error (error, compiler,
-		                   format_arg_str->getLocStart ());
-		g_free (error);
+		Debug::emit_error ("Unexpected GVariant format strings ‘%0’ "
+		                   "with unpaired arguments. If using multiple "
+		                   "format strings, they should be enclosed in "
+		                   "brackets to create a tuple (e.g. ‘(%1)’).",
+		                   compiler, format_arg_str->getLocStart ())
+		<< format_str
+		<< whole_format_str;
 
 		g_free (whole_format_str);
 
@@ -1059,32 +1025,32 @@ _check_gvariant_format_param (const CallExpr& call,
 	for (; !func_info->uses_va_list && args_begin != args_end;
 	     ++args_begin) {
 		const Expr *arg = *args_begin;
-		gchar *error;
 		gchar *error_format_str;
 
 		error_format_str = _gvariant_format_string_for_type (arg->getType ());
 
 		if (error_format_str != NULL) {
-			error = g_strdup_printf (
-				"Unexpected GVariant variadic argument of type "
-				"‘%s’. A ‘%s’ GVariant format string should be "
-				"added to the format argument to use it.",
-				arg->getType ().getAsString ().c_str (),
-				error_format_str);
+			Debug::emit_error ("Unexpected GVariant variadic "
+			                   "argument of type ‘%0’. A ‘%1’ "
+			                   "GVariant format string should be "
+			                   "added to the format argument to "
+			                   "use it.",
+			                   compiler, arg->getLocStart ())
+			<< arg->getType ()
+			<< error_format_str;
 		} else {
-			error = g_strdup_printf (
-				"Unexpected GVariant variadic argument of type "
-				"‘%s’. A GVariant format string should be "
-				"added to the format argument to use it, but "
-				"there is no known GVariant representation of "
-				"the argument’s type. The argument must be "
-				"serialized to a GVariant-representable type "
-				"first.",
-				arg->getType ().getAsString ().c_str ());
+			Debug::emit_error ("Unexpected GVariant variadic "
+			                   "argument of type ‘%0’. A GVariant "
+			                   "format string should be added to "
+			                   "the format argument to use it, but "
+			                   "there is no known GVariant "
+			                   "representation of the argument’s "
+			                   "type. The argument must be "
+			                   "serialized to a "
+			                   "GVariant-representable type first.",
+			                   compiler, arg->getLocStart ())
+			<< arg->getType ();
 		}
-
-		Debug::emit_error (error, compiler, arg->getLocStart ());
-		g_free (error);
 
 		retval = false;
 	}
