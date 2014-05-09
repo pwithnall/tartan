@@ -61,7 +61,7 @@
 }
 
 /*
- * Incorrect type for argument 1 in signal handler for signal ‘GObject::notify’. Expected ‘GObject *’ but saw ‘GIOStream *’.
+ * Incorrect type for argument ‘self’ in signal handler for signal ‘GObject::notify’. Expected ‘GObject *’ but saw ‘GIOStream *’.
  *                           (GCallback) object_notify_invalid_parameter_subclass_cb,
  *                                       ^
  * note: expanded from macro 'g_signal_connect'
@@ -76,7 +76,7 @@
 }
 
 /*
- * Incorrect type for argument 1 in signal handler for signal ‘GObject::notify’. Expected ‘GObject *’ but saw ‘const GObject *’.
+ * Incorrect type for argument ‘self’ in signal handler for signal ‘GObject::notify’. Expected ‘GObject *’ but saw ‘const GObject *’.
  *                           (GCallback) object_notify_invalid_parameter_const_cb,
  *                                       ^
  * note: expanded from macro 'g_signal_connect'
@@ -91,7 +91,7 @@
 }
 
 /*
- * Incorrect type for argument 2 in signal handler for signal ‘GObject::notify’. Expected ‘GParamSpec *’ but saw ‘void *’.
+ * Incorrect type for argument ‘pspec’ in signal handler for signal ‘GObject::notify’. Expected ‘GParamSpec *’ but saw ‘void *’.
  *                           (GCallback) object_notify_invalid_parameter_middle_cb,
  *                                       ^
  * note: expanded from macro 'g_signal_connect'
@@ -106,7 +106,7 @@
 }
 
 /*
- * Incorrect type for argument 3 in signal handler for signal ‘GObject::notify’. Expected ‘void *’ but saw ‘guint’.
+ * Incorrect type for argument ‘user_data’ in signal handler for signal ‘GObject::notify’. Expected ‘void *’ but saw ‘guint’.
  *                           (GCallback) object_notify_invalid_parameter_user_data_cb,
  *                                       ^
  * note: expanded from macro 'g_signal_connect'
@@ -160,7 +160,7 @@
 }
 
 /*
- * No signal named ‘invalid-signal’ in GObject class ‘Object’.
+ * No signal named ‘invalid-signal’ in GObject class ‘GObject’. To improve static analysis, add a typecast to the GObject parameter of g_signal_connect_data().
  *         g_signal_connect (some_object, "invalid-signal",
  *         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  * note: expanded from macro 'g_signal_connect'

@@ -3,7 +3,7 @@
 /*
  * Expected a GVariant variadic argument of type ‘char *’ but saw one of type ‘guint’.
  *         floating_variant = g_variant_new ("(sss)", "hello", my_string, a_little_int_short_and_stout);
- *                                               ^                        ^
+ *                                                                        ^
  */
 {
 	const gchar *my_string = "there";
@@ -58,9 +58,9 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘unsigned char’ but saw one of type ‘char *’.
+ * Expected a GVariant variadic argument of type ‘int’ but saw one of type ‘char *’.
  *         floating_variant = g_variant_new ("y", "nope");
- *                                            ^   ^
+ *                                                ^
  */
 {
 	floating_variant = g_variant_new ("y", "nope");
@@ -82,7 +82,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘short’ but saw one of type ‘char *’.
+ * Expected a GVariant variadic argument of type ‘int’ but saw one of type ‘char *’.
  *         floating_variant = g_variant_new ("n", "nope");
  *                                                ^
  */
@@ -242,7 +242,7 @@
 }
 
 /*
- *  Expected a GVariant variadic argument of type ‘signed long’ but saw one of type ‘char *’.
+ * Expected a GVariant variadic argument of type ‘unsigned long’ but saw one of type ‘char *’.
  *         floating_variant = g_variant_new ("t", "nada");
  *                                                ^
  */
@@ -251,7 +251,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘unsigned long’ but saw one of type ‘int’.
+ * Expected a GVariant variadic argument of type ‘unsigned long’ but saw one of type ‘unsigned int’.
  *         floating_variant = g_variant_new ("t", 5);
  *                                                ^
  */
@@ -463,8 +463,8 @@
 }
 
 /*
- * Unexpected GVariant format strings ‘u’ with unpaired arguments. If using multiple format strings, they should be enclosed in brackets to create a tuple (e.g. ‘(su)’).
- *         floating_variant = g_variant_new ("su", "some", 56);
+ * Unexpected GVariant format strings ‘i’ with unpaired arguments. If using multiple format strings, they should be enclosed in brackets to create a tuple (e.g. ‘(si)’).
+ *         floating_variant = g_variant_new ("si", "some", 56);
  *                                           ^
  */
 {
@@ -642,7 +642,7 @@
 
 /*
  *  Expected a GVariant variadic argument of type ‘char *’ but saw NULL instead.
- *         floating_variant = g_variant_new ("{ss}", NULL, "key");
+ *         floating_variant = g_variant_new ("{ss}", NULL, "value");
  *                                                   ^
  */
 {

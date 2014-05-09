@@ -99,10 +99,21 @@ while [[ -f `printf "${temp_dir}/${input_filename}_%02d.c" ${num}` ]]; do
 		# Expecting an error. Check that the expected errors are a
 		# subset of the actual errors, to allow for spurious Clang
 		# warnings because generated code is hard.
-		grep -F "$(<${expected_error_filename})" "${actual_error_filename}" >/dev/null
-		grep_status=$?
+		grep_failed=0
 
-		if [ $grep_status -ne 0 ]; then
+		while read line
+		do
+			grep -F "${line}" "${actual_error_filename}" >/dev/null
+			grep_status=$?
+
+			if [ $grep_status -ne 0 ]; then
+				echo " * Non-matching line:" 1>&2
+				echo "${line}" 1>&2
+				grep_failed=1
+			fi
+		done < "${expected_error_filename}"
+
+		if [ $grep_failed = 1 ]; then
 			echo " * Error: Expected compiler error was not seen." 1>&2
 
 			echo " - Expected:" 1>&2

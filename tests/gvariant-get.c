@@ -37,7 +37,7 @@
 
 /*
  * Expected a GVariant variadic argument of type ‘int *’ but there wasn’t one.
- *         g_variant_get ("invalid");
+ *         g_variant_get (existing_variant, "invalid");
  *                        ^
  */
 {
@@ -176,7 +176,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘GVariant **’ but saw one of type ‘char **’.
+ * Expected a GVariant variadic argument of type ‘GVariant **’ but saw one of type ‘gchar **’.
  *         g_variant_get (existing_variant, "@s", &some_str);
  *                                                ^
  */
@@ -214,8 +214,8 @@
 
 
 /*
- * Unexpected GVariant format strings ‘u’ with unpaired arguments. If using multiple format strings, they should be enclosed in brackets to create a tuple (e.g. ‘(su)’).
- *         g_variant_get (existing_variant, "su", &some_str, &some_int);
+ * Unexpected GVariant format strings ‘i’ with unpaired arguments. If using multiple format strings, they should be enclosed in brackets to create a tuple (e.g. ‘(si)’).
+ *         g_variant_get (existing_variant, "si", &some_str, &some_int);
  *                                          ^
  */
 {
