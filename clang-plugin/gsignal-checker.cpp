@@ -128,7 +128,8 @@ _expr_to_gobject_type (const Expr *expr,
 	}
 
 	/* We have the GObject pointee type, so try and resolve it. */
-	std::string gobject_type_str = gobject_type.getAsString ();
+	std::string gobject_type_str =
+		gobject_type.getUnqualifiedType ().getAsString ();
 	return gir_manager.find_object_info (gobject_type_str);
 }
 
@@ -570,7 +571,8 @@ _check_signal_callback_type (const Expr *expr,
 				atp = atp->getPointeeType ();
 			}
 
-			std::string actual_type_str = atp.getAsString ();
+			std::string actual_type_str =
+				atp.getUnqualifiedType ().getAsString ();
 			GIBaseInfo *actual_type_info =
 				gir_manager.find_object_info (actual_type_str);
 
@@ -610,6 +612,7 @@ _check_signal_callback_type (const Expr *expr,
 			 * explanation of the (non-trivial) GObject type
 			 * checking for the first parameter. */
 			type_error = (actual_type_info == NULL ||
+			              atp.isConstQualified () ||
 			              !_is_gobject_subclass (dynamic_gobject_info,
 			                                     actual_type_info) ||
 			              !_is_gobject_subclass (actual_type_info,
