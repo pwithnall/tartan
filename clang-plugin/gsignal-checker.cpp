@@ -64,6 +64,7 @@
 #include "debug.h"
 #include "gsignal-checker.h"
 
+namespace tartan {
 
 /* Information about the GSignal functions we’re interested in. If you want to
  * add support for a new GSignal function, it may be enough to add a new
@@ -902,3 +903,5 @@ GSignalVisitor::VisitCallExpr (CallExpr* expr)
 
 	return true;
 }
+
+} /* namespace tartan */

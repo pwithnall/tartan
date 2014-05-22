@@ -67,6 +67,8 @@
 #include "debug.h"
 #include "nullability-checker.h"
 
+namespace tartan {
+
 void
 NullabilityConsumer::HandleTranslationUnit (ASTContext& context)
 {
@@ -304,3 +306,5 @@ NullabilityVisitor::TraverseFunctionDecl (FunctionDecl* func)
 
 	return true;
 }
+
+} /* namespace tartan */

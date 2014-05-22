@@ -33,9 +33,11 @@
 
 #include "gir-manager.h"
 
+namespace tartan {
+
 using namespace clang;
 
-class GirAttributesConsumer : public ASTConsumer {
+class GirAttributesConsumer : public clang::ASTConsumer {
 
 public:
 	explicit GirAttributesConsumer (
@@ -70,5 +72,7 @@ private:
 public:
 	virtual bool HandleTopLevelDecl (DeclGroupRef decl_group);
 };
+
+} /* namespace tartan */
 
 #endif /* !TARTAN_GIR_ATTRIBUTES_H */

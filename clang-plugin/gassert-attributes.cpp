@@ -29,6 +29,8 @@
 #include "debug.h"
 #include "gassert-attributes.h"
 
+namespace tartan {
+
 GAssertAttributesConsumer::GAssertAttributesConsumer ()
 {
 	/* Nothing to see here. */
@@ -167,3 +169,5 @@ GAssertAttributesConsumer::HandleTopLevelDecl (DeclGroupRef decl_group)
 
 	return true;
 }
+
+} /* namespace tartan */

@@ -30,6 +30,8 @@
 #include "debug.h"
 #include "gir-attributes.h"
 
+namespace tartan {
+
 /* Determine whether a type should be const, given its (transfer) annotation and
  * base type. */
 static bool
@@ -496,3 +498,5 @@ GirAttributesChecker::HandleTopLevelDecl (DeclGroupRef decl_group)
 
 	return true;
 }
+
+} /* namespace tartan */

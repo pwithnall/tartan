@@ -75,6 +75,7 @@
 #include "debug.h"
 #include "gvariant-checker.h"
 
+namespace tartan {
 
 /* Information about the GVariant functions we’re interested in. If you want to
  * add support for a new GVariant function, it may be enough to add a new
@@ -1096,3 +1097,5 @@ GVariantVisitor::VisitCallExpr (CallExpr* expr)
 
 	return true;
 }
+
+} /* namespace tartan */

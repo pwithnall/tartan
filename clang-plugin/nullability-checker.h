@@ -32,6 +32,8 @@
 
 #include "gir-manager.h"
 
+namespace tartan {
+
 using namespace clang;
 
 class NullabilityVisitor : public RecursiveASTVisitor<NullabilityVisitor> {
@@ -65,5 +67,7 @@ private:
 public:
 	virtual void HandleTranslationUnit (ASTContext& context);
 };
+
+} /* namespace tartan */
 
 #endif /* !TARTAN_NULLABILITY_CHECKER_H */

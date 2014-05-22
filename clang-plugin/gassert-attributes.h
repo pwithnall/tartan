@@ -27,9 +27,11 @@
 #include <clang/AST/ASTConsumer.h>
 #include <clang/Frontend/CompilerInstance.h>
 
+namespace tartan {
+
 using namespace clang;
 
-class GAssertAttributesConsumer : public ASTConsumer {
+class GAssertAttributesConsumer : public clang::ASTConsumer {
 public:
 	GAssertAttributesConsumer ();
 	~GAssertAttributesConsumer ();
@@ -39,5 +41,7 @@ private:
 public:
 	virtual bool HandleTopLevelDecl (DeclGroupRef decl_group);
 };
+
+} /* namespace tartan */
 
 #endif /* !TARTAN_GASSERT_ATTRIBUTES_H */

@@ -30,6 +30,8 @@
 #include <clang/AST/RecursiveASTVisitor.h>
 #include <clang/Frontend/CompilerInstance.h>
 
+namespace tartan {
+
 using namespace clang;
 
 class GVariantVisitor : public RecursiveASTVisitor<GVariantVisitor> {
@@ -59,5 +61,7 @@ private:
 public:
 	virtual void HandleTranslationUnit (ASTContext& context);
 };
+
+} /* namespace tartan */
 
 #endif /* !TARTAN_GVARIANT_CHECKER_H */

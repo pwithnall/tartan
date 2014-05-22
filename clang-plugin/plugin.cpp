@@ -36,7 +36,7 @@
 
 using namespace clang;
 
-namespace {
+namespace tartan {
 
 /**
  * Plugin core.
@@ -256,4 +256,4 @@ protected:
 static FrontendPluginRegistry::Add<TartanAction>
 X("tartan", "add attributes and warnings using GLib-specific metadata");
 
-} /* namespace */
+} /* namespace tartan */
