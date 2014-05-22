@@ -61,18 +61,25 @@ protected:
 	CreateASTConsumer (CompilerInstance &compiler, llvm::StringRef in_file)
 	{
 		std::vector<ASTConsumer*> consumers;
+
+		/* Annotaters. */
 		consumers.push_back (
 			new GirAttributesConsumer (this->_gir_manager));
-		consumers.push_back (new GAssertAttributesConsumer ());
+		consumers.push_back (
+			new GAssertAttributesConsumer ());
+
+		/* Checkers. */
 		consumers.push_back (
 			new NullabilityConsumer (compiler,
 			                         this->_gir_manager,
 			                         this->_disabled_plugins));
 		consumers.push_back (
 			new GVariantConsumer (compiler,
+			                      this->_gir_manager,
 			                      this->_disabled_plugins));
 		consumers.push_back (
-			new GSignalConsumer (compiler, this->_gir_manager,
+			new GSignalConsumer (compiler,
+			                     this->_gir_manager,
 			                     this->_disabled_plugins));
 		consumers.push_back (
 			new GirAttributesChecker (compiler,

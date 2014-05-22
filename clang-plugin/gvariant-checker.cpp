@@ -1063,10 +1063,7 @@ void
 GVariantConsumer::HandleTranslationUnit (ASTContext& context)
 {
 	/* Run away if the plugin is disabled. */
-	if (this->_disabled_plugins.get ()->find ("gvariant") !=
-	    this->_disabled_plugins.get ()->end () ||
-	    this->_disabled_plugins.get ()->find ("all") !=
-	    this->_disabled_plugins.get ()->end ()) {
+	if (!this->is_enabled ()) {
 		return;
 	}
 

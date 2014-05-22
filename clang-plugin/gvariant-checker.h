@@ -30,6 +30,8 @@
 #include <clang/AST/RecursiveASTVisitor.h>
 #include <clang/Frontend/CompilerInstance.h>
 
+#include "checker.h"
+
 namespace tartan {
 
 using namespace clang;
@@ -48,18 +50,20 @@ public:
 	bool VisitCallExpr (CallExpr* call);
 };
 
-class GVariantConsumer : public ASTConsumer {
+class GVariantConsumer : public tartan::Checker {
 public:
 	GVariantConsumer (CompilerInstance& compiler,
+	                  std::shared_ptr<const GirManager> gir_manager,
 	                  std::shared_ptr<const std::unordered_set<std::string>> disabled_plugins) :
-		_visitor (compiler), _disabled_plugins (disabled_plugins) {}
+		Checker (compiler, gir_manager, disabled_plugins),
+		_visitor (compiler) {}
 
 private:
 	GVariantVisitor _visitor;
-	std::shared_ptr<const std::unordered_set<std::string>> _disabled_plugins;
 
 public:
 	virtual void HandleTranslationUnit (ASTContext& context);
+	const std::string get_name () const { return "gvariant"; }
 };
 
 } /* namespace tartan */

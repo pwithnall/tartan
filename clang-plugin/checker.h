@@ -1,7 +1,7 @@
 /* -*- Mode: C++; indent-tabs-mode: t; c-basic-offset: 8; tab-width: 8 -*- */
 /*
  * Tartan
- * Copyright © 2013 Collabora Ltd.
+ * Copyright © 2014 Collabora Ltd.
  *
  * Tartan is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,8 +20,8 @@
  *     Philip Withnall <philip.withnall@collabora.co.uk>
  */
 
-#ifndef TARTAN_GIR_ATTRIBUTES_H
-#define TARTAN_GIR_ATTRIBUTES_H
+#ifndef TARTAN_CHECKER_H
+#define TARTAN_CHECKER_H
 
 #include <unordered_set>
 
@@ -31,45 +31,32 @@
 
 #include <girepository.h>
 
-#include "checker.h"
 #include "gir-manager.h"
 
 namespace tartan {
 
 using namespace clang;
 
-class GirAttributesConsumer : public clang::ASTConsumer {
+class Checker : public clang::ASTConsumer {
 
 public:
-	explicit GirAttributesConsumer (
-		std::shared_ptr<const GirManager> gir_manager) :
-		_gir_manager (gir_manager) {}
-
-private:
-	std::shared_ptr<const GirManager> _gir_manager;
-
-	void _handle_function_decl (FunctionDecl& func);
-public:
-	virtual bool HandleTopLevelDecl (DeclGroupRef decl_group);
-};
-
-
-class GirAttributesChecker : public tartan::Checker {
-
-public:
-	explicit GirAttributesChecker (
+	explicit Checker (
 		CompilerInstance& compiler,
 		std::shared_ptr<const GirManager> gir_manager,
 		std::shared_ptr<const std::unordered_set<std::string>> disabled_plugins) :
-		Checker (compiler, gir_manager, disabled_plugins) {}
+		_compiler (compiler), _gir_manager (gir_manager),
+		_disabled_plugins (disabled_plugins) {}
 
-private:
-	void _handle_function_decl (FunctionDecl& func);
+protected:
+	CompilerInstance& _compiler;
+	std::shared_ptr<const GirManager> _gir_manager;
+	std::shared_ptr<const std::unordered_set<std::string>> _disabled_plugins;
+
 public:
-	virtual bool HandleTopLevelDecl (DeclGroupRef decl_group);
-	const std::string get_name () const { return "gir-attributes"; }
+	bool is_enabled () const;
+	virtual const std::string get_name () const = 0;
 };
 
 } /* namespace tartan */
 
-#endif /* !TARTAN_GIR_ATTRIBUTES_H */
+#endif /* !TARTAN_CHECKER_H */

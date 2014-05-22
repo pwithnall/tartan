@@ -30,6 +30,7 @@
 #include <clang/AST/RecursiveASTVisitor.h>
 #include <clang/Frontend/CompilerInstance.h>
 
+#include "checker.h"
 #include "gir-manager.h"
 
 namespace tartan {
@@ -52,20 +53,20 @@ public:
 	bool TraverseFunctionDecl (FunctionDecl* func);
 };
 
-class NullabilityConsumer : public ASTConsumer {
+class NullabilityConsumer : public tartan::Checker {
 public:
 	NullabilityConsumer (CompilerInstance& compiler,
 	                     std::shared_ptr<const GirManager> gir_manager,
 	                     std::shared_ptr<const std::unordered_set<std::string>> disabled_plugins) :
-		_visitor (compiler, gir_manager),
-		_disabled_plugins (disabled_plugins) {}
+		Checker (compiler, gir_manager, disabled_plugins),
+		_visitor (compiler, gir_manager) {}
 
 private:
 	NullabilityVisitor _visitor;
-	std::shared_ptr<const std::unordered_set<std::string>> _disabled_plugins;
 
 public:
 	virtual void HandleTranslationUnit (ASTContext& context);
+	const std::string get_name () const { return "nullability"; }
 };
 
 } /* namespace tartan */
