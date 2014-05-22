@@ -475,6 +475,14 @@ GirAttributesChecker::HandleTopLevelDecl (DeclGroupRef decl_group)
 {
 	DeclGroupRef::iterator i, e;
 
+	/* Run away if the plugin is disabled. */
+	if (this->_disabled_plugins.get ()->find ("gir-attributes") !=
+	    this->_disabled_plugins.get ()->end () ||
+	    this->_disabled_plugins.get ()->find ("all") !=
+	    this->_disabled_plugins.get ()->end ()) {
+		return true;
+	}
+
 	for (i = decl_group.begin (), e = decl_group.end (); i != e; i++) {
 		Decl *decl = *i;
 		FunctionDecl *func = dyn_cast<FunctionDecl> (decl);

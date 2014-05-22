@@ -1061,6 +1061,14 @@ _check_gvariant_format_param (const CallExpr& call,
 void
 GVariantConsumer::HandleTranslationUnit (ASTContext& context)
 {
+	/* Run away if the plugin is disabled. */
+	if (this->_disabled_plugins.get ()->find ("gvariant") !=
+	    this->_disabled_plugins.get ()->end () ||
+	    this->_disabled_plugins.get ()->find ("all") !=
+	    this->_disabled_plugins.get ()->end ()) {
+		return;
+	}
+
 	this->_visitor.TraverseDecl (context.getTranslationUnitDecl ());
 }
 

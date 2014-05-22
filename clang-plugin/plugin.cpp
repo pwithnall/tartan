@@ -46,6 +46,12 @@ private:
 	std::shared_ptr<GirManager> _gir_manager =
 		std::make_shared<GirManager> ();
 
+	/* Enabling/Disabling plugins is implemented as a blacklist: all plugins
+	 * are enabled by default, unless a --disable-plugin argument
+	 * specifically disables them (by listing their name in this set). */
+	std::shared_ptr<std::unordered_set<std::string>> _disabled_plugins =
+		std::make_shared<std::unordered_set<std::string>> ();
+
 protected:
 	/* Note: This is called before ParseArgs, and must transfer ownership
 	 * of the ASTConsumer. The TartanAction object is destroyed immediately
@@ -60,14 +66,18 @@ protected:
 		consumers.push_back (new GAssertAttributesConsumer ());
 		consumers.push_back (
 			new NullabilityConsumer (compiler,
-			                         this->_gir_manager));
+			                         this->_gir_manager,
+			                         this->_disabled_plugins));
 		consumers.push_back (
-			new GVariantConsumer (compiler));
+			new GVariantConsumer (compiler,
+			                      this->_disabled_plugins));
 		consumers.push_back (
-			new GSignalConsumer (compiler, this->_gir_manager));
+			new GSignalConsumer (compiler, this->_gir_manager,
+			                     this->_disabled_plugins));
 		consumers.push_back (
 			new GirAttributesChecker (compiler,
-			                          this->_gir_manager));
+			                          this->_gir_manager,
+			                          this->_disabled_plugins));
 
 		return new MultiplexConsumer (consumers);
 	}
@@ -182,12 +192,23 @@ protected:
 		/* Load all typelibs. */
 		this->_load_gi_repositories (CI);
 
+		/* Enable the default set of plugins. */
 		for (std::vector<std::string>::const_iterator it = args.begin();
 		     it != args.end (); ++it) {
 			std::string arg = *it;
 
 			if (arg == "--help") {
 				this->PrintHelp (llvm::errs ());
+			} else if (arg == "--enable-checker") {
+				const std::string checker = *(++it);
+				if (checker == "all") {
+					this->_disabled_plugins.get ()->clear ();
+				} else {
+					this->_disabled_plugins.get ()->erase (std::string (checker));
+				}
+			} else if (arg == "--disable-checker") {
+				const std::string checker = *(++it);
+				this->_disabled_plugins.get ()->insert (std::string (checker));
 			}
 		}
 
@@ -200,12 +221,26 @@ protected:
 	{
 		/* TODO: i18n */
 		out << "A plugin to enable extra static analysis checks and "
-		       "warnings for C code which uses GLib, by making use of "
+		       "warnings for C code which\nuses GLib, by making use of "
 		       "GIR metadata and other GLib coding conventions.\n"
+		       "\n"
+		       "Arguments:\n"
+		       "    --enable-plugin [name]\n"
+		       "        Enable the given Tartan plugin, which may be "
+		               "‘all’. All plugins are\n"
+		       "        enabled by default.\n"
+		       "    --disable-plugin [name]\n"
+		       "        Disable the given Tartan plugin, which may be "
+		               "‘all’. All plugins are\n"
+		       "        enabled by default.\n"
 		       "\n"
 		       "Usage:\n"
 		       "    clang -cc1 -load /path/to/libtartan.so "
-		           "-add-plugin tartan\n";
+		           "-add-plugin tartan \\\n"
+		       "        -plugin-arg-tartan --disable-checker \\\n"
+		       "        -plugin-arg-tartan all \\\n"
+		       "        -plugin-arg-tartan --enable-checker \\\n"
+		       "        -plugin-arg-tartan gir-attributes\n";
 	}
 
 	bool

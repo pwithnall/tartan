@@ -23,6 +23,8 @@
 #ifndef TARTAN_GVARIANT_CHECKER_H
 #define TARTAN_GVARIANT_CHECKER_H
 
+#include <unordered_set>
+
 #include <clang/AST/AST.h>
 #include <clang/AST/ASTConsumer.h>
 #include <clang/AST/RecursiveASTVisitor.h>
@@ -46,11 +48,13 @@ public:
 
 class GVariantConsumer : public ASTConsumer {
 public:
-	GVariantConsumer (CompilerInstance& compiler) :
-		_visitor (compiler) {}
+	GVariantConsumer (CompilerInstance& compiler,
+	                  std::shared_ptr<const std::unordered_set<std::string>> disabled_plugins) :
+		_visitor (compiler), _disabled_plugins (disabled_plugins) {}
 
 private:
 	GVariantVisitor _visitor;
+	std::shared_ptr<const std::unordered_set<std::string>> _disabled_plugins;
 
 public:
 	virtual void HandleTranslationUnit (ASTContext& context);

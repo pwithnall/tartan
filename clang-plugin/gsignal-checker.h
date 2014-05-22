@@ -23,6 +23,8 @@
 #ifndef TARTAN_GSIGNAL_CHECKER_H
 #define TARTAN_GSIGNAL_CHECKER_H
 
+#include <unordered_set>
+
 #include <clang/AST/AST.h>
 #include <clang/AST/ASTConsumer.h>
 #include <clang/AST/RecursiveASTVisitor.h>
@@ -51,11 +53,14 @@ public:
 class GSignalConsumer : public ASTConsumer {
 public:
 	GSignalConsumer (CompilerInstance& compiler,
-	                 std::shared_ptr<const GirManager> gir_manager) :
-		_visitor (compiler, gir_manager) {}
+	                 std::shared_ptr<const GirManager> gir_manager,
+	                 std::shared_ptr<const std::unordered_set<std::string>> disabled_plugins) :
+		_visitor (compiler, gir_manager),
+		_disabled_plugins (disabled_plugins) {}
 
 private:
 	GSignalVisitor _visitor;
+	std::shared_ptr<const std::unordered_set<std::string>> _disabled_plugins;
 
 public:
 	virtual void HandleTranslationUnit (ASTContext& context);

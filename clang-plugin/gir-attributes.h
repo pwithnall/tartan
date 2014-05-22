@@ -23,6 +23,8 @@
 #ifndef TARTAN_GIR_ATTRIBUTES_H
 #define TARTAN_GIR_ATTRIBUTES_H
 
+#include <unordered_set>
+
 #include <clang/AST/AST.h>
 #include <clang/AST/ASTConsumer.h>
 #include <clang/Frontend/CompilerInstance.h>
@@ -54,12 +56,15 @@ class GirAttributesChecker : public ASTConsumer {
 public:
 	explicit GirAttributesChecker (
 		CompilerInstance& compiler,
-		std::shared_ptr<const GirManager> gir_manager) :
-		_compiler (compiler), _gir_manager (gir_manager) {}
+		std::shared_ptr<const GirManager> gir_manager,
+		std::shared_ptr<const std::unordered_set<std::string>> disabled_plugins) :
+		_compiler (compiler), _gir_manager (gir_manager),
+		_disabled_plugins (disabled_plugins) {}
 
 private:
 	CompilerInstance& _compiler;
 	std::shared_ptr<const GirManager> _gir_manager;
+	std::shared_ptr<const std::unordered_set<std::string>> _disabled_plugins;
 
 	void _handle_function_decl (FunctionDecl& func);
 public:
