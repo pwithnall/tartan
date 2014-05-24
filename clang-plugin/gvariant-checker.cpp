@@ -242,8 +242,6 @@ _consume_variadic_argument (QualType expected_type,
 		expected_type = type_manager.find_pointer_type_by_name ("va_list");
 	}
 
-	std::string expected_type_str = expected_type.getAsString ();
-
 	/* Handle const-ness of out arguments. We have to insert the const one
 	 * layer of pointer indirection down. i.e. char* becomes const char*. */
 	if ((flags & CHECK_FLAG_DIRECTION_OUT) &&
@@ -253,17 +251,12 @@ _consume_variadic_argument (QualType expected_type,
 		QualType expected_pointee_type = expected2_type->getPointeeType ();
 		expected_pointee_type = context.getConstType (expected_pointee_type);
 		expected_type = context.getPointerType (expected_pointee_type);
-		expected_type_str = "const " + expected_type_str;
 	}
 
 	/* Handle in/out arguments. This must be done after constness. */
 	if ((flags & CHECK_FLAG_DIRECTION_OUT) &&
 	    !(flags & CHECK_FLAG_FORCE_VALIST)) {
 		expected_type = context.getPointerType (expected_type);
-		if (expected_type_str.at (expected_type_str.length () - 1) != '*')
-			expected_type_str = expected_type_str + " *";
-		else
-			expected_type_str = expected_type_str + "*";
 	}
 
 	DEBUG ("Consuming variadic argument with expected type ‘" <<
@@ -273,7 +266,7 @@ _consume_variadic_argument (QualType expected_type,
 		Debug::emit_error ("Expected a GVariant variadic argument of "
 		                   "type ‘%0’ but there wasn’t one.", compiler,
 		                   format_arg_str->getLocStart ())
-		<< expected_type_str;
+		<< expected_type;
 
 		return false;
 	}
@@ -302,7 +295,7 @@ _consume_variadic_argument (QualType expected_type,
 		Debug::emit_error ("Expected a GVariant variadic argument of "
 		                   "type ‘%0’ but saw NULL instead.", compiler,
 		                   arg->getLocStart ())
-		<< expected_type_str;
+		<< expected_type;
 
 		return false;
 	} else if (!is_null_constant) {
