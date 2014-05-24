@@ -31,6 +31,7 @@
 #include <clang/Frontend/CompilerInstance.h>
 
 #include "checker.h"
+#include "type-manager.h"
 
 namespace tartan {
 
@@ -39,12 +40,14 @@ using namespace clang;
 class GVariantVisitor : public RecursiveASTVisitor<GVariantVisitor> {
 public:
 	explicit GVariantVisitor (CompilerInstance& compiler) :
-		_compiler (compiler), _context (compiler.getASTContext ()) {}
+		_compiler (compiler), _context (compiler.getASTContext ()),
+		_type_manager (compiler.getASTContext ()) {}
 
 private:
 	QualType _gvariant_pointer_type;
 	CompilerInstance& _compiler;
 	const ASTContext& _context;
+	TypeManager _type_manager;
 
 public:
 	bool VisitCallExpr (CallExpr* call);

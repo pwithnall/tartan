@@ -111,12 +111,8 @@ static const VariantFuncInfo gvariant_format_funcs[] = {
  * @CHECK_FLAG_NONE: No flags.
  * @CHECK_FLAG_FORCE_GVARIANT: Force the expected type of the next variadic
  * argument to be consumed to be GVariant*.
- * @CHECK_FLAG_FORCE_GVARIANTBUILDER: Force the expected type of the next
- * variadic argument to be consumed to be GVariantBuilder*.
  * @CHECK_FLAG_FORCE_VALIST: Force the expected type of the next variadic
  * argument to be consumed to be va_list*.
- * @CHECK_FLAG_FORCE_GVARIANTITER: Force the expected type of the next variadic
- * argument to be consumed to be GVariantIter*.
  * @CHECK_FLAG_REQUIRE_CONST: Require that the pointee of the expected type (if
  * it is a pointer type) must be constant. This is ignored it
  * %CHECK_FLAG_DIRECTION_OUT is not set.
@@ -136,9 +132,7 @@ static const VariantFuncInfo gvariant_format_funcs[] = {
 typedef enum {
 	CHECK_FLAG_NONE = 0,
 	CHECK_FLAG_FORCE_GVARIANT = 1 << 0,
-	CHECK_FLAG_FORCE_GVARIANTBUILDER = 1 << 1,
 	CHECK_FLAG_FORCE_VALIST = 1 << 2,
-	CHECK_FLAG_FORCE_GVARIANTITER = 1 << 3,
 	CHECK_FLAG_REQUIRE_CONST = 1 << 4,
 	CHECK_FLAG_DIRECTION_OUT = 1 << 5,
 	CHECK_FLAG_ALLOW_MAYBE = 1 << 6,
@@ -219,13 +213,7 @@ _compare_types (const QualType actual_type, const QualType expected_type,
 }
 
 /* Consume a single variadic argument from the varargs array, checking that one
- * exists and has the given @expected_type. If %CHECK_FLAG_FORCE_GVARIANT is
- * set, the expected type is forced to be GVariant*. (This is necessary because
- * I can find no way to represent GVariant* as a QualType. If someone can fix
- * that, the boolean argument can be removed.) Same for
- * %CHECK_FLAG_FORCE_GVARIANTBUILDER, but with GVariantBuilder*;
- * %CHECK_FLAG_FORCE_VALIST, but with va_list*; and
- * %CHECK_FLAG_FORCE_GVARIANTITER, but with GVariantIter*.
+ * exists and has the given @expected_type.
  *
  * Iff %CHECK_FLAG_ALLOW_MAYBE is set, the variadic argument may be NULL.
  *
@@ -237,29 +225,24 @@ _consume_variadic_argument (QualType expected_type,
                             unsigned int /* VariantCheckFlags */ flags,
                             CompilerInstance& compiler,
                             const StringLiteral *format_arg_str,
-                            ASTContext& context)
+                            ASTContext& context, TypeManager &type_manager)
 {
-	std::string expected_type_str;
-
-	if (flags & CHECK_FLAG_FORCE_GVARIANTBUILDER) {
-		/* Note: Stricter checking is implemented below. */
-		expected_type = context.VoidPtrTy;
-		expected_type_str = std::string ("GVariantBuilder *");
-	} else if (flags & CHECK_FLAG_FORCE_GVARIANT) {
-		/* Note: Stricter checking is implemented below. */
-		expected_type = context.VoidPtrTy;
-		expected_type_str = std::string ("GVariant *");
-	} else if (flags & CHECK_FLAG_FORCE_VALIST) {
-		/* Note: Stricter checking is implemented below. */
-		expected_type = context.VoidPtrTy;
-		expected_type_str = std::string ("va_list *");
-	} else if (flags & CHECK_FLAG_FORCE_GVARIANTITER) {
-		/* Note: Stricter checking is implemented below. */
-		expected_type = context.VoidPtrTy;
-		expected_type_str = std::string ("GVariantIter *");
-	} else {
-		expected_type_str = expected_type.getAsString ();
+	/* If the GVariant method doesn’t use varargs, don’t actually consume
+	 * the argument. */
+	if (!(flags & CHECK_FLAG_CONSUME_ARGS)) {
+		return true;
 	}
+
+	/* In certain parsing states the expected types have been modified by a
+	 * preceding character in the format string. Force the expected types in
+	 * those cases. */
+	if (flags & CHECK_FLAG_FORCE_GVARIANT) {
+		expected_type = type_manager.find_pointer_type_by_name ("GVariant");
+	} else if (flags & CHECK_FLAG_FORCE_VALIST) {
+		expected_type = type_manager.find_pointer_type_by_name ("va_list");
+	}
+
+	std::string expected_type_str = expected_type.getAsString ();
 
 	/* Handle const-ness of out arguments. We have to insert the const one
 	 * layer of pointer indirection down. i.e. char* becomes const char*. */
@@ -322,76 +305,8 @@ _consume_variadic_argument (QualType expected_type,
 		<< expected_type_str;
 
 		return false;
-	} else if (!is_null_constant &&
-	           (flags & (CHECK_FLAG_FORCE_GVARIANT |
-	                     CHECK_FLAG_FORCE_GVARIANTBUILDER |
-	                     CHECK_FLAG_FORCE_VALIST |
-	                     CHECK_FLAG_FORCE_GVARIANTITER))) {
-		/* Special case handling for GVariant[Builder]* types, because I
-		 * can’t find a reasonable way of retrieving the QualType for
-		 * the GVariant or GVariantBuilder typedefs; so we use this
-		 * hacky approach instead. */
-		const PointerType *actual_pointer_type = dyn_cast<PointerType> (actual_type);
-		if (actual_pointer_type == NULL) {
-			Debug::emit_error ("Expected a GVariant variadic "
-			                   "argument of type ‘%0’ but saw one "
-			                   "of type ‘%1’.", compiler,
-			                   arg->getLocStart ())
-			<< expected_type_str
-			<< actual_type;
-
-			return false;
-		}
-
-		QualType actual_pointee_type = actual_pointer_type->getPointeeType ();
-
-		/* Inbound arguments can be const or not. It’s a bit trickier
-		 * for outbound arguments. Outbound arguments must have an extra
-		 * level of pointer indirection stripped off. */
-		if (!(flags & CHECK_FLAG_DIRECTION_OUT)) {
-			actual_pointee_type = actual_pointee_type.getUnqualifiedType ();
-		} else if (!(flags & CHECK_FLAG_FORCE_VALIST)) {
-			const PointerType *actual_pointer2_type = dyn_cast<PointerType> (actual_pointee_type);
-			if (actual_pointer2_type == NULL) {
-				Debug::emit_error ("Expected a GVariant "
-				                   "variadic argument of type "
-				                   "‘%0’ but saw one of type "
-				                   "‘%1’.", compiler,
-				                   arg->getLocStart ())
-				<< expected_type_str
-				<< actual_type;
-
-				return false;
-			}
-
-			actual_pointee_type = actual_pointer2_type->getPointeeType ();
-		}
-
-		std::string actual_pointee_type_str = actual_pointee_type.getAsString ();
-
-		if (!(flags & CHECK_FLAG_FORCE_GVARIANTBUILDER &&
-		      actual_pointee_type_str == "GVariantBuilder") &&
-		    !(flags & CHECK_FLAG_FORCE_GVARIANT &&
-		      actual_pointee_type_str == "GVariant") &&
-		    !(flags & CHECK_FLAG_FORCE_VALIST &&
-		      actual_pointee_type_str == "va_list") &&
-		     !(flags & CHECK_FLAG_FORCE_GVARIANTITER &&
-		      actual_pointee_type_str == "GVariantIter")) {
-			Debug::emit_error ("Expected a GVariant variadic "
-			                   "argument of type ‘%0’ but saw one "
-			                   "of type ‘%1’.", compiler,
-			                   arg->getLocStart ())
-			<< expected_type_str
-			<< actual_type;
-
-			return false;
-		}
-	} else if (!is_null_constant &&
-	           !(flags & (CHECK_FLAG_FORCE_GVARIANT |
-	                      CHECK_FLAG_FORCE_GVARIANTBUILDER |
-	                      CHECK_FLAG_FORCE_VALIST |
-	                      CHECK_FLAG_FORCE_GVARIANTITER))) {
-		/* Normal non-GVariant, non-GVariantBuilder case. */
+	} else if (!is_null_constant) {
+		/* Normal case. */
 		if (!_compare_types (actual_type, expected_type,
 		                     flags, context)) {
 			Debug::emit_error ("Expected a GVariant variadic "
@@ -405,10 +320,8 @@ _consume_variadic_argument (QualType expected_type,
 		}
 	}
 
-	/* If the GVariant method doesn’t use varargs, don’t actually consume
-	 * the argument. */
-	if (flags & CHECK_FLAG_CONSUME_ARGS)
-		*args_begin = *args_begin + 1;  /* consume the format */
+	/* Consume the format. */
+	*args_begin = *args_begin + 1;
 
 	return true;
 }
@@ -426,7 +339,7 @@ _check_basic_type_string (const gchar **type_str,
                           unsigned int /* VariantCheckFlags */ flags,
                           CompilerInstance& compiler,
                           const StringLiteral *format_arg_str,
-                          ASTContext& context)
+                          ASTContext& context, TypeManager &type_manager)
 {
 	DEBUG ("Checking basic type string ‘" << *type_str << "’.");
 
@@ -473,10 +386,7 @@ _check_basic_type_string (const gchar **type_str,
 		break;
 	/* Basic types */
 	case '?': /* GVariant* of any type */
-		/* Stricter validation is applied in
-		 * _consume_variadic_argument(). */
-		expected_type = context.VoidPtrTy;
-		flags |= CHECK_FLAG_FORCE_GVARIANT;
+		expected_type = type_manager.find_pointer_type_by_name ("GVariant");
 		break;
 	default:
 		Debug::emit_error ("Expected a GVariant basic type string but "
@@ -512,7 +422,8 @@ _check_basic_type_string (const gchar **type_str,
 	return _consume_variadic_argument (expected_type,
 	                                   args_begin, args_end,
 	                                   flags, compiler,
-	                                   format_arg_str, context);
+	                                   format_arg_str, context,
+	                                   type_manager);
 }
 
 /* Parse a single type string from the beginning of the string pointed to
@@ -528,7 +439,7 @@ _check_type_string (const gchar **type_str,
                     unsigned int /* VariantCheckFlags */ flags,
                     CompilerInstance& compiler,
                     const StringLiteral *format_arg_str,
-                    ASTContext& context)
+                    ASTContext& context, TypeManager &type_manager)
 {
 	DEBUG ("Checking type string ‘" << *type_str << "’.");
 
@@ -538,10 +449,7 @@ _check_type_string (const gchar **type_str,
 	switch (**type_str) {
 	/* Variants */
 	case 'v': /* GVariant* */
-		/* Stricter validation is applied in
-		 * _consume_variadic_argument(). */
-		expected_type = context.VoidPtrTy;
-		flags |= CHECK_FLAG_FORCE_GVARIANT;
+		expected_type = type_manager.find_pointer_type_by_name ("GVariant");
 		break;
 	/* Arrays */
 	case 'a':
@@ -554,30 +462,33 @@ _check_type_string (const gchar **type_str,
 		flags |= CHECK_FLAG_ALLOW_MAYBE;
 
 		if (flags & CHECK_FLAG_DIRECTION_OUT) {
-			flags |= CHECK_FLAG_FORCE_GVARIANTITER;
+			expected_type = type_manager.find_pointer_type_by_name ("GVariantIter");
 		} else {
-			flags |= CHECK_FLAG_FORCE_GVARIANTBUILDER;
+			expected_type = type_manager.find_pointer_type_by_name ("GVariantBuilder");
 		}
 
 		/* Check and consume the type string for the array element
 		 * type. */
 		if (!_check_type_string (type_str, args_begin, args_end,
 		                         flags & ~CHECK_FLAG_CONSUME_ARGS,
-		                         compiler, format_arg_str,  context)) {
+		                         compiler, format_arg_str, context,
+		                         type_manager)) {
 			return false;
 		}
 
 		/* Consume the single GVariantBuilder for the array. */
-		return _consume_variadic_argument (context.VoidPtrTy,
+		return _consume_variadic_argument (expected_type,
 		                                   args_begin, args_end,
 		                                   flags, compiler,
-		                                   format_arg_str, context);
+		                                   format_arg_str, context,
+		                                   type_manager);
 	/* Maybe Types */
 	case 'm':
 		*type_str = *type_str + 1;  /* consume the ‘m’ */
 		return _check_type_string (type_str, args_begin, args_end,
 		                           flags | CHECK_FLAG_ALLOW_MAYBE,
-		                           compiler, format_arg_str, context);
+		                           compiler, format_arg_str, context,
+		                           type_manager);
 	/* Tuples */
 	case '(':
 		*type_str = *type_str + 1;  /* consume the opening bracket */
@@ -586,7 +497,8 @@ _check_type_string (const gchar **type_str,
 			if (!_check_type_string (type_str, args_begin,
 			                         args_end,
 			                         flags, compiler,
-			                         format_arg_str, context)) {
+			                         format_arg_str, context,
+			                         type_manager)) {
 				return false;
 			}
 		}
@@ -603,12 +515,8 @@ _check_type_string (const gchar **type_str,
 
 		return true;
 	case 'r': /* GVariant* of tuple type */
-		/* Stricter validation is applied in
-		 * _consume_variadic_argument().
-		 *
-		 * FIXME: Validate that the GVariant* has a tuple type. */
-		expected_type = context.VoidPtrTy;
-		flags |= CHECK_FLAG_FORCE_GVARIANT;
+		/* FIXME: Validate that the GVariant* has a tuple type. */
+		expected_type = type_manager.find_pointer_type_by_name ("GVariant");
 		break;
 	/* Dictionaries */
 	case '{':
@@ -624,7 +532,8 @@ _check_type_string (const gchar **type_str,
 		} else if (!_check_basic_type_string (type_str, args_begin,
 		                                      args_end,
 		                                      flags, compiler,
-		                                      format_arg_str, context)) {
+		                                      format_arg_str, context,
+		                                      type_manager)) {
 			return false;
 		}
 
@@ -637,7 +546,8 @@ _check_type_string (const gchar **type_str,
 			return false;
 		} else if (!_check_type_string (type_str, args_begin, args_end,
 		                                flags, compiler,
-		                                format_arg_str, context)) {
+		                                format_arg_str, context,
+		                                type_manager)) {
 			return false;
 		}
 
@@ -662,16 +572,14 @@ _check_type_string (const gchar **type_str,
 		return true;
 	/* GVariant* */
 	case '*': /* GVariant* of any type */
-		/* Stricter validation is applied in
-		 * _consume_variadic_argument(). */
-		expected_type = context.VoidPtrTy;
-		flags |= CHECK_FLAG_FORCE_GVARIANT;
+		expected_type = type_manager.find_pointer_type_by_name ("GVariant");
 		break;
 	default:
 		/* Fall back to checking basic types. */
 		return _check_basic_type_string (type_str, args_begin, args_end,
 		                                 flags, compiler,
-		                                 format_arg_str, context);
+		                                 format_arg_str, context,
+		                                 type_manager);
 	}
 
 	/* Consume the type string. */
@@ -680,7 +588,8 @@ _check_type_string (const gchar **type_str,
 	return _consume_variadic_argument (expected_type,
 	                                   args_begin, args_end,
 	                                   flags, compiler,
-	                                   format_arg_str, context);
+	                                   format_arg_str, context,
+	                                   type_manager);
 }
 
 /* Parse a single basic format string from the beginning of the string pointed
@@ -696,7 +605,7 @@ _check_basic_format_string (const gchar **format_str,
                             unsigned int /* VariantCheckFlags */ flags,
                             CompilerInstance& compiler,
                             const StringLiteral *format_arg_str,
-                            ASTContext& context)
+                            ASTContext& context, TypeManager &type_manager)
 {
 	DEBUG ("Checking format string ‘" << *format_str << "’.");
 
@@ -709,17 +618,15 @@ _check_basic_format_string (const gchar **format_str,
 		                                 flags |
 		                                 CHECK_FLAG_FORCE_GVARIANT,
 		                                 compiler, format_arg_str,
-		                                 context);
+		                                 context, type_manager);
 	case '?':
-		/* Direct GVariant. Stricter checking is implemented later on,
-		 * so we don’t just validate to VoidPtrTy. */
+		/* Direct GVariant. */
 		*format_str = *format_str + 1;  /* consume the argument */
-		return _consume_variadic_argument (context.VoidPtrTy,
+		return _consume_variadic_argument (type_manager.find_pointer_type_by_name ("GVariant"),
 		                                   args_begin, args_end,
-		                                   flags |
-		                                   CHECK_FLAG_FORCE_GVARIANT,
+		                                   flags,
 		                                   compiler, format_arg_str,
-		                                   context);
+		                                   context, type_manager);
 	case '&':
 		/* Ignore it for inbound arguments; require that outbound
 		 * arguments are const. */
@@ -729,7 +636,7 @@ _check_basic_format_string (const gchar **format_str,
 		                                 flags |
 		                                 CHECK_FLAG_REQUIRE_CONST,
 		                                 compiler, format_arg_str,
-		                                 context);
+		                                 context, type_manager);
 	case '^': {
 		/* Various different hard-coded types. */
 		*format_str = *format_str + 1;
@@ -778,14 +685,16 @@ _check_basic_format_string (const gchar **format_str,
 		return _consume_variadic_argument (expected_type, args_begin,
 		                                   args_end,
 		                                   flags, compiler,
-		                                   format_arg_str, context);
+		                                   format_arg_str, context,
+		                                   type_manager);
 	}
 	default:
 		/* Assume it’s a type string. */
 		return _check_basic_type_string (format_str, args_begin,
 		                                 args_end,
 		                                 flags, compiler,
-		                                 format_arg_str, context);
+		                                 format_arg_str, context,
+		                                 type_manager);
 	}
 }
 
@@ -802,7 +711,7 @@ _check_format_string (const gchar **format_str,
                       unsigned int /* VariantCheckFlags */ flags,
                       CompilerInstance& compiler,
                       const StringLiteral *format_arg_str,
-                      ASTContext& context)
+                      ASTContext& context, TypeManager &type_manager)
 {
 	DEBUG ("Checking format string ‘" << *format_str << "’.");
 
@@ -812,24 +721,24 @@ _check_format_string (const gchar **format_str,
 		*format_str = *format_str + 1;  /* consume the ‘@’ */
 		return _check_type_string (format_str, args_begin, args_end,
 		                           flags | CHECK_FLAG_FORCE_GVARIANT,
-		                           compiler, format_arg_str, context);
+		                           compiler, format_arg_str, context,
+		                           type_manager);
 	case 'm':
 		*format_str = *format_str + 1;  /* consume the ‘m’ */
 		return _check_format_string (format_str, args_begin, args_end,
 		                             flags | CHECK_FLAG_ALLOW_MAYBE,
-		                             compiler, format_arg_str, context);
+		                             compiler, format_arg_str, context,
+		                             type_manager);
 	case '*':
 	case '?':
 	case 'r':
-		/* Direct GVariants. Stricter checking is implemented later on,
-		 * so we don’t just validate to VoidPtrTy. */
+		/* Direct GVariants. */
 		*format_str = *format_str + 1;  /* consume the argument */
-		return _consume_variadic_argument (context.VoidPtrTy,
+		return _consume_variadic_argument (type_manager.find_pointer_type_by_name ("GVariant"),
 		                                   args_begin, args_end,
-		                                   flags |
-		                                   CHECK_FLAG_FORCE_GVARIANT,
+		                                   flags,
 		                                   compiler, format_arg_str,
-		                                   context);
+		                                   context, type_manager);
 	case '(':
 		*format_str = *format_str + 1;  /* consume the opening bracket */
 
@@ -837,7 +746,8 @@ _check_format_string (const gchar **format_str,
 			if (!_check_format_string (format_str, args_begin,
 			                           args_end,
 			                           flags, compiler,
-			                           format_arg_str, context)) {
+			                           format_arg_str, context,
+			                           type_manager)) {
 				return false;
 			}
 		}
@@ -868,7 +778,8 @@ _check_format_string (const gchar **format_str,
 		                                        args_end,
 		                                        flags, compiler,
 		                                        format_arg_str,
-		                                        context)) {
+		                                        context,
+		                                        type_manager)) {
 			return false;
 		}
 
@@ -882,7 +793,8 @@ _check_format_string (const gchar **format_str,
 		} else if (!_check_format_string (format_str, args_begin,
 		                                  args_end,
 		                                  flags, compiler,
-		                                  format_arg_str, context)) {
+		                                  format_arg_str, context,
+		                                  type_manager)) {
 			return false;
 		}
 
@@ -911,18 +823,21 @@ _check_format_string (const gchar **format_str,
 		*format_str = *format_str + 1;
 		return _check_type_string (format_str, args_begin, args_end,
 		                           flags | CHECK_FLAG_REQUIRE_CONST,
-		                           compiler, format_arg_str, context);
+		                           compiler, format_arg_str, context,
+		                           type_manager);
 	case '^':
 		/* Handled by the basic format string parser. */
 		return _check_basic_format_string (format_str, args_begin,
 		                                   args_end,
 		                                   flags, compiler,
-		                                   format_arg_str, context);
+		                                   format_arg_str, context,
+		                                   type_manager);
 	default:
 		/* Assume it’s a type string. */
 		return _check_type_string (format_str, args_begin, args_end,
 		                           flags, compiler,
-		                           format_arg_str, context);
+		                           format_arg_str, context,
+		                           type_manager);
 	}
 }
 
@@ -946,7 +861,7 @@ _check_gvariant_format_param (const CallExpr& call,
                               const FunctionDecl &func,
                               const VariantFuncInfo *func_info,
                               CompilerInstance& compiler,
-                              ASTContext& context)
+                              ASTContext& context, TypeManager &type_manager)
 {
 	/* Grab the format parameter string. */
 	const Expr *format_arg = call.getArg (func_info->format_param_index)->IgnoreParenImpCasts ();
@@ -995,7 +910,8 @@ _check_gvariant_format_param (const CallExpr& call,
 		flags |= (CHECK_FLAG_DIRECTION_OUT | CHECK_FLAG_ALLOW_MAYBE);
 
 	if (!_check_format_string (&format_str, &args_begin, &args_end,
-	                           flags, compiler, format_arg_str, context)) {
+	                           flags, compiler, format_arg_str, context,
+	                           type_manager)) {
 		g_free (whole_format_str);
 		return false;
 	}
@@ -1090,7 +1006,8 @@ GVariantVisitor::VisitCallExpr (CallExpr* expr)
 
 	/* Check the format parameter. */
 	_check_gvariant_format_param (*expr, *func, func_info, this->_compiler,
-	                              func->getASTContext ());
+	                              func->getASTContext (),
+	                              this->_type_manager);
 
 	return true;
 }
