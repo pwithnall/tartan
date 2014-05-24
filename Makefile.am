@@ -32,6 +32,8 @@ clang_plugin_libtartan_la_SOURCES = \
 	clang-plugin/nullability-checker.h \
 	clang-plugin/checker.cpp \
 	clang-plugin/checker.h \
+	clang-plugin/type-manager.cpp \
+	clang-plugin/type-manager.h \
 	$(NULL)
 
 clang_plugin_libtartan_la_CPPFLAGS = \

@@ -177,56 +177,14 @@ _gobject_look_up_signal (GIObjectInfo *dynamic_gobject_info,
 	return signal_info;
 }
 
-/* Find a #QualType for the typedeffed type with the given @name. This is a very
- * slow call (it requires iterating through all defined types in the given
- * @context), so its results should be cached where possible (FIXME: do this).
- *
- * If type lookup fails, a null type is returned. */
-static const QualType
-_find_type_by_name (const ASTContext &context, const std::string name)
-{
-	for (ASTContext::const_type_iterator it = context.types_begin (),
-	     ie = context.types_end (); it != ie; ++it) {
-		const Type *t = *it;
-		const TypedefType *tt = t->getAs<TypedefType> ();
-
-		if (tt != NULL) {
-			const TypedefNameDecl *decl = tt->getDecl ();
-
-			if (decl->getName () == name) {
-				DEBUG ("Found type ‘" << name << "’ with "
-				       "desugared type ‘" <<
-				       tt->desugar ().getAsString () << "’.");
-
-				return QualType (tt, 0);
-			}
-		}
-	}
-
-	DEBUG ("Failed to find type ‘" << name << "’.");
-
-	return QualType ();
-}
-
-/* Version of _find_type_by_name() which makes it a pointer type. */
-static const QualType
-_find_pointer_type_by_name (const ASTContext &context, const std::string name)
-{
-	QualType qt = _find_type_by_name (context, name);
-	if (!qt.isNull ()) {
-		return context.getPointerType (qt);
-	}
-
-	return QualType ();
-}
-
 /* Look up the #QualType representing the type in @type_info, which must be
  * a %GI_TYPE_TAG_INTERFACE info. If type lookup fails, a null type is
  * returned. */
 static QualType
 _type_interface_info_to_type (GITypeInfo *type_info,
                               const ASTContext &context,
-                              const GirManager &gir_manager)
+                              const GirManager &gir_manager,
+                              TypeManager &type_manager)
 {
 	GIBaseInfo *interface_info;
 	QualType retval;
@@ -244,7 +202,7 @@ _type_interface_info_to_type (GITypeInfo *type_info,
 	case GI_INFO_TYPE_INTERFACE:
 	case GI_INFO_TYPE_UNION: {
 		std::string c_type (gir_manager.get_c_name_for_type (interface_info));
-		retval = _find_pointer_type_by_name (context, c_type);
+		retval = type_manager.find_pointer_type_by_name (c_type);
 		break;
 	}
 	case GI_INFO_TYPE_FUNCTION:
@@ -280,14 +238,16 @@ _type_interface_info_to_type (GITypeInfo *type_info,
 static QualType
 _type_info_to_type (GITypeInfo *type_info,
                     const ASTContext &context,
-                    const GirManager &gir_manager);
+                    const GirManager &gir_manager,
+                    TypeManager &type_manager);
 
 /* Look up the #QualType representing the type in @array_info, which must be
  * a %GI_TYPE_TAG_ARRAY info. If type lookup fails, a null type is returned. */
 static QualType
 _type_array_info_to_type (GITypeInfo *array_info,
                           const ASTContext &context,
-                          const GirManager &gir_manager)
+                          const GirManager &gir_manager,
+                          TypeManager &type_manager)
 {
 	switch (g_type_info_get_array_type (array_info)) {
 	case GI_ARRAY_TYPE_C: {
@@ -295,7 +255,8 @@ _type_array_info_to_type (GITypeInfo *array_info,
 		GITypeInfo *param_type = g_type_info_get_param_type (array_info,
 		                                                     0);
 		QualType element_type = _type_info_to_type (param_type, context,
-		                                            gir_manager);
+		                                            gir_manager,
+		                                            type_manager);
 		g_base_info_unref (param_type);
 
 		if (element_type.isNull ()) {
@@ -321,11 +282,11 @@ _type_array_info_to_type (GITypeInfo *array_info,
 		}
 	}
 	case GI_ARRAY_TYPE_ARRAY:
-		return _find_pointer_type_by_name (context, "GArray");
+		return type_manager.find_pointer_type_by_name ("GArray");
 	case GI_ARRAY_TYPE_PTR_ARRAY:
-		return _find_pointer_type_by_name (context, "GPtrArray");
+		return type_manager.find_pointer_type_by_name ("GPtrArray");
 	case GI_ARRAY_TYPE_BYTE_ARRAY:
-		return _find_pointer_type_by_name (context, "GByteArray");
+		return type_manager.find_pointer_type_by_name ("GByteArray");
 	default:
 		llvm::errs () << "Warning: Unexpected array type " <<
 			g_type_info_get_array_type (array_info) <<
@@ -340,7 +301,8 @@ _type_array_info_to_type (GITypeInfo *array_info,
 static QualType
 _type_info_to_type (GITypeInfo *type_info,
                     const ASTContext &context,
-                    const GirManager &gir_manager)
+                    const GirManager &gir_manager,
+                    TypeManager &type_manager)
 {
 	switch (g_type_info_get_tag (type_info)) {
 	/* Basic types. */
@@ -380,18 +342,18 @@ _type_info_to_type (GITypeInfo *type_info,
 	/* Non-basic types */
 	case GI_TYPE_TAG_ARRAY:
 		return _type_array_info_to_type (type_info, context,
-		                                 gir_manager);
+		                                 gir_manager, type_manager);
 	case GI_TYPE_TAG_INTERFACE:
 		return _type_interface_info_to_type (type_info, context,
-		                                     gir_manager);
+		                                     gir_manager, type_manager);
 	case GI_TYPE_TAG_GLIST:
-		return _find_pointer_type_by_name (context, "GList");
+		return type_manager.find_pointer_type_by_name ("GList");
 	case GI_TYPE_TAG_GSLIST:
-		return _find_pointer_type_by_name (context, "GSList");
+		return type_manager.find_pointer_type_by_name ("GSList");
 	case GI_TYPE_TAG_GHASH:
-		return _find_pointer_type_by_name (context, "GHashTable");
+		return type_manager.find_pointer_type_by_name ("GHashTable");
 	case GI_TYPE_TAG_ERROR: {
-		QualType qt = _find_pointer_type_by_name (context, "GError");
+		QualType qt = type_manager.find_pointer_type_by_name ("GError");
 
 		if (!qt.isNull ()) {
 			return context.getPointerType (qt);
@@ -449,7 +411,8 @@ _check_signal_callback_type (const Expr *expr,
                              GISignalInfo *signal_info,
                              CompilerInstance &compiler,
                              const ASTContext &context,
-                             const GirManager &gir_manager)
+                             const GirManager &gir_manager,
+                             TypeManager &type_manager)
 {
 	const FunctionProtoType *callback_type = NULL;
 	SourceRange decl_range;  /* for the callback definition */
@@ -500,7 +463,8 @@ _check_signal_callback_type (const Expr *expr,
 		                                    dynamic_gobject_info,
 		                                    static_gobject_info,
 		                                    signal_info, compiler,
-		                                    context, gir_manager);
+		                                    context, gir_manager,
+		                                    type_manager);
 	}
 	case Stmt::StmtClass::ImplicitCastExprClass:
 	case Stmt::StmtClass::CStyleCastExprClass: {
@@ -511,7 +475,8 @@ _check_signal_callback_type (const Expr *expr,
 		                                    dynamic_gobject_info,
 		                                    static_gobject_info,
 		                                    signal_info, compiler,
-		                                    context, gir_manager);
+		                                    context, gir_manager,
+		                                    type_manager);
 	}
 	case Stmt::StmtClass::NoStmtClass:
 	default:
@@ -555,8 +520,7 @@ _check_signal_callback_type (const Expr *expr,
 			/* First argument is always a pointer to the GObject
 			 * instance which the signal is defined on. */
 			std::string c_type (gir_manager.get_c_name_for_type (static_gobject_info));
-			expected_type = _find_pointer_type_by_name (context,
-			                                            c_type);
+			expected_type = type_manager.find_pointer_type_by_name (c_type);
 			arg_name = "self";
 
 			QualType atp = actual_type;
@@ -637,7 +601,8 @@ _check_signal_callback_type (const Expr *expr,
 
 			expected_type = _type_info_to_type (&expected_type_info,
 			                                    context,
-			                                    gir_manager);
+			                                    gir_manager,
+			                                    type_manager);
 
 			if (expected_type.isNull ()) {
 				/* Error. */
@@ -696,7 +661,7 @@ _check_signal_callback_type (const Expr *expr,
 	g_callable_info_load_return_type (callable_info, &expected_type_info);
 	actual_type = callback_type->getResultType ();
 	expected_type = _type_info_to_type (&expected_type_info, context,
-	                                    gir_manager);
+	                                    gir_manager, type_manager);
 	if (expected_type.isNull ()) {
 		/* Error. */
 
@@ -743,7 +708,8 @@ _check_gsignal_callback_type (const CallExpr &call,
                               const SignalFuncInfo *func_info,
                               CompilerInstance &compiler,
                               const ASTContext &context,
-                              const GirManager &gir_manager)
+                              const GirManager &gir_manager,
+                              TypeManager &type_manager)
 {
 	const Expr *callback_arg, *gobject_arg, *signal_name_arg;
 
@@ -846,7 +812,8 @@ _check_gsignal_callback_type (const CallExpr &call,
 	if (!_check_signal_callback_type (callback_arg->IgnoreParenImpCasts (),
 	                                  dynamic_gobject_info,
 	                                  static_gobject_info, signal_info,
-	                                  compiler, context, gir_manager)) {
+	                                  compiler, context, gir_manager,
+	                                  type_manager)) {
 		/* A diagnostic has already been emitted by
 		 * _check_signal_callback_type(). */
 		g_base_info_unref (signal_info);
@@ -896,7 +863,7 @@ GSignalVisitor::VisitCallExpr (CallExpr* expr)
 	const GirManager *gir_manager = this->_gir_manager.get ();
 	_check_gsignal_callback_type (*expr, *func, func_info, this->_compiler,
 	                              func->getASTContext (),
-	                              *gir_manager);
+	                              *gir_manager, this->_type_manager);
 
 	return true;
 }

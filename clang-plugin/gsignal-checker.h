@@ -32,6 +32,7 @@
 
 #include "checker.h"
 #include "gir-manager.h"
+#include "type-manager.h"
 
 namespace tartan {
 
@@ -42,12 +43,14 @@ public:
 	explicit GSignalVisitor (CompilerInstance& compiler,
 	                         std::shared_ptr<const GirManager> gir_manager) :
 		_compiler (compiler), _context (compiler.getASTContext ()),
-		_gir_manager (gir_manager) {}
+		_gir_manager (gir_manager),
+		_type_manager (compiler.getASTContext ()) {}
 
 private:
 	CompilerInstance& _compiler;
 	const ASTContext& _context;
 	std::shared_ptr<const GirManager> _gir_manager;
+	TypeManager _type_manager;
 
 public:
 	bool VisitCallExpr (CallExpr* call);
