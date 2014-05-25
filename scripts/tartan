@@ -54,11 +54,11 @@ plugin_name=tartan
 # a fallback from before the project rename.
 plugin_options=()
 for arg in $GNOME_CLANG_OPTIONS; do
-	plugin_options+=( '-plugin-arg-tartan' )
+	plugin_options+=( "-plugin-arg-$plugin_name" )
 	plugin_options+=( "$arg" )
 done
 for arg in $TARTAN_OPTIONS; do
-	plugin_options+=( '-plugin-arg-tartan' )
+	plugin_options+=( "-plugin-arg-$plugin_name" )
 	plugin_options+=( "$arg" )
 done
 
