@@ -25,7 +25,7 @@
 }
 
 /*
- *  Expected a GVariant variadic argument of type ‘const char **’ but saw one of type ‘gchar **’.
+ *  Expected a GVariant variadic argument of type 'const char **' but saw one of type 'gchar **' (aka 'char **').
  *         g_variant_get (existing_variant, "(&s&s)", &str1, &str2);
  *                                                    ^
  */
@@ -36,7 +36,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘int *’ but there wasn’t one.
+ * Expected a GVariant variadic argument of type 'int *' but there wasn’t one.
  *         g_variant_get (existing_variant, "invalid");
  *                        ^
  */
@@ -53,7 +53,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘char ***’ but saw one of type ‘const gchar ***’.
+ * Expected a GVariant variadic argument of type 'char ***' but saw one of type 'const gchar ***' (aka 'const char ***').
  *         g_variant_get (existing_variant, "^as", &some_str_array);
  *                                                 ^
  */
@@ -71,7 +71,7 @@
 }
 
 /*
- *  Expected a GVariant variadic argument of type ‘const char ***’ but saw one of type ‘gchar ***’.
+ *  Expected a GVariant variadic argument of type 'const char ***' but saw one of type 'gchar ***' (aka 'char ***').
  *         g_variant_get (existing_variant, "^a&s", &some_str_array);
  *                                                  ^
  */
@@ -105,7 +105,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘char **’ but saw one of type ‘const gchar **’.
+ * Expected a GVariant variadic argument of type 'char **' but saw one of type 'const gchar **' (aka 'const char **').
  *         g_variant_get (existing_variant, "^ay", &some_byte_str);
  *                                                 ^
  */
@@ -123,7 +123,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘const char **’ but saw one of type ‘gchar **’.
+ * Expected a GVariant variadic argument of type 'const char **' but saw one of type 'gchar **' (aka 'char **').
  *         g_variant_get (existing_variant, "^&ay", &some_byte_str);
  *                                                  ^
  */
@@ -141,7 +141,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘char ***’ but saw one of type ‘const gchar ***’.
+ * Expected a GVariant variadic argument of type 'char ***' but saw one of type 'const gchar ***' (aka 'const char ***').
  *         g_variant_get (existing_variant, "^aay", &some_bytes_array);
  *                                                  ^
  */
@@ -159,7 +159,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘const char ***’ but saw one of type ‘gchar ***’.
+ * Expected a GVariant variadic argument of type 'const char ***' but saw one of type 'gchar ***' (aka 'char ***').
  *         g_variant_get (existing_variant, "^a&ay", &some_bytes_array);
  *                                                   ^
  */
@@ -176,7 +176,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘GVariant **’ but saw one of type ‘gchar **’.
+ * Expected a GVariant variadic argument of type 'GVariant **' (aka 'struct _GVariant **') but saw one of type 'gchar **' (aka 'char **').
  *         g_variant_get (existing_variant, "@s", &some_str);
  *                                                ^
  */
@@ -194,7 +194,7 @@
 }
 
 /*
- *  Expected a GVariant variadic argument of type ‘GVariant **’ but saw one of type ‘const GVariant **’.
+ *  Expected a GVariant variadic argument of type 'GVariant **' (aka 'struct _GVariant **') but saw one of type 'const GVariant **' (aka 'const struct _GVariant **').
  *         g_variant_get (existing_variant, "@s", &some_variant);
  *                                                ^
  */
@@ -274,7 +274,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘GVariant **’ but saw one of type ‘const GVariant **’.
+ * Expected a GVariant variadic argument of type 'GVariant **' (aka 'struct _GVariant **') but saw one of type 'const GVariant **' (aka 'const struct _GVariant **').
  *         g_variant_get (existing_variant, "v", &some_var);
  *                                               ^
  */
@@ -291,7 +291,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘GVariant **’ but saw one of type ‘char *’.
+ * Expected a GVariant variadic argument of type 'GVariant **' (aka 'struct _GVariant **') but saw one of type 'char *'.
  *         g_variant_get (existing_variant, "v", "nope");
  *                                               ^
  */
@@ -330,7 +330,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘const char **’ but saw one of type ‘gchar **’.
+ * Expected a GVariant variadic argument of type 'const char **' but saw one of type 'gchar **' (aka 'char **').
  *         g_variant_get (existing_variant, "m&s", &some_str);
  *                                                 ^
  */
@@ -350,7 +350,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘GVariantIter **’ but saw one of type ‘GVariantIter *’.
+ * Expected a GVariant variadic argument of type 'GVariantIter **' (aka 'struct _GVariantIter **') but saw one of type 'GVariantIter *' (aka 'struct _GVariantIter *').
  *         g_variant_get (existing_variant, "as", some_iter);
  *                                                ^
  */
@@ -394,7 +394,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘GVariantIter **’ but saw one of type ‘char *’.
+ * Expected a GVariant variadic argument of type 'GVariantIter **' (aka 'struct _GVariantIter **') but saw one of type 'char *'.
  *         g_variant_get (existing_variant, "au", "nope");
  *                                                ^
  */
@@ -411,7 +411,7 @@
 }
 
 /*
- *  Expected a GVariant variadic argument of type ‘int *’ but saw one of type ‘gchar *’.
+ *  Expected a GVariant variadic argument of type 'int *' but saw one of type 'gchar *' (aka 'char *').
  *         g_variant_get (existing_variant, "b", &some_not_bool);
  *                                               ^
  */
@@ -429,7 +429,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘unsigned char *’ but saw one of type ‘guint *’.
+ * Expected a GVariant variadic argument of type 'unsigned char *' but saw one of type 'guint *' (aka 'unsigned int *').
  *         g_variant_get (existing_variant, "y", &some_uchar);
  *                                               ^
  */
@@ -456,7 +456,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘double *’ but saw one of type ‘gfloat *’.
+ * Expected a GVariant variadic argument of type 'double *' but saw one of type 'gfloat *' (aka 'float *').
  *         g_variant_get (existing_variant, "d", &some_float);
  *                                               ^
  */
@@ -466,7 +466,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘long *’ but saw one of type ‘gint32 *’.
+ * Expected a GVariant variadic argument of type 'long *' but saw one of type 'gint32 *' (aka 'int *').
  *         g_variant_get (existing_variant, "x", &some_int);
  *                                               ^
  */
@@ -484,7 +484,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘long *’ but saw one of type ‘guint64 *’.
+ * Expected a GVariant variadic argument of type 'long *' but saw one of type 'guint64 *' (aka 'unsigned long *').
  *         g_variant_get (existing_variant, "x", &some_uint);
  *                                               ^
  */

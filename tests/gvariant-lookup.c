@@ -44,7 +44,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘char **’ but saw one of type ‘guint *’.
+ * Expected a GVariant variadic argument of type 'char **' but saw one of type 'guint *' (aka 'unsigned int *').
  *         g_variant_lookup (existing_variant, "key", "s", &not_a_string);
  *                                                         ^
  */

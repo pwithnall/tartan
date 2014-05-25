@@ -19,7 +19,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘char *’ but saw one of type ‘int’.
+ * Expected a GVariant variadic argument of type 'char *' but saw one of type 'int'.
  *         g_variant_builder_add (builder, "{ss}", "hi", 15);
  *                                                       ^
  */
@@ -30,7 +30,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘char *’ but saw NULL instead.
+ * Expected a GVariant variadic argument of type 'char *' but saw NULL instead.
  *         g_variant_builder_add (builder, "s", FALSE);
  *                                              ^
  */

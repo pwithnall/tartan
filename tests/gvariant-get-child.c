@@ -32,7 +32,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘const char **’ but saw one of type ‘guint *’.
+ * Expected a GVariant variadic argument of type 'const char **' but saw one of type 'guint *' (aka 'unsigned int *').
  *         g_variant_get_child (existing_variant, 0, "&s", &not_a_string);
  *                                                         ^
  */

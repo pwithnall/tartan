@@ -264,7 +264,7 @@ _consume_variadic_argument (QualType expected_type,
 
 	if (*args_begin == *args_end) {
 		Debug::emit_error ("Expected a GVariant variadic argument of "
-		                   "type ‘%0’ but there wasn’t one.", compiler,
+		                   "type %0 but there wasn’t one.", compiler,
 		                   format_arg_str->getLocStart ())
 		<< expected_type;
 
@@ -293,7 +293,7 @@ _consume_variadic_argument (QualType expected_type,
 	if (is_null_constant && !(flags & CHECK_FLAG_ALLOW_MAYBE) &&
 	    expected_type->isPointerType ()) {
 		Debug::emit_error ("Expected a GVariant variadic argument of "
-		                   "type ‘%0’ but saw NULL instead.", compiler,
+		                   "type %0 but saw NULL instead.", compiler,
 		                   arg->getLocStart ())
 		<< expected_type;
 
@@ -303,8 +303,8 @@ _consume_variadic_argument (QualType expected_type,
 		if (!_compare_types (actual_type, expected_type,
 		                     flags, context)) {
 			Debug::emit_error ("Expected a GVariant variadic "
-			                   "argument of type ‘%0’ but saw one "
-			                   "of type ‘%1’.", compiler,
+			                   "argument of type %0 but saw one "
+			                   "of type %1.", compiler,
 			                   arg->getLocStart ())
 			<< expected_type
 			<< actual_type;
@@ -385,7 +385,7 @@ _check_basic_type_string (const gchar **type_str,
 		Debug::emit_error ("Expected a GVariant basic type string but "
 		                   "saw ‘%0’.", compiler,
 		                   format_arg_str->getLocStart ())
-		<< **type_str;
+		<< std::string (1, **type_str);
 
 		return false;
 	}
@@ -941,7 +941,7 @@ _check_gvariant_format_param (const CallExpr& call,
 
 		if (error_format_str != NULL) {
 			Debug::emit_error ("Unexpected GVariant variadic "
-			                   "argument of type ‘%0’. A ‘%1’ "
+			                   "argument of type %0. A ‘%1’ "
 			                   "GVariant format string should be "
 			                   "added to the format argument to "
 			                   "use it.",
@@ -950,7 +950,7 @@ _check_gvariant_format_param (const CallExpr& call,
 			<< error_format_str;
 		} else {
 			Debug::emit_error ("Unexpected GVariant variadic "
-			                   "argument of type ‘%0’. A GVariant "
+			                   "argument of type %0. A GVariant "
 			                   "format string should be added to "
 			                   "the format argument to use it, but "
 			                   "there is no known GVariant "

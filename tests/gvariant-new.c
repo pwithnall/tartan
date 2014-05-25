@@ -1,7 +1,7 @@
 /* Template: gvariant */
 
 /*
- * Expected a GVariant variadic argument of type ‘char *’ but saw one of type ‘guint’.
+ * Expected a GVariant variadic argument of type 'char *' but saw one of type 'guint' (aka 'unsigned int').
  *         floating_variant = g_variant_new ("(sss)", "hello", my_string, a_little_int_short_and_stout);
  *                                                                        ^
  */
@@ -20,7 +20,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘int’ but there wasn’t one.
+ * Expected a GVariant variadic argument of type 'int' but there wasn’t one.
  *         floating_variant = g_variant_new ("invalid");
  *                                            ^
  */
@@ -43,7 +43,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘int’ but saw one of type ‘char *’.
+ * Expected a GVariant variadic argument of type 'int' but saw one of type 'char *'.
  *         floating_variant = g_variant_new ("b", "nope");
  */
 {
@@ -58,7 +58,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘int’ but saw one of type ‘char *’.
+ * Expected a GVariant variadic argument of type 'int' but saw one of type 'char *'.
  *         floating_variant = g_variant_new ("y", "nope");
  *                                                ^
  */
@@ -82,7 +82,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘int’ but saw one of type ‘char *’.
+ * Expected a GVariant variadic argument of type 'int' but saw one of type 'char *'.
  *         floating_variant = g_variant_new ("n", "nope");
  *                                                ^
  */
@@ -129,7 +129,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘int’ but saw one of type ‘char *’.
+ * Expected a GVariant variadic argument of type 'int' but saw one of type 'char *'.
  *         floating_variant = g_variant_new ("i", "nope");
  *                                                ^
  */
@@ -160,7 +160,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘unsigned int’ but saw one of type ‘char *’.
+ * Expected a GVariant variadic argument of type 'unsigned int' but saw one of type 'char *'.
  *         floating_variant = g_variant_new ("u", "nope");
  *                                                ^
  */
@@ -199,7 +199,7 @@
 }
 
 /*
- *  Expected a GVariant variadic argument of type ‘long’ but saw one of type ‘char *’.
+ *  Expected a GVariant variadic argument of type 'long' but saw one of type 'char *'.
  *         floating_variant = g_variant_new ("x", "nope");
  *                                                ^
  */
@@ -208,7 +208,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘long’ but saw one of type ‘int’.
+ * Expected a GVariant variadic argument of type 'long' but saw one of type 'int'.
  *         floating_variant = g_variant_new ("x", -5);
  *                                                ^
  */
@@ -217,7 +217,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘long’ but saw one of type ‘gint32’.
+ * Expected a GVariant variadic argument of type 'long' but saw one of type 'gint32' (aka 'int').
  *         floating_variant = g_variant_new ("x", some_var);
  *                                                ^
  */
@@ -242,7 +242,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘unsigned long’ but saw one of type ‘char *’.
+ * Expected a GVariant variadic argument of type 'unsigned long' but saw one of type 'char *'.
  *         floating_variant = g_variant_new ("t", "nada");
  *                                                ^
  */
@@ -251,7 +251,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘unsigned long’ but saw one of type ‘unsigned int’.
+ * Expected a GVariant variadic argument of type 'unsigned long' but saw one of type 'unsigned int'.
  *         floating_variant = g_variant_new ("t", 5);
  *                                                ^
  */
@@ -260,7 +260,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘unsigned long’ but saw one of type ‘guint32’.
+ * Expected a GVariant variadic argument of type 'unsigned long' but saw one of type 'guint32' (aka 'unsigned int').
  *         floating_variant = g_variant_new ("t", some_var);
  *                                                ^
  */
@@ -285,7 +285,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘int’ but saw one of type ‘char *’.
+ * Expected a GVariant variadic argument of type 'int' but saw one of type 'char *'.
  *         floating_variant = g_variant_new ("h", "nope");
  *                                                ^
  */
@@ -309,7 +309,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘double’ but saw one of type ‘int’.
+ * Expected a GVariant variadic argument of type 'double' but saw one of type 'int'.
  *         floating_variant = g_variant_new ("d", 5);
  *                                                ^
  */
@@ -347,7 +347,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘char *’ but saw one of type ‘int’.
+ * Expected a GVariant variadic argument of type 'char *' but saw one of type 'int'.
  *         floating_variant = g_variant_new ("s", 152);
  *                                                ^
  */
@@ -388,7 +388,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘char *’ but saw one of type ‘int’.
+ * Expected a GVariant variadic argument of type 'char *' but saw one of type 'int'.
  *         floating_variant = g_variant_new ("o", 152);
  *                                                ^
  */
@@ -429,7 +429,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘char *’ but saw one of type ‘int’.
+ * Expected a GVariant variadic argument of type 'char *' but saw one of type 'int'.
  *         floating_variant = g_variant_new ("g", 152);
  *                                                ^
  */
@@ -523,7 +523,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘GVariant *’ but saw one of type ‘char *’.
+ * Expected a GVariant variadic argument of type 'GVariant *' (aka 'struct _GVariant *') but saw one of type 'char *'.
  *         floating_variant = g_variant_new ("v", "nope");
  *                                                ^
  */
@@ -553,7 +553,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘char *’ but saw NULL instead.
+ * Expected a GVariant variadic argument of type 'char *' but saw NULL instead.
  *         floating_variant = g_variant_new ("s", NULL);
  *                                           ^
  */
@@ -570,7 +570,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘GVariant *’ but saw NULL instead.
+ * Expected a GVariant variadic argument of type 'GVariant *' (aka 'struct _GVariant *') but saw NULL instead.
  *         floating_variant = g_variant_new ("@s", NULL);
  *                                           ^
  */
@@ -579,7 +579,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘GVariant *’ but saw one of type ‘char *’.
+ * Expected a GVariant variadic argument of type 'GVariant *' (aka 'struct _GVariant *') but saw one of type 'char *'.
  *         floating_variant = g_variant_new ("@s", "some string");
  *                                                 ^
  */
@@ -612,7 +612,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘char *’ but saw one of type ‘int’.
+ * Expected a GVariant variadic argument of type 'char *' but saw one of type 'int'.
  *         floating_variant = g_variant_new ("{ss}", 5, FALSE);
  *                                                   ^
  */
@@ -632,7 +632,7 @@
 }
 
 /*
- *  Expected a GVariant variadic argument of type ‘char *’ but saw NULL instead.
+ *  Expected a GVariant variadic argument of type 'char *' but saw NULL instead.
  *         floating_variant = g_variant_new ("{ss}", "key", NULL);
  *                                                          ^
  */
@@ -641,7 +641,7 @@
 }
 
 /*
- *  Expected a GVariant variadic argument of type ‘char *’ but saw NULL instead.
+ *  Expected a GVariant variadic argument of type 'char *' but saw NULL instead.
  *         floating_variant = g_variant_new ("{ss}", NULL, "value");
  *                                                   ^
  */
@@ -813,7 +813,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘GVariantBuilder *’ but saw one of type ‘char *’.
+ * Expected a GVariant variadic argument of type 'GVariantBuilder *' (aka 'struct _GVariantBuilder *') but saw one of type 'char *'.
  *         floating_variant = g_variant_new ("au", "nope");
  *                                                 ^
  */
@@ -856,7 +856,7 @@
 }
 
 /*
- *  Expected a GVariant variadic argument of type ‘char **’ but saw NULL instead.
+ *  Expected a GVariant variadic argument of type 'char **' but saw NULL instead.
  *         floating_variant = g_variant_new ("^as", NULL);
  *                                                  ^
  */

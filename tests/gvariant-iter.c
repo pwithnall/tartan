@@ -16,7 +16,7 @@
 }
 
 /*
- *  Expected a GVariant variadic argument of type ‘GVariant **’ but saw one of type ‘gchar **’.
+ *  Expected a GVariant variadic argument of type 'GVariant **' (aka 'struct _GVariant **') but saw one of type 'gchar **' (aka 'char **').
  *         while (g_variant_iter_loop (&iter, "{sv}", &key, &not_a_value)) {
  *                                                          ^
  */
@@ -51,7 +51,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type ‘GVariant **’ but saw one of type ‘gchar **’.
+ * Expected a GVariant variadic argument of type 'GVariant **' (aka 'struct _GVariant **') but saw one of type 'gchar **' (aka 'char **').
  *         while (g_variant_iter_next (&iter, "{sv}", &key, &not_a_value)) {
  *                                                          ^
  */
