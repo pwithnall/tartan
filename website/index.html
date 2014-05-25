@@ -102,7 +102,9 @@ using Tartan, add the following lines to
 <pre>static_analyzer = True
 static_analyzer_template = 'scan-build --use-analyzer=<span class="replaceable">$JHBUILD_PREFIX</span>/bin/tartan -v -o %(outputdir)s/%(module)s</pre>
 <p>where <span class="program-name">tartan</span> is a wrapper script for
-Clang which loads and enables the Tartan plugin.</p>
+Clang which loads and enables the Tartan plugin. It can be used both installed
+(<span class="filename"><span class="replaceable">$JHBUILD_PREFIX</span>/bin/tartan</span>)
+or uninstalled (<span class="filename">/path/to/tartan/source/scripts/tartan</span>).</p>
 
 <p>The <span class="program-name">scan-build</span> wrapper can also be used
 without Tartan:</p>
@@ -114,32 +116,43 @@ not enable GLib-specific warnings.</p>
 
 <h3 id="usage-standalone">Standalone usage</h3>
 
+<h4 id="usage-standalone-scan-build">Automatic wrapper script</h4>
+
 <p>The easiest way to use Tartan standalone is with the
-<span class="program-name">scan-build</span> script which comes with Clang.
-e.g.:<br/>
-<span class="command">scan-build --use-analyzer=/path/to/bin/tartan -v ./autogen.sh</span><br/>
-where <span class="command">./autogen.sh</span> is the command to configure or
-build your project (though if a project is configured under
-<span class="program-name">scan-build</span>, you only need to run
-<span class="command">make</span> normally to perform the static analysis.</p>
+<span class="program-name">scan-build</span> script which comes with Clang:</p>
+<pre>scan-build --use-analyzer=/path/to/bin/tartan -v ./autogen.sh
+make</pre>
+<p>where <span class="command">./autogen.sh</span> is the command to configure
+or build your project. You can then run <span class="command">make</span>
+normally to perform the static analysis.</p>
+
+<p>You can think of <span class="program-name">scan-build</span> as setting the
+<span class="env-var">CC</span> environment variable to use the static analyser,
+so that <span class="program-name">autogen.sh</span> picks that up.</p>
 
 <p>The <span class="program-name">tartan</span> script can be used
-installed or uninstalled, straight from the source directory.</p>
+installed or uninstalled, straight from the Tartan source directory.</p>
+
+<h4 id="usage-standalone-clang">Directly with Clang</h4>
 
 <p>To use Tartan with the Clang static analyser directly, use the
-<span class="program-name">tartan</span> wrapper script by itself,
-e.g.:<br/>
-<span class="command">clang -cc1 -analyze -std=c89 $system_includes my-project/*.c</span><br/>
-becomes:<br/>
-<span class="command">tartan -cc1 -analyze -std=c89 $system_includes my-project/*.c</span><br/>
-which wraps the normal Clang compiler and automatically loads the correct
-plugin. The system includes should be set using:<br />
-<span class="command">system_includes=`echo | cpp -Wp,-v 2>&amp;1 |
-grep '^[[:space:]]' | sed -e 's/^[[:space:]]*/-isystem/' |
-tr "\n" ' '`</span><br />
-You should also specify your project’s include flags, for example using
-<span class="command">pkg-config</span>:<br />
-<span class="command">tartan -cc1 -analyze -std=c89 $system_includes `pkg-config --cflags glib-2.0` my-project/*.c</span></p>
+<span class="program-name">tartan</span> wrapper script by itself. The old
+command</p>
+<pre>clang -cc1 -analyze -std=c89 $system_includes my-project/*.c</pre>
+<p>becomes:</p>
+<pre>tartan -cc1 -analyze -std=c89 $system_includes my-project/*.c</pre>
+<p>which wraps the normal Clang compiler and automatically loads the correct
+plugin. The system includes should be set using:</p>
+<pre>system_includes=`echo | cpp -Wp,-v 2>&amp;1 | \
+grep '^[[:space:]]' | sed -e 's/^[[:space:]]*/-isystem/' | \
+tr "\n" ' '`</pre>
+<p>You should also specify your project’s include flags, for example using
+<span class="command">pkg-config</span>:</p>
+<pre>tartan -cc1 -analyze -std=c89 $system_includes `pkg-config --cflags glib-2.0` my-project/*.c</pre>
+
+<p>You can think of the <span class="program-name">tartan</span> script as
+equivalent to <span class="program-name">clang</span> or
+<span class="program-name">gcc</span> — it acts as a compiler.</p>
 
 <p>The <span class="program-name">tartan</span> script looks for the
 <span class="program-name">clang</span> binary in the same directory as itself,
@@ -155,10 +168,13 @@ optionally be set to pass extra options to the compiler after the Tartan
 options. Similarly, <span class="env-var">TARTAN_CLANG_OPTIONS</span> may
 optionally be set to pass extra options to the Tartan plugin (only).</p>
 
+<h4 id="usage-standalone-raw">Raw Clang plugin</h4>
+
 <p>Finally, Tartan may be used without the wrapper script by passing the
-<span class="command">-load</span> and <span class="command">add-plugin</span>
+<span class="command">-load</span> and <span class="command">-add-plugin</span>
 arguments directly to the compiler:</p>
 <pre>clang -cc1 -load <span class="replaceable">$PREFIX</span>/lib/tartan/<span class="replaceable">$LLVM_VERSION</span>/libtartan.so -add-plugin tartan -analyze -std=c89 my-project/*.c</pre>
+<p>Again, Tartan can be used both while installed or uninstalled.</p>
 
 
 <h2 id="troubleshooting">Troubleshooting</h2>
@@ -179,8 +195,8 @@ situation.</p>
 	detect, such as passing <span class="command">NULL</span> as the input
 	string to <span class="function-name">g_ascii_strtod()</span>, or using
 	an invalid GVariant format string in a GVariant method. If this causes a
-	]’ error message, then Tartan is working. Otherwise it is not, and you
-	should <a href="#contact">contact</a> the authors.</li>
+	‘[tartan]’ error message, then Tartan is working. Otherwise it is not,
+	and you should <a href="#contact">contact</a> the authors.</li>
 </ul>
 
 
