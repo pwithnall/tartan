@@ -17,6 +17,7 @@ elif [ -f `which clang` ]; then
 	real_clang=`which clang`
 else
 	echo "Error: Could not find clang executable. Set TARTAN_CC to the absolute path of the real clang executable." >& 2
+	exit 1
 fi
 
 # Extract the clang version.
@@ -43,6 +44,7 @@ elif [ -f "$clang_prefix/lib/tartan/$clang_version/libtartan.so" ]; then
 	plugin_path="$clang_prefix/lib/tartan/$clang_version/libtartan.so"
 else
 	echo "Error: Could not find libtartan.so. Set TARTAN_PLUGIN to the absolute path of the Tartan plugin." >& 2
+	exit 2
 fi
 
 plugin_name=tartan
@@ -63,6 +65,11 @@ done
 # Clang can’t accept -load as the first argument.
 first_arg=$1
 shift
+
+if [ "$first_arg" == "" ]; then
+	echo "Error: $0 must be called with at least one argument or source code file to scan." >& 2
+	exit 3
+fi
 
 # Exec Clang with the plugin loaded.
 exec "$real_clang" \
