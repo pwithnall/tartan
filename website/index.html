@@ -121,10 +121,9 @@ not enable GLib-specific warnings.</p>
 <p>The easiest way to use Tartan standalone is with the
 <span class="program-name">scan-build</span> script which comes with Clang:</p>
 <pre>scan-build --use-analyzer=/path/to/bin/tartan -v ./autogen.sh
-make</pre>
+scan-build --use-analyzer=/path/to/bin/tartan -v make</pre>
 <p>where <span class="command">./autogen.sh</span> is the command to configure
-or build your project. You can then run <span class="command">make</span>
-normally to perform the static analysis.</p>
+your project and <span class="command">make</span> builds it.</p>
 
 <p>You can think of <span class="program-name">scan-build</span> as setting the
 <span class="env-var">CC</span> environment variable to use the static analyser,
