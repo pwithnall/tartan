@@ -25,7 +25,19 @@ fi
 #     clang version 3.3 (tags/RELEASE_33/rc3)
 #     Target: x86_64-redhat-linux-gnu
 #     Thread model: posix
-clang_version=`"$real_clang" --version | head -n1 | cut -f3 -d ' '`
+# or:
+#     clang version 3.4.2 (http://llvm.org/git/clang.git 65173e04eacb68ff89a58fbff14979eb318896c9) (http://llvm.org/git/llvm.git 5c6aa738fb3325ae499454877f1e2926d2368135)
+#     Target: x86_64-unknown-linux-gnu
+#     Thread model: posix
+clang_version_full=`"$real_clang" --version | head -n1 | cut -f3 -d ' '`
+clang_version=`echo "$clang_version_full" | sed 's/\([[0-9]]*\)\.\([[0-9]]*\)\(\.[[0-9]]*\)\?\(svn\)\?/\1.\2/'`
+
+# Sanity check.
+if [ "$clang_version" == "" ]; then
+	echo "Error: Could not extract Clang version from output:" >& 2
+	"$real_clang" --version >& 2
+	exit 4
+fi
 
 # Try and find the Tartan plugin. $TARTAN_PLUGIN trumps everything.
 if [ "x$TARTAN_PLUGIN" != "x" ]; then
@@ -42,6 +54,9 @@ elif [ -f "$clang_prefix/lib64/tartan/$clang_version/libtartan.so" ]; then
 elif [ -f "$clang_prefix/lib/tartan/$clang_version/libtartan.so" ]; then
 	# 32-bit installed.
 	plugin_path="$clang_prefix/lib/tartan/$clang_version/libtartan.so"
+elif [ ! -d "$clang_prefix/lib/tartan/$clang_version/" ]; then
+	echo "Error: Unsupported version of Clang ‘$clang_version’. Recompile Tartan for this version of Clang, set TARTAN_CC to a supported Clang version, or set TARTAN_PLUGIN to a plugin which supports this version." >& 2
+	exit 2
 else
 	echo "Error: Could not find libtartan.so. Set TARTAN_PLUGIN to the absolute path of the Tartan plugin." >& 2
 	exit 2
