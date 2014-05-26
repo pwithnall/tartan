@@ -50,14 +50,14 @@ AS_IF([test $LLVM_CONFIG = "failed"],[
 
 AC_MSG_CHECKING([for LLVM])
 
-# LLVM_REQS is either (e.g.) 3.5 or 3.6svn
-req_major=`echo $LLVM_REQS | sed 's/\([[0-9]]*\)\.\([[0-9]]*\)\(svn\)\?/\1/'`
-req_minor=`echo $LLVM_REQS | sed 's/\([[0-9]]*\)\.\([[0-9]]*\)\(svn\)\?/\2/'`
+# LLVM_REQS is either (e.g.) 3.5, 3.6svn or 3.4.2
+req_major=`echo $LLVM_REQS | sed 's/\([[0-9]]*\)\.\([[0-9]]*\)\(\.[[0-9]]*\)\?\(svn\)\?/\1/'`
+req_minor=`echo $LLVM_REQS | sed 's/\([[0-9]]*\)\.\([[0-9]]*\)\(\.[[0-9]]*\)\?\(svn\)\?/\2/'`
 
 llvm_version=`$LLVM_CONFIG --version`
 
-major=`echo $llvm_version | sed 's/\([[0-9]]*\)\.\([[0-9]]*\)\(svn\)\?/\1/'`
-minor=`echo $llvm_version | sed 's/\([[0-9]]*\)\.\([[0-9]]*\)\(svn\)\?/\2/'`
+major=`echo $llvm_version | sed 's/\([[0-9]]*\)\.\([[0-9]]*\)\(\.[[0-9]]*\)\?\(svn\)\?/\1/'`
+minor=`echo $llvm_version | sed 's/\([[0-9]]*\)\.\([[0-9]]*\)\(\.[[0-9]]*\)\?\(svn\)\?/\2/'`
 
 AS_IF([test "$major" -eq "$req_major" -a "$minor" -ge "$req_minor"],[
 	LLVM_CPPFLAGS=`$LLVM_CONFIG --cppflags`
