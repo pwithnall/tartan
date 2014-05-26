@@ -45,9 +45,9 @@ if [ "x$TARTAN_PLUGIN" != "x" ]; then
 elif [ "x$GNOME_CLANG_PLUGIN" != "x" ]; then
 	# Fallback from before project rename
 	plugin_path="$GNOME_CLANG_PLUGIN"
-elif [ -f "$clang_bin_dir/clang-plugin/.libs/libtartan.so" ]; then
+elif [ -f "$clang_bin_dir/../clang-plugin/.libs/libtartan.so" ]; then
 	# Uninstalled, from the source directory.
-	plugin_path="$clang_bin_dir/clang-plugin/.libs/libtartan.so"
+	plugin_path="$clang_bin_dir/../clang-plugin/.libs/libtartan.so"
 elif [ -f "$clang_prefix/lib64/tartan/$clang_version/libtartan.so" ]; then
 	# 64-bit installed.
 	plugin_path="$clang_prefix/lib64/tartan/$clang_version/libtartan.so"
