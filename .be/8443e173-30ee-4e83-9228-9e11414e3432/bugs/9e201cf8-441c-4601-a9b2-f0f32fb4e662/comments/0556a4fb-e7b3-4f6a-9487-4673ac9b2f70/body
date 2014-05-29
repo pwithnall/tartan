@@ -1,0 +1,8 @@
+I get loads of those:
+  dbus.c:104:31: warning: [tartan]: Missing (allow-none) annotation on the
+  ‘error’ parameter of function tp_dbus_check_valid_bus_name() (already has a
+      nonnull attribute or no non-NULL precondition assertion).
+                                GError **error)
+
+Tartran should automatically annotate GError.
+
