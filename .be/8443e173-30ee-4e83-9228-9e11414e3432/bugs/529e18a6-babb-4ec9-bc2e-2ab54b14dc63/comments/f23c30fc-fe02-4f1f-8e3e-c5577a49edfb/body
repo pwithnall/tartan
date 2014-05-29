@@ -1,0 +1,12 @@
+proxy.c:957:19: warning: [tartan]: Incorrect type for argument ‘error’ in
+signal handler for signal ‘GDBusConnection::closed’. Expected ‘GError **’ but
+saw ‘GError *’.
+
+But the signature of the function is actually:
+
+void  user_function (GDBusConnection *connection,
+    gboolean         remote_peer_vanished,
+    GError          *error,
+    gpointer         user_data)
+
+
