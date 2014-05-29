@@ -1,0 +1,50 @@
+{
+
+
+
+
+
+
+    "creator": "Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>", 
+
+
+
+
+
+
+    "reporter": "Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>", 
+
+
+
+
+
+
+    "severity": "minor", 
+
+
+
+
+
+
+    "status": "open", 
+
+
+
+
+
+
+    "summary": "doesn't find GObject::notify signal", 
+
+
+
+
+
+
+    "time": "Thu, 29 May 2014 12:41:17 +0000"
+
+
+
+
+
+
+}

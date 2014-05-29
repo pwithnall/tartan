@@ -1,0 +1,6 @@
+call-handler.c:277:3: warning: [tartan]: Could not find GObject subclass for
+expression when connecting to signal ‘notify’. To improve static analysis, add
+a typecast to the GObject parameter of g_signal_connect_data().
+
+This signal is in GObject-2.0.gir so I guess that Tartan should find it.
+

@@ -1,0 +1,6 @@
+conf.c:190:23: warning: [tartan]: Incorrect type for argument ‘key’ in signal
+handler for signal ‘GSettings::changed’. Expected ‘char *’ but saw ‘const
+gchar *’.
+
+The type checker should be less strict here.
+
