@@ -1,0 +1,14 @@
+log-store-pidgin.c:512:11: warning: [tartan]: Unexpected GVariant variadic
+argument of type 'char *'. A GVariant format string should be added to the
+format argument to use it, but there is no known GVariant representation of
+the argument’s type. The argument must be serialized to a
+GVariant-representable type first.
+
+The code being checked is:
+    g_variant_lookup (params,
+        "account", "&s", &account_param,
+        "server", "&s", &server_param);
+which is valid.
+
+
+

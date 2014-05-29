@@ -1,0 +1,50 @@
+{
+
+
+
+
+
+
+    "creator": "Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>", 
+
+
+
+
+
+
+    "reporter": "Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>", 
+
+
+
+
+
+
+    "severity": "minor", 
+
+
+
+
+
+
+    "status": "open", 
+
+
+
+
+
+
+    "summary": "wrong args ordering when checking g_variant_lookup()", 
+
+
+
+
+
+
+    "time": "Thu, 29 May 2014 12:46:26 +0000"
+
+
+
+
+
+
+}
