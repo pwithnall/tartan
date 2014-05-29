@@ -1,0 +1,7 @@
+accepter.c:90:19: warning: [tartan]: Incorrect type for argument ‘self’ in
+signal handler for signal ‘TpProxy::invalidated’. Expected ‘TpProxy *’ but saw
+‘TpStreamTubeChannel *’.
+
+TpStreamTubeChannel is actually a subclass of TpProxy so there is no error
+here.
+

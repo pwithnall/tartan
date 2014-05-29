@@ -1,0 +1,50 @@
+{
+
+
+
+
+
+
+    "creator": "Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>", 
+
+
+
+
+
+
+    "reporter": "Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>", 
+
+
+
+
+
+
+    "severity": "minor", 
+
+
+
+
+
+
+    "status": "open", 
+
+
+
+
+
+
+    "summary": "Should allow to use subclasses in signal callbacks", 
+
+
+
+
+
+
+    "time": "Thu, 29 May 2014 12:50:33 +0000"
+
+
+
+
+
+
+}
