@@ -1,0 +1,1 @@
+That usage of g_variant_lookup() is actually invalid, so Tartan found a bug. I've improved the error message it gives and added a unit test.

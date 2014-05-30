@@ -52,3 +52,24 @@
 	guint not_a_string;
 	g_variant_lookup (existing_variant, "key", "s", &not_a_string);
 }
+
+/*
+ * Unexpected GVariant variadic argument of type 'char *'. Either it should be removed, or a GVariant format string should be added to the format argument to use it. There is no known GVariant representation of the argument’s type, so the argument must be serialized to a GVariant-representable type first.
+ *                           "server", "&s", &server_param);
+ *                           ^
+ * Unexpected GVariant variadic argument of type 'char *'. Either it should be removed, or a GVariant format string should be added to the format argument to use it. There is no known GVariant representation of the argument’s type, so the argument must be serialized to a GVariant-representable type first.
+ *                           "server", "&s", &server_param);
+ *                                     ^
+ * Unexpected GVariant variadic argument of type 'const gchar **' (aka 'const char **'). Either it should be removed, or a GVariant format string should be added to the format argument to use it. There is no known GVariant representation of the argument’s type, so the argument must be serialized to a GVariant-representable type first.
+ *                           "server", "&s", &server_param);
+ *                                           ^
+ */
+{
+	/* Incorrect usage of g_variant_lookup() found in the wild in tp-glib.
+	 * This is the first real bug Tartan found!
+	 * (g_variant_lookup() can only look up one key, not multiple.) */
+	const gchar *account_param, *server_param;
+	g_variant_lookup (existing_variant,
+	                  "account", "&s", &account_param,
+	                  "server", "&s", &server_param);
+}
