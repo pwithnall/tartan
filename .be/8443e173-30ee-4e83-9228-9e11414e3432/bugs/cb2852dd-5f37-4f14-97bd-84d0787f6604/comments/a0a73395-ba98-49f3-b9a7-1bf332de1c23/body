@@ -1,0 +1,6 @@
+ • Verify properties (nullability, types, etc.) of vfunc implementations by
+   searching for class_init() functions and checking for vfunc assignments. If
+   we have access to the source code for the vfunc wrapper function, we could
+   transfer its pre- and post-conditions to the vfunc implementation as static
+   analysis assumptions.
+     https://bugzilla.gnome.org/show_bug.cgi?id=728776#c9

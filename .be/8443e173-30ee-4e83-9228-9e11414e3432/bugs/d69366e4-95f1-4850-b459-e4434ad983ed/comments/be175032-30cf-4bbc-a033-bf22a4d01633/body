@@ -1,0 +1,3 @@
+ • Add links to each error/warning, going to a page which describes the error,
+   what causes it, why it's bad, common causes of false positives, how to fix
+   the error or how to ignore it

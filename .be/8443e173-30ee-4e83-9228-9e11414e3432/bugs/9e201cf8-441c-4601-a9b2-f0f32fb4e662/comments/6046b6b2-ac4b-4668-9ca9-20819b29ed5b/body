@@ -1,0 +1,3 @@
+The GObject conventions for GError nullability and optionality should be used, preferably by making sure they're correct in the GIR library first, then ensuring they're correct in Tarttan.
+
+See also: https://bugzilla.gnome.org/show_bug.cgi?id=729660
