@@ -941,7 +941,8 @@ _check_gvariant_format_param (const CallExpr& call,
 
 		if (error_format_str != NULL) {
 			Debug::emit_error ("Unexpected GVariant variadic "
-			                   "argument of type %0. A ‘%1’ "
+			                   "argument of type %0. Either it "
+			                   "should be removed, or a ‘%1’ "
 			                   "GVariant format string should be "
 			                   "added to the format argument to "
 			                   "use it.",
@@ -950,12 +951,13 @@ _check_gvariant_format_param (const CallExpr& call,
 			<< error_format_str;
 		} else {
 			Debug::emit_error ("Unexpected GVariant variadic "
-			                   "argument of type %0. A GVariant "
+			                   "argument of type %0. Either it "
+			                   "should be removed, or a GVariant "
 			                   "format string should be added to "
-			                   "the format argument to use it, but "
-			                   "there is no known GVariant "
+			                   "the format argument to use it. "
+			                   "There is no known GVariant "
 			                   "representation of the argument’s "
-			                   "type. The argument must be "
+			                   "type, so the argument must be "
 			                   "serialized to a "
 			                   "GVariant-representable type first.",
 			                   compiler, arg->getLocStart ())
