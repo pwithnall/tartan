@@ -172,3 +172,27 @@
 	g_signal_connect (some_object, "invalid-signal",
 	                  (GCallback) object_notify_cb, NULL);
 }
+
+/*
+ * Incorrect type for argument ‘key’ in signal handler for signal ‘GSettings::changed’. Expected ‘const char *’ but saw ‘gchar *’.
+ *                           (GCallback) settings_changed_cb, NULL);
+ *                                       ^
+ * note: expanded from macro 'g_signal_connect'
+ *     g_signal_connect_data ((instance), (detailed_signal), (c_handler), (data), NULL, (GConnectFlags) 0)
+ *                                                            ^
+ */
+{
+	// Signal handler doesn't mark the key as 'const'.
+	GSettings *settings = g_malloc (5);  // only checking the type
+	g_signal_connect (settings, "changed",
+	                  (GCallback) settings_changed_cb, NULL);
+}
+
+/*
+ * No error
+ */
+{
+	GSettings *settings = g_malloc (5);  // only checking the type
+	g_signal_connect (settings, "changed",
+	                  (GCallback) settings_changed_const_cb, NULL);
+}

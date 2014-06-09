@@ -77,6 +77,19 @@ object_notify_extra_parameter_cb (GObject *gobject, GParamSpec *pspec,
 	/* Something */
 }
 
+static void
+settings_changed_cb (GSettings *settings, gchar *key, gpointer user_data)
+{
+	/* Something */
+}
+
+static void
+settings_changed_const_cb (GSettings *settings, const gchar *key,
+                           gpointer user_data)
+{
+	/* Something */
+}
+
 int
 main (void)
 {

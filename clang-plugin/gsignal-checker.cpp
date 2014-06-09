@@ -336,7 +336,7 @@ _type_info_to_type (GITypeInfo *type_info,
 		return context.getSizeType ();
 	case GI_TYPE_TAG_UTF8:
 	case GI_TYPE_TAG_FILENAME:
-		return context.getPointerType (context.CharTy);
+		return context.getPointerType (context.getConstType (context.CharTy));
 	case GI_TYPE_TAG_UNICHAR:
 		return context.getIntTypeForBitwidth (32, false);
 	/* Non-basic types */
