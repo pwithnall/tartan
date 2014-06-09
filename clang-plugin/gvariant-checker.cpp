@@ -838,9 +838,64 @@ _check_format_string (const gchar **format_str,
  * no representation is known. The returned value must be freed using
  * g_free(). */
 static gchar *
-_gvariant_format_string_for_type (QualType type)
+_gvariant_format_string_for_type (QualType type,
+                                  ASTContext &context,
+                                  TypeManager &type_manager)
 {
-	/* TODO: Return the format string for a basic type */
+	const BuiltinType *bt = dyn_cast<BuiltinType> (type);
+
+	/* Boolean. */
+	if ((bt != NULL && bt->getKind () == BuiltinType::Bool) ||
+	    type == type_manager.find_pointer_type_by_name ("gboolean")) {
+		return g_strdup ("b");
+	    } else if (bt != NULL && bt->getKind () == BuiltinType::UChar) {
+		return g_strdup ("y");
+	} else if (bt != NULL && bt->getKind () == BuiltinType::LongDouble) {
+		return g_strdup ("d");
+	} else if (type->isSignedIntegerType ()) {
+		uint64_t size = context.getTypeSize (type);
+
+		if (size == 16) {
+			return g_strdup ("n");
+		} else if (size == 32) {
+			return g_strdup ("i");
+		} else if (size == 64) {
+			return g_strdup ("x");
+		}
+	} else if (type->isUnsignedIntegerType ()) {
+		uint64_t size = context.getTypeSize (type);
+
+		if (size == 16) {
+			return g_strdup ("q");
+		} else if (size == 32) {
+			return g_strdup ("u");
+		} else if (size == 64) {
+			return g_strdup ("t");
+		}
+	} else if (type->isPointerType ()) {
+		const QualType pointee_type = type->getPointeeType ();
+
+		if (pointee_type->isCharType () && pointee_type.isConstQualified ()) {
+			return g_strdup ("&s");  /* or 'o' or 'g' */
+		} else if (pointee_type->isCharType ()) {
+			return g_strdup ("s");
+		} else if (pointee_type == type_manager.find_pointer_type_by_name ("GVariant")) {
+			return g_strdup ("v");
+		} else if (pointee_type->isPointerType ()) {
+			const QualType pointee2_type = pointee_type->getPointeeType ();
+
+			if (pointee2_type->isCharType ()) {
+				/* const gchar * const * */
+				return g_strdup ("^as");
+			}
+		}
+	}
+
+	/* FIXME: Add support for:
+	 *  - Arrays
+	 *  - Maybe types
+	 *  - Tuples
+	 */
 	return NULL;
 }
 
@@ -937,15 +992,17 @@ _check_gvariant_format_param (const CallExpr& call,
 		const Expr *arg = *args_begin;
 		gchar *error_format_str;
 
-		error_format_str = _gvariant_format_string_for_type (arg->getType ());
+		error_format_str = _gvariant_format_string_for_type (arg->getType (),
+		                                                     context,
+		                                                     type_manager);
 
 		if (error_format_str != NULL) {
 			Debug::emit_error ("Unexpected GVariant variadic "
 			                   "argument of type %0. Either it "
 			                   "should be removed, or a ‘%1’ "
-			                   "GVariant format string should be "
-			                   "added to the format argument to "
-			                   "use it.",
+			                   "(or other valid) GVariant format "
+			                   "string should be added to the "
+			                   "format argument to use it.",
 			                   compiler, arg->getLocStart ())
 			<< arg->getType ()
 			<< error_format_str;

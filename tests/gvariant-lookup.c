@@ -54,13 +54,13 @@
 }
 
 /*
- * Unexpected GVariant variadic argument of type 'char *'. Either it should be removed, or a GVariant format string should be added to the format argument to use it. There is no known GVariant representation of the argument’s type, so the argument must be serialized to a GVariant-representable type first.
+ * Unexpected GVariant variadic argument of type 'char *'. Either it should be removed, or a ‘s’ (or other valid) GVariant format string should be added to the format argument to use it.
  *                           "server", "&s", &server_param);
  *                           ^
- * Unexpected GVariant variadic argument of type 'char *'. Either it should be removed, or a GVariant format string should be added to the format argument to use it. There is no known GVariant representation of the argument’s type, so the argument must be serialized to a GVariant-representable type first.
+ * Unexpected GVariant variadic argument of type 'char *'. Either it should be removed, or a ‘s’ (or other valid) GVariant format string should be added to the format argument to use it.
  *                           "server", "&s", &server_param);
  *                                     ^
- * Unexpected GVariant variadic argument of type 'const gchar **' (aka 'const char **'). Either it should be removed, or a GVariant format string should be added to the format argument to use it. There is no known GVariant representation of the argument’s type, so the argument must be serialized to a GVariant-representable type first.
+ * Unexpected GVariant variadic argument of type 'const gchar **' (aka 'const char **'). Either it should be removed, or a ‘^as’ (or other valid) GVariant format string should be added to the format argument to use it.
  *                           "server", "&s", &server_param);
  *                                           ^
  */
