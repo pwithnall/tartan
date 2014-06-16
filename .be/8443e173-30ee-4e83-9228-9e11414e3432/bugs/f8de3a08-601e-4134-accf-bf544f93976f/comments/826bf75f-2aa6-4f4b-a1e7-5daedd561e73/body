@@ -1,0 +1,1 @@
+The GSignal checker needs extending to examine the interfaces implemented by an object to see if a signal exists on them. e.g. GtkEditable.
