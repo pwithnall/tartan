@@ -1,0 +1,8 @@
+It should be possible to add a static analysis plugin (it has to be static analysis, because it’s flow dependent) which annotates each GVariant* variable with its expected GVariant type, and tracks that type through the program, type-checking every subsequent call which is passed the GVariant.
+
+This should be able to catch bugs like the following:
+    GVariant *my_variant = g_variant_new ("(ss)", "some-string", "some-other-string");
+    g_variant_get (my_variant, "(su)", &some_string, &some_int);
+where the dynamic type of the variant on the second line doesn’t match the expected static type, even though the call itself is valid (so the current GVariant checks in Tartan won’t catch any errors).
+
+This should also work through branching and looping control flows.
