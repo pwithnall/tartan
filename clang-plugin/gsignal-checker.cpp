@@ -136,26 +136,26 @@ _expr_to_gobject_type (const Expr *expr,
 
 /* Look up a named signal in a GIObjectInfo. The return value must be freed
  * using g_base_info_unref(). The GIObjectInfo for the GObject subclass which
- * actually defines that signal will be returned in @static_gobject_info iff the
- * return value is non-NULL. Any value returned in @static_gobject_info must be
+ * actually defines that signal will be returned in @static_instance_info iff the
+ * return value is non-NULL. Any value returned in @static_instance_info must be
  * freed using g_base_info_unref(). */
 static GISignalInfo *
-_gobject_look_up_signal (GIObjectInfo *dynamic_gobject_info,
-                         GIObjectInfo **static_gobject_info,
+_gobject_look_up_signal (GIObjectInfo *dynamic_instance_info,
+                         GIObjectInfo **static_instance_info,
                          const gchar *signal_name)
 {
 	GISignalInfo *signal_info;
-	gint n_signals = g_object_info_get_n_signals (dynamic_gobject_info);
+	gint n_signals = g_object_info_get_n_signals (dynamic_instance_info);
 
 	for (gint i = 0; i < n_signals; i++) {
-		signal_info = g_object_info_get_signal (dynamic_gobject_info,
+		signal_info = g_object_info_get_signal (dynamic_instance_info,
 		                                        i);
 
 		if (strcmp (signal_name,
 		            g_base_info_get_name (signal_info)) == 0) {
 			/* Found the signal. */
-			*static_gobject_info =
-				g_base_info_ref (dynamic_gobject_info);
+			*static_instance_info =
+				g_base_info_ref (dynamic_instance_info);
 			return signal_info;
 		}
 
@@ -163,16 +163,16 @@ _gobject_look_up_signal (GIObjectInfo *dynamic_gobject_info,
 	}
 
 	/* If the object has a parent class, try that. */
-	dynamic_gobject_info = g_object_info_get_parent (dynamic_gobject_info);
-	if (dynamic_gobject_info == NULL) {
-		*static_gobject_info = NULL;
+	dynamic_instance_info = g_object_info_get_parent (dynamic_instance_info);
+	if (dynamic_instance_info == NULL) {
+		*static_instance_info = NULL;
 		return NULL;
 	}
 
-	signal_info = _gobject_look_up_signal (dynamic_gobject_info,
-	                                       static_gobject_info,
+	signal_info = _gobject_look_up_signal (dynamic_instance_info,
+	                                       static_instance_info,
 	                                       signal_name);
-	g_base_info_unref (dynamic_gobject_info);
+	g_base_info_unref (dynamic_instance_info);
 
 	return signal_info;
 }
@@ -397,17 +397,17 @@ _is_gobject_subclass (GIBaseInfo *a, GIBaseInfo *b)
  * pointer or cast of a function pointer), asserting that it matches the type
  * of @signal_info.
  *
- * @dynamic_gobject_info is information about the GObject subclass being passed
- * to g_signal_connect(). @static_gobject_info is information about the GObject
- * subclass which the signal is defined on. @dynamic_gobject_info should be a
- * (non-strict) subclass of @static_gobject_info.
+ * @dynamic_instance_info is information about the GObject subclass being passed
+ * to g_signal_connect(). @static_instance_info is information about the GObject
+ * subclass which the signal is defined on. @dynamic_instance_info should be a
+ * (non-strict) subclass of @static_instance_info.
  *
  * Returns true if the callback has the correct type. Emits an error and returns
  * false otherwise. */
 static bool
 _check_signal_callback_type (const Expr *expr,
-                             GIBaseInfo *dynamic_gobject_info,
-                             GIBaseInfo *static_gobject_info,
+                             GIBaseInfo *dynamic_instance_info,
+                             GIBaseInfo *static_instance_info,
                              GISignalInfo *signal_info,
                              CompilerInstance &compiler,
                              const ASTContext &context,
@@ -436,7 +436,7 @@ _check_signal_callback_type (const Expr *expr,
 			                     "function declaration does not "
 			                     "contain parameter types.",
 			                     compiler, expr->getLocStart ())
-			<< gir_manager.get_c_name_for_type (static_gobject_info)
+			<< gir_manager.get_c_name_for_type (static_instance_info)
 			<< g_base_info_get_name (signal_info)
 			<< decl_range;
 
@@ -460,8 +460,8 @@ _check_signal_callback_type (const Expr *expr,
 		const ParenExpr *paren_expr = cast<ParenExpr> (expr);
 
 		return _check_signal_callback_type (paren_expr->getSubExpr (),
-		                                    dynamic_gobject_info,
-		                                    static_gobject_info,
+		                                    dynamic_instance_info,
+		                                    static_instance_info,
 		                                    signal_info, compiler,
 		                                    context, gir_manager,
 		                                    type_manager);
@@ -472,8 +472,8 @@ _check_signal_callback_type (const Expr *expr,
 		const CastExpr *cast_expr = cast<CastExpr> (expr);
 
 		return _check_signal_callback_type (cast_expr->getSubExprAsWritten (),
-		                                    dynamic_gobject_info,
-		                                    static_gobject_info,
+		                                    dynamic_instance_info,
+		                                    static_instance_info,
 		                                    signal_info, compiler,
 		                                    context, gir_manager,
 		                                    type_manager);
@@ -500,7 +500,7 @@ _check_signal_callback_type (const Expr *expr,
 		                   "handler for signal ‘%0::%1’. Expected %2 "
 		                   "but saw %3.",
 		                   compiler, expr->getLocStart ())
-		<< gir_manager.get_c_name_for_type (static_gobject_info)
+		<< gir_manager.get_c_name_for_type (static_instance_info)
 		<< g_base_info_get_name (signal_info)
 		<< n_args
 		<< callback_type->getNumArgs ()
@@ -519,7 +519,7 @@ _check_signal_callback_type (const Expr *expr,
 		if (i == 0) {
 			/* First argument is always a pointer to the GObject
 			 * instance which the signal is defined on. */
-			std::string c_type (gir_manager.get_c_name_for_type (static_gobject_info));
+			std::string c_type (gir_manager.get_c_name_for_type (static_instance_info));
 			expected_type = type_manager.find_pointer_type_by_name (c_type);
 			arg_name = "self";
 
@@ -554,11 +554,11 @@ _check_signal_callback_type (const Expr *expr,
 			}
 
 			DEBUG ("Checking expected subclass relationships ‘" <<
-			       g_base_info_get_name (dynamic_gobject_info) <<
+			       g_base_info_get_name (dynamic_instance_info) <<
 			       "’ <: ‘" <<
 			       g_base_info_get_name (actual_type_info) <<
 			       "’ <: ‘" <<
-			       g_base_info_get_name (static_gobject_info) <<
+			       g_base_info_get_name (static_instance_info) <<
 			       "’.");
 
 			/* See the documentation at the top of the file for an
@@ -566,10 +566,10 @@ _check_signal_callback_type (const Expr *expr,
 			 * checking for the first parameter. */
 			type_error = (actual_type_info == NULL ||
 			              atp.isConstQualified () ||
-			              !_is_gobject_subclass (dynamic_gobject_info,
+			              !_is_gobject_subclass (dynamic_instance_info,
 			                                     actual_type_info) ||
 			              !_is_gobject_subclass (actual_type_info,
-			                                     static_gobject_info));
+			                                     static_instance_info));
 
 			g_base_info_unref (actual_type_info);
 		} else if (i == n_args - 1) {
@@ -616,7 +616,7 @@ _check_signal_callback_type (const Expr *expr,
 				                     "‘%3’.", compiler,
 				                     expr->getLocStart ())
 				<< arg_name
-				<< gir_manager.get_c_name_for_type (static_gobject_info)
+				<< gir_manager.get_c_name_for_type (static_instance_info)
 				<< g_base_info_get_name (signal_info)
 				<< g_base_info_get_name (&expected_type_info)
 				<< decl_range;
@@ -647,7 +647,7 @@ _check_signal_callback_type (const Expr *expr,
 			                   "‘%4’.", compiler,
 			                   expr->getLocStart ())
 			<< arg_name
-			<< gir_manager.get_c_name_for_type (static_gobject_info)
+			<< gir_manager.get_c_name_for_type (static_instance_info)
 			<< g_base_info_get_name (signal_info)
 			<< expected_type.getAsString ()
 			<< actual_type.getAsString ()
@@ -670,7 +670,7 @@ _check_signal_callback_type (const Expr *expr,
 		                     "handler for signal ‘%0::%1’. Cannot find "
 		                     "type with name ‘%2’.", compiler,
 		                     expr->getLocStart ())
-		<< gir_manager.get_c_name_for_type (static_gobject_info)
+		<< gir_manager.get_c_name_for_type (static_instance_info)
 		<< g_base_info_get_name (signal_info)
 		<< g_base_info_get_name (&expected_type_info)
 		<< decl_range;
@@ -685,7 +685,7 @@ _check_signal_callback_type (const Expr *expr,
 		Debug::emit_error ("Incorrect return type from signal handler "
 		                   "for signal ‘%0::%1’. Expected ‘%2’ but saw "
 		                   "‘%3’.", compiler, expr->getLocStart ())
-		<< gir_manager.get_c_name_for_type (static_gobject_info)
+		<< gir_manager.get_c_name_for_type (static_instance_info)
 		<< g_base_info_get_name (signal_info)
 		<< expected_type.getAsString ()
 		<< actual_type.getAsString ()
@@ -752,13 +752,13 @@ _check_gsignal_callback_type (const CallExpr &call,
 	DEBUG ("Using signal name ‘" << signal_name << "’.");
 
 	/* Try and grab the GObject parameter’s type. This is the type of the
-	 * variable passed into g_signal_connect(). The @static_gobject_info is
+	 * variable passed into g_signal_connect(). The @static_instance_info is
 	 * the type of the GObject subclass which defines the signal. */
-	GIObjectInfo *dynamic_gobject_info, *static_gobject_info = NULL;
+	GIObjectInfo *dynamic_instance_info, *static_instance_info = NULL;
 
-	dynamic_gobject_info = _expr_to_gobject_type (gobject_arg->IgnoreParenImpCasts (),
-	                                              context, gir_manager);
-	if (dynamic_gobject_info == NULL) {
+	dynamic_instance_info = _expr_to_gobject_type (gobject_arg->IgnoreParenImpCasts (),
+	                                               context, gir_manager);
+	if (dynamic_instance_info == NULL) {
 		/* Warning. */
 		Debug::emit_warning ("Could not find GObject subclass for "
 		                     "expression when connecting to signal "
@@ -774,16 +774,16 @@ _check_gsignal_callback_type (const CallExpr &call,
 	}
 
 	DEBUG ("Using GIObjectInfo ‘" <<
-	       g_base_info_get_name ((GIBaseInfo *) dynamic_gobject_info) <<
+	       g_base_info_get_name ((GIBaseInfo *) dynamic_instance_info) <<
 	       "’ from namespace ‘" <<
-	       g_base_info_get_namespace ((GIBaseInfo *) dynamic_gobject_info) <<
+	       g_base_info_get_namespace ((GIBaseInfo *) dynamic_instance_info) <<
 	       "’.");
 
 	/* Find the signal in the GObject. */
 	GISignalInfo *signal_info;
 
-	signal_info = _gobject_look_up_signal (dynamic_gobject_info,
-	                                       &static_gobject_info,
+	signal_info = _gobject_look_up_signal (dynamic_instance_info,
+	                                       &static_instance_info,
 	                                       signal_name.c_str ());
 	if (signal_info == NULL) {
 		/* Warning. */
@@ -792,12 +792,12 @@ _check_gsignal_callback_type (const CallExpr &call,
 		                     "typecast to the GObject parameter of "
 		                     "%2().", compiler, call.getLocStart ())
 		<< signal_name
-		<< gir_manager.get_c_name_for_type (dynamic_gobject_info)
+		<< gir_manager.get_c_name_for_type (dynamic_instance_info)
 		<< func_info->func_name
 		<< gobject_arg->getSourceRange ()
 		<< signal_name_arg->getSourceRange ();
 
-		g_base_info_unref (dynamic_gobject_info);
+		g_base_info_unref (dynamic_instance_info);
 
 		return false;
 	}
@@ -810,22 +810,22 @@ _check_gsignal_callback_type (const CallExpr &call,
 
 	/* Check the callback’s type. */
 	if (!_check_signal_callback_type (callback_arg->IgnoreParenImpCasts (),
-	                                  dynamic_gobject_info,
-	                                  static_gobject_info, signal_info,
+	                                  dynamic_instance_info,
+	                                  static_instance_info, signal_info,
 	                                  compiler, context, gir_manager,
 	                                  type_manager)) {
 		/* A diagnostic has already been emitted by
 		 * _check_signal_callback_type(). */
 		g_base_info_unref (signal_info);
-		g_base_info_unref (dynamic_gobject_info);
-		g_base_info_unref (static_gobject_info);
+		g_base_info_unref (dynamic_instance_info);
+		g_base_info_unref (static_instance_info);
 
 		return false;
 	}
 
 	g_base_info_unref (signal_info);
-	g_base_info_unref (dynamic_gobject_info);
-	g_base_info_unref (static_gobject_info);
+	g_base_info_unref (dynamic_instance_info);
+	g_base_info_unref (static_instance_info);
 
 	return true;
 }
