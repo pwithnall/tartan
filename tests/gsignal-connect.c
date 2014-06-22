@@ -196,3 +196,91 @@
 	g_signal_connect (settings, "changed",
 	                  (GCallback) settings_changed_const_cb, NULL);
 }
+
+/*
+ * No error
+ */
+{
+	GSettings *settings = g_malloc (5);  // only checking the type
+	g_signal_connect_swapped (settings, "changed",
+	                          (GCallback) settings_changed_swapped_cb,
+	                          NULL);
+}
+
+/*
+ * No error
+ */
+{
+	GSettings *settings = g_malloc (5);  // only checking the type
+	gint some_thing[] = { 0, 1, 2 }; // subtype of gpointer, so valid
+	g_signal_connect_swapped (settings, "changed",
+	                          (GCallback) settings_changed_swapped_cb,
+	                          some_thing);
+}
+
+/*
+ * No error
+ */
+{
+	GSettings *settings = g_malloc (5);  // only checking the type
+	gint some_thing[] = { 0, 1, 2 }; // subtype of gpointer, so valid
+	g_signal_connect_swapped (settings, "changed",
+	                          (GCallback) settings_changed_swapped_cb,
+	                          some_thing);
+}
+
+/*
+ * No error
+ */
+{
+	GSettings *settings = g_malloc (5);  // only checking the type
+	gint some_thing[] = { 0, 1, 2 }; // not a GInputStream; FIXME: might be marked as invalid in future
+	g_signal_connect_swapped (settings, "changed",
+	                          (GCallback) settings_changed_swapped_stream_cb,
+	                          some_thing);
+}
+
+/*
+ * No error
+ */
+{
+	GSettings *settings = g_malloc (5);  // only checking the type
+	GFilterInputStream *stream = g_malloc (5);  // GInputStream subtype; valid
+	g_signal_connect_swapped (settings, "changed",
+	                          (GCallback) settings_changed_swapped_stream_cb,
+	                          stream);
+}
+
+/*
+ * No error
+ */
+{
+	GSettings *settings = g_malloc (5);  // only checking the type
+	GObject *stream = g_malloc (5);  // GInputStream supertype; FIXME: might be marked as invalid in future
+	g_signal_connect_swapped (settings, "changed",
+	                          (GCallback) settings_changed_swapped_stream_cb,
+	                          stream);
+}
+
+/*
+ * No error
+ */
+{
+	GSettings *settings = g_malloc (5);  // only checking the type
+	gint some_thing[] = { 0, 1, 2 }; // subtype of gpointer, so valid
+	g_signal_connect_data (settings, "changed",
+	                       (GCallback) settings_changed_swapped_cb,
+	                       some_thing, NULL, G_CONNECT_SWAPPED);
+}
+
+/*
+ * No error
+ */
+{
+	GSettings *settings = g_malloc (5);  // only checking the type
+	gint some_thing[] = { 0, 1, 2 }; // subtype of gpointer, so valid
+	g_signal_connect_data (settings, "changed",
+	                       (GCallback) settings_changed_swapped_cb,
+	                       some_thing, NULL,
+	                       G_CONNECT_SWAPPED | G_CONNECT_AFTER);
+}

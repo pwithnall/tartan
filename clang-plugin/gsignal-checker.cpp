@@ -32,8 +32,9 @@
  * specific type possible, so it can look up the signals for that GObject
  * subclass.
  *
- * The type of the user_data is not validated, but could be checked by a
- * separate plugin for closure types.
+ * The type of the user_data is not validated (other than requiring it to be a
+ * pointer type, such as gpointer), but could be checked by a separate plugin
+ * for closure types.
  *
  * The GObject type is resolved and the signal name is looked up on it. If both
  * these operations succeed, the type of the callback function is checked
@@ -51,6 +52,12 @@
  *     A <: O    or it won’t have the signal
  *     A <: B    or the callback may call invalid methods
  *     B <: O    or it won’t have the signal
+ *
+ * If %G_CONNECT_SWAPPED is specified in the g_signal_connect() flags, the same
+ * relationships hold but using the connection call definition:
+ *     g_signal_connect (A, "O::signal-name", callback, U_1)
+ * and a callback defined as:
+ *     R callback (U_2, …, B)
  */
 
 #include <cstring>
@@ -78,14 +85,18 @@ typedef struct {
 	unsigned int signal_name_param_index;
 	/* Zero-based index of the callback function pointer parameter. */
 	unsigned int callback_param_index;
+	/* Zero-based index of the flags parameter, or -1 if there is none. */
+	int flags_param_index;
+	/* Zero-based index of the user_data parameter. */
+	unsigned int user_data_param_index;
 } SignalFuncInfo;
 
 static const SignalFuncInfo gsignal_connect_funcs[] = {
-	{ "g_signal_connect", 0, 1, 2 },
-	{ "g_signal_connect_after", 0, 1, 2 },
-	{ "g_signal_connect_swapped", 0, 1, 2 },
-	{ "g_signal_connect_object", 0, 1, 2 },
-	{ "g_signal_connect_data", 0, 1, 2 },
+	{ "g_signal_connect", 0, 1, 2, -1, 3 },
+	{ "g_signal_connect_after", 0, 1, 2, -1, 3 },
+	{ "g_signal_connect_swapped", 0, 1, 2, -1, 3 },
+	{ "g_signal_connect_object", 0, 1, 2, 4, 3 },
+	{ "g_signal_connect_data", 0, 1, 2, 5, 3 },
 /* FIXME add support for these:
 	{ "g_signal_connect_closure", 0, 1, _ },
 	{ "g_signal_connect_closure_by_id", 0, _, _ },
@@ -402,12 +413,19 @@ _is_gobject_subclass (GIBaseInfo *a, GIBaseInfo *b)
  * subclass which the signal is defined on. @dynamic_instance_info should be a
  * (non-strict) subclass of @static_instance_info.
  *
+ * @data_type is the qualified type of the user data parameter passed to
+ * g_signal_connect(). It is checked against the first parameter of the callback
+ * type iff %G_CONNECT_SWAPPED was specified at connection time (iff @is_swapped
+ * is true).
+ *
  * Returns true if the callback has the correct type. Emits an error and returns
  * false otherwise. */
 static bool
 _check_signal_callback_type (const Expr *expr,
                              GIBaseInfo *dynamic_instance_info,
                              GIBaseInfo *static_instance_info,
+                             const QualType data_type,
+                             bool is_swapped,
                              GISignalInfo *signal_info,
                              CompilerInstance &compiler,
                              const ASTContext &context,
@@ -462,6 +480,7 @@ _check_signal_callback_type (const Expr *expr,
 		return _check_signal_callback_type (paren_expr->getSubExpr (),
 		                                    dynamic_instance_info,
 		                                    static_instance_info,
+		                                    data_type, is_swapped,
 		                                    signal_info, compiler,
 		                                    context, gir_manager,
 		                                    type_manager);
@@ -474,6 +493,7 @@ _check_signal_callback_type (const Expr *expr,
 		return _check_signal_callback_type (cast_expr->getSubExprAsWritten (),
 		                                    dynamic_instance_info,
 		                                    static_instance_info,
+		                                    data_type, is_swapped,
 		                                    signal_info, compiler,
 		                                    context, gir_manager,
 		                                    type_manager);
@@ -516,9 +536,12 @@ _check_signal_callback_type (const Expr *expr,
 
 		actual_type = callback_type->getArgType (i);
 
-		if (i == 0) {
+		if ((i == 0 && !is_swapped) ||
+		    (i == n_args - 1 && is_swapped)) {
 			/* First argument is always a pointer to the GObject
-			 * instance which the signal is defined on. */
+			 * instance which the signal is defined on; unless the
+			 * %G_CONNECT_SWAPPED flag has been passed, in which
+			 * case it’s the user_data. */
 			std::string c_type (gir_manager.get_c_name_for_type (static_instance_info));
 			expected_type = type_manager.find_pointer_type_by_name (c_type);
 			arg_name = "self";
@@ -572,7 +595,8 @@ _check_signal_callback_type (const Expr *expr,
 			                                     static_instance_info));
 
 			g_base_info_unref (actual_type_info);
-		} else if (i == n_args - 1) {
+		} else if ((i == n_args - 1 && !is_swapped) ||
+		           (i == 0 && is_swapped)) {
 			/* Final argument is always a gpointer user_data. */
 			expected_type = context.getPointerType (context.VoidTy);
 			arg_name = "user_data";
@@ -582,10 +606,20 @@ _check_signal_callback_type (const Expr *expr,
 			       "‘" << actual_type.getAsString () << "’.");
 
 			/* Although technically the callback function should
-			 * take a gpointer user_data argument, ignore cases 
+			 * take a gpointer user_data argument, ignore cases
 			 * where it takes a more specific *pointer* type, since
 			 * it’s a common practice which causes no problems. This
-			 * eliminates a huge number of false positives. */
+			 * eliminates a huge number of false positives.
+			 *
+			 * FIXME: In future, we might want to compare that the
+			 * @data_type (the type of the @user_data expression
+			 * passed to g_signal_connect()) is compatible with
+			 * @actual_type (the type of the formal @user_data
+			 * parameter of the callback). However, I think that can
+			 * be better implemented as a separate checker which
+			 * checks that closure parameters type check with the
+			 * callbacks they are used with, i.e. so it will also
+			 * check things like g_list_find_custom(). */
 			type_error = !(context.hasSameType (actual_type,
 			                                    expected_type) ||
 			               actual_type->isPointerType ());
@@ -697,6 +731,86 @@ _check_signal_callback_type (const Expr *expr,
 	return true;
 }
 
+static bool
+_signal_flags_is_swapped (const Expr *flags_expr,
+                          const std::string &signal_name,
+                          CompilerInstance &compiler,
+                          const ASTContext &context)
+{
+	switch (flags_expr->getStmtClass ()) {
+	case Stmt::StmtClass::DeclRefExprClass: {
+		/* A reference to an enum, presumably. */
+		const DeclRefExpr *decl_ref_expr = cast<DeclRefExpr> (flags_expr);
+		const ValueDecl *value_decl = decl_ref_expr->getDecl ();
+		const EnumConstantDecl *enum_decl = dyn_cast<EnumConstantDecl> (value_decl);
+
+		if (enum_decl == NULL) {
+			/* Error. */
+			WARN_EXPR (__func__ << "() can’t handle values "
+			           "of type ‘" <<
+			           value_decl->getType ().getAsString () <<
+			           "’.",
+			           *flags_expr);
+			return false;
+		}
+
+		return (enum_decl->getNameAsString () == "G_CONNECT_SWAPPED");
+	}
+	case Stmt::StmtClass::IntegerLiteralClass: {
+		const IntegerLiteral *literal_expr = cast<IntegerLiteral> (flags_expr);
+		const llvm::APInt i = literal_expr->getValue ();
+
+		/* FIXME: Ugly as sin. */
+		return ((i.getLimitedValue ((1 << 8) - 1) & G_CONNECT_SWAPPED) != 0);
+	}
+	case Stmt::StmtClass::BinaryOperatorClass: {
+		/* A binary operation, probably bitwise OR. */
+		const BinaryOperator *op_expr = cast<BinaryOperator> (flags_expr);
+
+		if (op_expr->getOpcode () != BO_Or) {
+			/* Error. */
+			WARN_EXPR (__func__ << "() can’t handle binary "
+			           "operators other than bitwise OR.",
+			           *flags_expr);
+			return false;
+		}
+
+		bool lhs_is_swapped = _signal_flags_is_swapped (op_expr->getLHS ()->IgnoreParenImpCasts (),
+		                                                signal_name,
+		                                                compiler,
+		                                                context);
+		bool rhs_is_swapped = _signal_flags_is_swapped (op_expr->getRHS ()->IgnoreParenImpCasts (),
+		                                                signal_name,
+		                                                compiler,
+		                                                context);
+
+		return lhs_is_swapped || rhs_is_swapped;
+	}
+	case Stmt::StmtClass::ParenExprClass: {
+		/* A parenthesised expression. */
+		const ParenExpr *paren_expr = cast<ParenExpr> (flags_expr);
+
+		return _signal_flags_is_swapped (paren_expr->getSubExpr (),
+		                                 signal_name, compiler,
+		                                 context);
+	}
+	case Stmt::StmtClass::ImplicitCastExprClass:
+	case Stmt::StmtClass::CStyleCastExprClass: {
+		/* A cast (explicit or C-style). */
+		const CastExpr *cast_expr = cast<CastExpr> (flags_expr);
+
+		return _signal_flags_is_swapped (cast_expr->getSubExprAsWritten (),
+		                                 signal_name, compiler,
+		                                 context);
+	}
+	case Stmt::StmtClass::NoStmtClass:
+	default:
+		WARN_EXPR (__func__ << "() can’t handle expressions of type " <<
+		           flags_expr->getStmtClassName (), *flags_expr);
+		return false;
+	}
+}
+
 /* Check the type of the function pointer passed to a g_signal_connect() call,
  * and ensure that its declaration matches the signal definition.
  *
@@ -712,10 +826,17 @@ _check_gsignal_callback_type (const CallExpr &call,
                               TypeManager &type_manager)
 {
 	const Expr *callback_arg, *gobject_arg, *signal_name_arg;
+	const Expr *user_data_arg;
+	const Expr *flags_arg = NULL;
 
 	callback_arg = call.getArg (func_info->callback_param_index);
 	gobject_arg = call.getArg (func_info->gobject_param_index);
 	signal_name_arg = call.getArg (func_info->signal_name_param_index);
+	user_data_arg = call.getArg (func_info->user_data_param_index);
+
+	if (func_info->flags_param_index >= 0) {
+		flags_arg = call.getArg (func_info->flags_param_index);
+	}
 
 	/* Check if the signal name is a string literal. If not, we can’t check
 	 * it. */
@@ -750,6 +871,16 @@ _check_gsignal_callback_type (const CallExpr &call,
 	}
 
 	DEBUG ("Using signal name ‘" << signal_name << "’.");
+
+	/* Work out whether the instance and data have been swapped for extra
+	 * complication funtimes. */
+	bool is_swapped = false;
+
+	if (flags_arg != NULL) {
+		is_swapped = _signal_flags_is_swapped (flags_arg->IgnoreParenImpCasts (),
+		                                       signal_name, compiler,
+		                                       context);
+	}
 
 	/* Try and grab the GObject parameter’s type. This is the type of the
 	 * variable passed into g_signal_connect(). The @static_instance_info is
@@ -811,7 +942,9 @@ _check_gsignal_callback_type (const CallExpr &call,
 	/* Check the callback’s type. */
 	if (!_check_signal_callback_type (callback_arg->IgnoreParenImpCasts (),
 	                                  dynamic_instance_info,
-	                                  static_instance_info, signal_info,
+	                                  static_instance_info,
+	                                  user_data_arg->getType (), is_swapped,
+	                                  signal_info,
 	                                  compiler, context, gir_manager,
 	                                  type_manager)) {
 		/* A diagnostic has already been emitted by

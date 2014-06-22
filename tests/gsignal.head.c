@@ -90,6 +90,20 @@ settings_changed_const_cb (GSettings *settings, const gchar *key,
 	/* Something */
 }
 
+static void
+settings_changed_swapped_cb (gpointer user_data, const gchar *key,
+                             GSettings *settings)
+{
+	/* Something */
+}
+
+static void
+settings_changed_swapped_stream_cb (GInputStream *stream, const gchar *key,
+                                    GSettings *settings)
+{
+	/* Something */
+}
+
 int
 main (void)
 {
