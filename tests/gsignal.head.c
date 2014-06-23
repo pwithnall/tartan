@@ -104,6 +104,21 @@ settings_changed_swapped_stream_cb (GInputStream *stream, const gchar *key,
 	/* Something */
 }
 
+static void
+application_activate_swapped_cb (GSettings *self, GApplication *app)
+{
+	/* Done */
+}
+
+static void
+application_activate_swapped_excess_arguments_cb (GSettings *self,
+                                                  const gchar *some_random_arg,
+                                                  guint another_random_arg,
+                                                  gpointer user_data)
+{
+	/* Done */
+}
+
 int
 main (void)
 {

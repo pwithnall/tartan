@@ -404,6 +404,105 @@ _is_gobject_subclass (GIBaseInfo *a, GIBaseInfo *b)
 	return retval;
 }
 
+/* A safe calling convention is any convention which is caller-cleanup and where
+ * the callee can access its actual parameters left-to-right without calculating
+ * offsets (e.g. if the actual parameters are pushed on to the stack in
+ * right-to-left order by the caller, leaving the left-most actual parameter the
+ * first one to be popped off by the callee). This allows us to safely pass
+ * actual parameters in excess of the number of formal parameters expected by
+ * the function, without risking corrupting the stack.
+ *
+ * An unsafe calling convention is any other convention.
+ *
+ * Known safe calling conventions:
+ *  - x86[1]:
+ *   • cdecl: Caller clean-up, parameters pushed right-to-left.
+ *   • syscall: Same.
+ *   • optlink: Same.
+ *   • GCC thiscall: Same.
+ *   • Microsoft x64: Caller clean-up (of parameters, not stack frame),
+ *     parameters pushed right-to-left[10].
+ *   • System V AMD64 ABI: Same[11, §3.2.3].
+ *  - PowerPC (32-bit): Caller clean-up (of parameters, not stack frame),
+ *    parameters pushed right-to-left[2].
+ *  - PowerPC (64-bit): Same[3].
+ *  - ARM: Caller clean-up, parameters pushed right-to-left[4, §5.3].
+ *  - MIPS:
+ *   • O32: Caller clean-up (of parameters, not stack frame), parameters pushed
+ *     right-to-left[6].
+ *   • O64: Same[8].
+ *   • N32: Unclear, but variadic arguments are supported[7].
+ *   • N64: Same[7].
+ *   • EABI32: Caller clean-up, parameters pushed right-to-left[5].
+ *   • EABI64: Same[5].
+ *  - SPARC: Callee clean-up, but the caller’s stack pointer value is saved in
+ *    its register window, so the callee doesn’t need to know the stack frame
+ *    size to restore the old stack pointer; parameters pushed right-to-left[9].
+ *  - PNaCl: Equivalent to cdecl[12].
+ *
+ * Known unsafe calling conventions:
+ *  - x86[1]:
+ *   • pascal: Callee clean-up, parameters pushed left-to-right.
+ *   • stdcall: Callee clean-up, parameters pushed right-to-left.
+ *     Note: This is used for Windows API calls, so we cannot use Windows API
+ *     for callbacks with swapped parameters.
+ *   • register/Borland fastcall: Same problems as pascal.
+ *   • Microsoft/GCC fastcall: Same problems as stdcall.
+ *   • Watcom fastcall: Same.
+ *   • safecall: Same.
+ *   • Microsoft thiscall: Same.
+ *     Note: This is used for C++ non-static member function calls (when using
+ *     MSVC++), so we cannot use C++ methods for callbacks with swapped
+ *     parameters.
+ *
+ * References:
+ *  [1]: http://en.wikipedia.org/wiki/X86_calling_conventions
+ *  [2]: https://developer.apple.com/library/mac/documentation/
+ *       DeveloperTools/Conceptual/LowLevelABI/
+ *       100-32-bit_PowerPC_Function_Calling_Conventions/
+ *       32bitPowerPC.html
+ *  [3]: https://developer.apple.com/library/mac/documentation/
+ *       DeveloperTools/Conceptual/LowLevelABI/
+ *       110-64-bit_PowerPC_Function_Calling_Conventions/
+ *       64bitPowerPC.html
+ *  [4]: http://infocenter.arm.com/help/topic/com.arm.doc.ihi0042e/
+ *       IHI0042E_aapcs.pdf
+ *  [5]: http://www.cygwin.com/ml/binutils/2003-06/msg00436.html
+ *  [6]: http://web.archive.org/web/20040930224745/http://
+ *       www.caldera.com/developers/devspecs/mipsabi.pdf
+ *  [7]: http://techpubs.sgi.com/library/manuals/2000/007-2816-005/pdf/
+ *       007-2816-005.pdf
+ *  [8]: https://gcc.gnu.org/projects/mipso64-abi.html
+ *  [9]: http://math-atlas.sourceforge.net/devel/assembly/abi_sysV_sparc.pdf
+ *  [10]: http://msdn.microsoft.com/en-us/library/ms235286.aspx
+ *  [11]: http://x86-64.org/documentation/abi.pdf
+ *  [12]: https://developer.chrome.com/native-client/reference/
+ *        pnacl-bitcode-abi#calling-conventions
+ */
+static bool
+calling_convention_is_safe (CallingConv conv)
+{
+	switch (conv) {
+	case CC_C:  /* cdecl */
+	case CC_X86_64Win64:  /* x86-64 */
+	case CC_X86_64SysV:  /* x86-64 */
+	case CC_AAPCS:  /* ARM */
+	case CC_AAPCS_VFP:  /* ARM with VFP registers */
+	case CC_PnaclCall:  /* Chromium PNC — equivalent to cdecl */
+		return true;
+	case CC_X86StdCall:
+	case CC_X86FastCall:
+	case CC_X86ThisCall:
+	case CC_X86Pascal:
+		return false;
+	case CC_IntelOclBicc:
+		/* Intel OpenCL Built-Ins. I can’t find any documentation about
+		 * this, so let’s consider it unsafe. */
+	default:
+		return false;
+	}
+}
+
 /* Check the type of the callback in @expr (which is assumed to be a function
  * pointer or cast of a function pointer), asserting that it matches the type
  * of @signal_info.
@@ -506,13 +605,34 @@ _check_signal_callback_type (const Expr *expr,
 	}
 
 	/* Check the function type against the signal info. Add 2 to n_args
-	 * because GIR omits the ‘self’ and ‘user_data’ arguments. */
+	 * because GIR omits the ‘self’ and ‘user_data’ arguments.
+	 *
+	 * Should we allow the callback type to have fewer parameters than the
+	 * signal prototype specifies? This is a complex one. It is undefined
+	 * behaviour by the C standard (§6.5.2.2¶6), but is defined behaviour in
+	 * most common calling conventions, so we can define ‘safe’ and ‘unsafe’
+	 * calling conventions for passing actual parameters in excess of a
+	 * function’s number of formal parameters.
+	 *
+	 * In the interest of being practical, only emit an error on an
+	 * actual–formal parameter count mismatch if the user specifies a
+	 * callback with an unsafe calling convention. If the user specifies a
+	 * callback with a safe calling convention, emit a portability warning
+	 * instead, which should be low-importance and disableable.
+	 *
+	 * See the documentation for calling_convention_is_safe() for an
+	 * analysis.
+	 */
 	GICallableInfo *callable_info = signal_info;
-	guint n_args = g_callable_info_get_n_args (callable_info) + 2;
+	guint n_signal_args = g_callable_info_get_n_args (callable_info) + 2;
+	guint n_callback_args = callback_type->getNumArgs ();
+
 	GITypeInfo expected_type_info;
 	QualType actual_type, expected_type;
 
-	if (n_args != callback_type->getNumArgs ()) {
+	if ((!calling_convention_is_safe (callback_type->getCallConv ()) &&
+	     n_signal_args != n_callback_args) ||
+	    n_signal_args < n_callback_args) {
 		/* Error. */
 
 		/* TODO: Emit expected type of signal callback? */
@@ -522,26 +642,27 @@ _check_signal_callback_type (const Expr *expr,
 		                   compiler, expr->getLocStart ())
 		<< gir_manager.get_c_name_for_type (static_instance_info)
 		<< g_base_info_get_name (signal_info)
-		<< n_args
-		<< callback_type->getNumArgs ()
+		<< n_signal_args
+		<< n_callback_args
 		<< decl_range;
 
 		return false;
 	}
 
 	/* Check all arguments */
-	for (guint i = 0; i < n_args; i++) {
+	for (guint i = 0; i < n_callback_args; i++) {
 		const gchar *arg_name;
 		bool type_error;
 
 		actual_type = callback_type->getArgType (i);
 
 		if ((i == 0 && !is_swapped) ||
-		    (i == n_args - 1 && is_swapped)) {
+		    (i == n_signal_args - 1 && is_swapped)) {
 			/* First argument is always a pointer to the GObject
 			 * instance which the signal is defined on; unless the
 			 * %G_CONNECT_SWAPPED flag has been passed, in which
-			 * case it’s the user_data. */
+			 * case it’s the user_data, which is handled in the
+			 * ‘else’ block below. */
 			std::string c_type (gir_manager.get_c_name_for_type (static_instance_info));
 			expected_type = type_manager.find_pointer_type_by_name (c_type);
 			arg_name = "self";
@@ -595,7 +716,7 @@ _check_signal_callback_type (const Expr *expr,
 			                                     static_instance_info));
 
 			g_base_info_unref (actual_type_info);
-		} else if ((i == n_args - 1 && !is_swapped) ||
+		} else if ((i == n_signal_args - 1 && !is_swapped) ||
 		           (i == 0 && is_swapped)) {
 			/* Final argument is always a gpointer user_data. */
 			expected_type = context.getPointerType (context.VoidTy);
@@ -671,7 +792,24 @@ _check_signal_callback_type (const Expr *expr,
 		/* Return as soon as the first error is encountered, since it’s
 		 * likely the user’s used completely the wrong callback type,
 		 * so further errors would just be noise. */
-		if (type_error) {
+		if (type_error && is_swapped) {
+			/* Error. */
+
+			/* TODO: Emit expected type of signal callback? */
+			Debug::emit_error ("Incorrect type for argument ‘%0’ "
+			                   "in swapped signal handler for "
+			                   "signal ‘%1::%2’. Expected ‘%3’ but "
+			                   "saw ‘%4’.", compiler,
+			                   expr->getLocStart ())
+			<< arg_name
+			<< gir_manager.get_c_name_for_type (static_instance_info)
+			<< g_base_info_get_name (signal_info)
+			<< expected_type.getAsString ()
+			<< actual_type.getAsString ()
+			<< decl_range;
+
+			return false;
+		} else if (type_error) {
 			/* Error. */
 
 			/* TODO: Emit expected type of signal callback? */

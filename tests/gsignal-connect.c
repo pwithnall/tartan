@@ -132,14 +132,11 @@
 }
 
 /*
- * Incorrect number of arguments in signal handler for signal ‘GObject::notify’. Expected 3 but saw 2.
- *                           (GCallback) object_notify_missing_parameter_cb, NULL);
- *                                       ^
- * note: expanded from macro 'g_signal_connect'
- *     g_signal_connect_data ((instance), (detailed_signal), (c_handler), (data), NULL, (GConnectFlags) 0)
- *                                                            ^
+ * No error
  */
 {
+	// As long as object_notify_missing_parameter_cb is using a safe calling
+	// convention, this is actually fine.
 	GObject *some_object = g_malloc (5);  // only checking the type
 	g_signal_connect (some_object, "notify",
 	                  (GCallback) object_notify_missing_parameter_cb, NULL);
@@ -283,4 +280,46 @@
 	                       (GCallback) settings_changed_swapped_cb,
 	                       some_thing, NULL,
 	                       G_CONNECT_SWAPPED | G_CONNECT_AFTER);
+}
+
+/*
+ * No error
+ */
+{
+	GSettings *settings = g_malloc (5);  // only checking the type
+	GApplication *app = g_malloc (5);  // only checking the type
+	g_signal_connect_swapped (app, "activate",
+	                          G_CALLBACK (application_activate_swapped_cb),
+	                          settings);
+}
+
+/*
+ * Incorrect number of arguments in signal handler for signal ‘GApplication::activate’. Expected 2 but saw 4.
+ *                                   G_CALLBACK (application_activate_swapped_excess_arguments_cb),
+ *                                               ^
+ * note: expanded from macro 'G_CALLBACK'
+ * #define G_CALLBACK(f)                    ((GCallback) (f))
+ *                                                        ^
+ * note: expanded from macro 'g_signal_connect_swapped'
+ *     g_signal_connect_data ((instance), (detailed_signal), (c_handler), (data), NULL, G_CONNECT_SWAPPED)
+ *                                                            ^
+ */
+{
+	GSettings *settings = g_malloc (5);  // only checking the type
+	GApplication *app = g_malloc (5);  // only checking the type
+	g_signal_connect_swapped (app, "activate",
+	                          G_CALLBACK (application_activate_swapped_excess_arguments_cb),
+	                          settings);
+}
+
+/*
+ * No error
+ */
+{
+	// A more typical use of G_CONNECT_SWAPPED, where we use an existing
+	// function and swap the arguments to avoid writing a wrapper function.
+	GApplication *app = g_malloc (5);  // only checking the type
+	GObject *some_object = g_malloc (5);  // only checking the type
+	g_signal_connect_swapped (app, "activate",
+	                          G_CALLBACK (g_object_run_dispose), some_object);
 }
