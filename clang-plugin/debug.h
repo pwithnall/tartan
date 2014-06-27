@@ -56,6 +56,9 @@ namespace Debug {
 	DiagnosticBuilder emit_warning (const char *format_string,
 	                                CompilerInstance& compiler,
 	                                SourceLocation location);
+	DiagnosticBuilder emit_remark (const char *format_string,
+	                               CompilerInstance& compiler,
+	                               SourceLocation location);
 }
 
 #endif /* !TARTAN_DEBUG_H */

@@ -73,3 +73,11 @@ Debug::emit_warning (const char *format_string, CompilerInstance& compiler,
 	return Debug::emit_report (DiagnosticsEngine::Warning, format_string,
 	                           compiler, location);
 }
+
+DiagnosticBuilder
+Debug::emit_remark (const char *format_string, CompilerInstance& compiler,
+                    SourceLocation location)
+{
+	return Debug::emit_report (DiagnosticsEngine::Warning, format_string,
+	                           compiler, location);
+}
