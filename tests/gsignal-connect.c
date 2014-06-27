@@ -157,7 +157,7 @@
 }
 
 /*
- * No signal named ‘invalid-signal’ in GObject class ‘GObject’. To improve static analysis, add a typecast to the GObject parameter of g_signal_connect_data().
+ * No signal named ‘invalid-signal’ in GObject class ‘GObject’. To improve static analysis, add a typecast to the GObject parameter of g_signal_connect_data() to the specific class defining the signal. Ensure a GIR file defining that class is loaded.
  *         g_signal_connect (some_object, "invalid-signal",
  *         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  * note: expanded from macro 'g_signal_connect'

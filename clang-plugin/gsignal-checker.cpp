@@ -1099,12 +1099,17 @@ _check_gsignal_callback_type (const CallExpr &call,
 	dynamic_instance_info = _expr_to_gtype (gobject_arg->IgnoreParenImpCasts (),
 	                                        context, gir_manager);
 	if (dynamic_instance_info == NULL) {
-		/* Warning. */
-		Debug::emit_warning ("Could not find GObject subclass for "
-		                     "expression when connecting to signal "
-		                     "‘%0’. To improve static analysis, add a "
-		                     "typecast to the GObject parameter of "
-		                     "%1().", compiler, call.getLocStart ())
+		/* Emit a remark rather than a warning because the user may not
+		 * easily be able to add a GIR file containing the signal
+		 * information.. */
+		Debug::emit_remark ("Could not find GObject subclass for "
+		                    "expression when connecting to signal "
+		                    "‘%0’. To improve static analysis, add a "
+		                    "typecast to the GObject parameter of "
+		                    "%1() to the specific class defining the "
+		                    "signal. Ensure a GIR file defining that "
+		                    "class is loaded.", compiler,
+		                    call.getLocStart ())
 		<< signal_name
 		<< func_info->func_name
 		<< gobject_arg->getSourceRange ()
@@ -1126,11 +1131,16 @@ _check_gsignal_callback_type (const CallExpr &call,
 	                                     &static_instance_info,
 	                                     signal_name.c_str ());
 	if (signal_info == NULL) {
-		/* Warning. */
-		Debug::emit_warning ("No signal named ‘%0’ in GObject class "
-		                     "‘%1’. To improve static analysis, add a "
-		                     "typecast to the GObject parameter of "
-		                     "%2().", compiler, call.getLocStart ())
+		/* Remark on the fact the signal information cannot be found.
+		 * We can’t really make this a warning, since the user may not
+		 * be able to easily add a GIR file containing the signal
+		 * information. */
+		Debug::emit_remark ("No signal named ‘%0’ in GObject class "
+		                    "‘%1’. To improve static analysis, add a "
+		                    "typecast to the GObject parameter of "
+		                    "%2() to the specific class defining the "
+		                    "signal. Ensure a GIR file defining that "
+		                    "class is loaded.", compiler, call.getLocStart ())
 		<< signal_name
 		<< gir_manager.get_c_name_for_type (dynamic_instance_info)
 		<< func_info->func_name
