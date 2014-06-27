@@ -344,3 +344,16 @@
 	g_signal_connect (proxy, "interface-added",
 	                  (GCallback) dbus_object_interface_added_cb, NULL);
 }
+
+/*
+ * No error
+ */
+{
+	// GDBusConnection::closed has a GError* as one of its parameters,
+	// which we want to check to avoid bug 844/529.
+	GDBusConnection *conn = g_malloc (5);  // only checking the type
+	GObject *self = g_malloc (5);  // only checking the type
+	g_signal_connect_object (conn, "closed",
+	                         G_CALLBACK (dbus_connection_closed_cb),
+	                         self, 0);
+}

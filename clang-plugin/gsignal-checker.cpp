@@ -409,15 +409,8 @@ _type_info_to_type (GITypeInfo *type_info,
 		return type_manager.find_pointer_type_by_name ("GSList");
 	case GI_TYPE_TAG_GHASH:
 		return type_manager.find_pointer_type_by_name ("GHashTable");
-	case GI_TYPE_TAG_ERROR: {
-		QualType qt = type_manager.find_pointer_type_by_name ("GError");
-
-		if (!qt.isNull ()) {
-			return context.getPointerType (qt);
-		}
-
-		return QualType ();
-	}
+	case GI_TYPE_TAG_ERROR:
+		return type_manager.find_pointer_type_by_name ("GError");
 	default:
 		llvm::errs () << "Warning: Unexpected base info type " <<
 			g_base_info_get_type (type_info) <<

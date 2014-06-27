@@ -134,6 +134,15 @@ dbus_object_proxy_interface_added_cb (GDBusObjectProxy *obj,
 	/* Done */
 }
 
+static void
+dbus_connection_closed_cb (GDBusConnection *conn,
+                           gboolean remote_peer_vanished,
+                           GError *error,
+                           gpointer user_data)
+{
+	/* Done */
+}
+
 int
 main (void)
 {
