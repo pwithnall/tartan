@@ -323,3 +323,24 @@
 	g_signal_connect_swapped (app, "activate",
 	                          G_CALLBACK (g_object_run_dispose), some_object);
 }
+
+/*
+ * No error
+ */
+{
+	// Connecting to a signal defined on an interface.
+	GDBusObject *obj = g_malloc (5);  // only checking the type
+	g_signal_connect (obj, "interface-added",
+	                  (GCallback) dbus_object_interface_added_cb, NULL);
+}
+
+/*
+ * No error
+ */
+{
+	// Connecting to a signal defined on an interface implemented by the
+	// object.
+	GDBusObjectProxy *proxy = g_malloc (5);  // only checking the type
+	g_signal_connect (proxy, "interface-added",
+	                  (GCallback) dbus_object_interface_added_cb, NULL);
+}

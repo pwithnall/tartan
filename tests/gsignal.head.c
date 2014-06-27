@@ -119,6 +119,21 @@ application_activate_swapped_excess_arguments_cb (GSettings *self,
 	/* Done */
 }
 
+static void
+dbus_object_interface_added_cb (GDBusObject *obj, GDBusInterface *iface,
+                                gpointer user_data)
+{
+	/* Done */
+}
+
+static void
+dbus_object_proxy_interface_added_cb (GDBusObjectProxy *obj,
+                                      GDBusInterface *iface,
+                                      gpointer user_data)
+{
+	/* Done */
+}
+
 int
 main (void)
 {

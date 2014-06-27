@@ -117,7 +117,9 @@ GirManager::find_function_info (const std::string& func_name) const
 	return info;
 }
 
-/* Try to find typelib information about the type.
+/* Try to find typelib information about the type. The type could be a GObject
+ * or a GInterface.
+ *
  * Note: This returns a reference which needs freeing using
  * g_base_info_unref(). The GIBaseInfo* is guaranteed to be a valid
  * GIObjectInfo*. */
@@ -155,7 +157,8 @@ GirManager::find_object_info (const std::string& type_name) const
 
 	/* Check it is actually a GObject. */
 	if (info != NULL &&
-	    g_base_info_get_type (info) != GI_INFO_TYPE_OBJECT) {
+	    g_base_info_get_type (info) != GI_INFO_TYPE_OBJECT &&
+	    g_base_info_get_type (info) != GI_INFO_TYPE_INTERFACE) {
 		DEBUG ("Ignoring type " << type_name << " as its GI info "
 		       "indicates it’s not a GObject.");
 

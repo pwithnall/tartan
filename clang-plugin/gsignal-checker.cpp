@@ -123,15 +123,15 @@ _func_is_gsignal_connect (const FunctionDecl& func)
 	return NULL;
 }
 
-/* If an expression is a reference to a GObject (or subclass), return the most
- * specific type information we can for that object. This must be freed with
- * g_base_info_unref().
+/* If an expression is a reference to a GObject (or subclass, or a GInterface),
+ * return the most specific type information we can for that object (or
+ * interface). This must be freed with g_base_info_unref().
  *
  * If the expression is not a GObject, return NULL. */
 static GIObjectInfo*
-_expr_to_gobject_type (const Expr *expr,
-                       const ASTContext &context,
-                       const GirManager &gir_manager)
+_expr_to_gtype (const Expr *expr,
+                const ASTContext &context,
+                const GirManager &gir_manager)
 {
 	QualType gobject_type = expr->getType ();
 
@@ -145,22 +145,48 @@ _expr_to_gobject_type (const Expr *expr,
 	return gir_manager.find_object_info (gobject_type_str);
 }
 
-/* Look up a named signal in a GIObjectInfo. The return value must be freed
- * using g_base_info_unref(). The GIObjectInfo for the GObject subclass which
- * actually defines that signal will be returned in @static_instance_info iff the
- * return value is non-NULL. Any value returned in @static_instance_info must be
- * freed using g_base_info_unref(). */
+/* Look up a named signal in a #GIObjectInfo or #GIInterfaceInfo,
+ * @dynamic_instance_info.
+ *
+ * If no definition for the signal can be found, %NULL will be returned.
+ *
+ * If the signal is defined on a #GObject, the #GIObjectInfo for that object
+ * will be returned in @static_instance_info. In this case,
+ * @static_instance_info is guaranteed to be the same as, or a superclass of,
+ * @dynamic_instance_info.
+ *
+ * If the signal is defined on a #GInterface, the #GIInterfaceInfo for that
+ * interface will be returned in @static_instance_info. In this case,
+ * @dynamic_instance_info could have been the interface, or any class which
+ * implements it.
+ *
+ * Any value returned in @static_instance_info must be freed using
+ * g_base_info_unref(). The returned #GISignalInfo must be freed using
+ * g_base_info_unref() as well. */
 static GISignalInfo *
-_gobject_look_up_signal (GIObjectInfo *dynamic_instance_info,
-                         GIObjectInfo **static_instance_info,
-                         const gchar *signal_name)
+_gtype_look_up_signal (GIRegisteredTypeInfo *dynamic_instance_info,
+                       GIRegisteredTypeInfo **static_instance_info,
+                       const gchar *signal_name)
 {
 	GISignalInfo *signal_info;
-	gint n_signals = g_object_info_get_n_signals (dynamic_instance_info);
+	gint n_signals;
+
+	if (GI_IS_OBJECT_INFO (dynamic_instance_info)) {
+		n_signals = g_object_info_get_n_signals (dynamic_instance_info);
+	} else if (GI_IS_INTERFACE_INFO (dynamic_instance_info)) {
+		n_signals = g_interface_info_get_n_signals (dynamic_instance_info);
+	} else {
+		g_assert_not_reached ();
+	}
 
 	for (gint i = 0; i < n_signals; i++) {
-		signal_info = g_object_info_get_signal (dynamic_instance_info,
-		                                        i);
+		if (GI_IS_OBJECT_INFO (dynamic_instance_info)) {
+			signal_info = g_object_info_get_signal (dynamic_instance_info, i);
+		} else if (GI_IS_INTERFACE_INFO (dynamic_instance_info)) {
+			signal_info = g_interface_info_get_signal (dynamic_instance_info, i);
+		} else {
+			g_assert_not_reached ();
+		}
 
 		if (strcmp (signal_name,
 		            g_base_info_get_name (signal_info)) == 0) {
@@ -173,19 +199,39 @@ _gobject_look_up_signal (GIObjectInfo *dynamic_instance_info,
 		g_base_info_unref (signal_info);
 	}
 
-	/* If the object has a parent class, try that. */
-	dynamic_instance_info = g_object_info_get_parent (dynamic_instance_info);
-	if (dynamic_instance_info == NULL) {
-		*static_instance_info = NULL;
-		return NULL;
+	if (GI_IS_OBJECT_INFO (dynamic_instance_info)) {
+		/* If the object implements any interfaces, try those. */
+		for (gint i = 0;
+		     i < g_object_info_get_n_interfaces (dynamic_instance_info);
+		     i++) {
+			GIInterfaceInfo *b;
+
+			b = g_object_info_get_interface (dynamic_instance_info, i);
+			signal_info = _gtype_look_up_signal (b,
+			                                     static_instance_info,
+			                                     signal_name);
+			g_base_info_unref (b);
+
+			if (signal_info != NULL) {
+				return signal_info;
+			}
+		}
+
+		/* If the object has a parent class, try that. */
+		dynamic_instance_info = g_object_info_get_parent (dynamic_instance_info);
+		if (dynamic_instance_info != NULL) {
+			signal_info = _gtype_look_up_signal (dynamic_instance_info,
+			                                     static_instance_info,
+			                                     signal_name);
+			g_base_info_unref (dynamic_instance_info);
+
+			return signal_info;
+		}
 	}
 
-	signal_info = _gobject_look_up_signal (dynamic_instance_info,
-	                                       static_instance_info,
-	                                       signal_name);
-	g_base_info_unref (dynamic_instance_info);
-
-	return signal_info;
+	/* Found nothing. */
+	*static_instance_info = NULL;
+	return NULL;
 }
 
 /* Look up the #QualType representing the type in @type_info, which must be
@@ -381,24 +427,49 @@ _type_info_to_type (GITypeInfo *type_info,
 	}
 }
 
-/* Returns true iff @a is equal to, or a subclass of, @b. */
+/* Returns true iff
+ *  • @a is a GObject, @b is a GObject, and @a is equal to or a subclass of @b;
+ *  • @a is a GInterface, @b is a GInterface, and @a is equal to @b;
+ *  • @a is a GObject, @b is a GInterface, and @a or one of its superclasses
+ *    implements @b.
+ */
 static bool
-_is_gobject_subclass (GIBaseInfo *a, GIBaseInfo *b)
+_is_gtype_subclass (GIBaseInfo *a, GIBaseInfo *b)
 {
-	assert (g_base_info_get_type (a) == GI_INFO_TYPE_OBJECT);
-	assert (g_base_info_get_type (b) == GI_INFO_TYPE_OBJECT);
+	assert (g_base_info_get_type (a) == GI_INFO_TYPE_OBJECT ||
+	        g_base_info_get_type (a) == GI_INFO_TYPE_INTERFACE);
+	assert (g_base_info_get_type (b) == GI_INFO_TYPE_OBJECT ||
+	        g_base_info_get_type (b) == GI_INFO_TYPE_INTERFACE);
 
+	/* The case where @a and @b are equal. */
 	if (g_base_info_equal (a, b)) {
 		return true;
 	}
 
+	/* The case where @a implements @b. */
+	if (g_base_info_get_type (b) == GI_INFO_TYPE_INTERFACE) {
+		for (gint i = 0; i < g_object_info_get_n_interfaces (a); i++) {
+			GIInterfaceInfo *iface;
+
+			iface = g_object_info_get_interface (a, i);
+			bool eq = g_base_info_equal (iface, b);
+			g_base_info_unref (iface);
+
+			if (eq) {
+				return true;
+			}
+		}
+	}
+
+	/* The case where @a is a subclass of @b, or a subclass of a class which
+	 * implements @b. */
 	GIObjectInfo *ap = g_object_info_get_parent ((GIObjectInfo *) a);
 
 	if (ap == NULL) {
 		return false;
 	}
 
-	bool retval = _is_gobject_subclass (ap, b);
+	bool retval = _is_gtype_subclass (ap, b);
 	g_base_info_unref (ap);
 
 	return retval;
@@ -710,10 +781,10 @@ _check_signal_callback_type (const Expr *expr,
 			 * checking for the first parameter. */
 			type_error = (actual_type_info == NULL ||
 			              atp.isConstQualified () ||
-			              !_is_gobject_subclass (dynamic_instance_info,
-			                                     actual_type_info) ||
-			              !_is_gobject_subclass (actual_type_info,
-			                                     static_instance_info));
+			              !_is_gtype_subclass (dynamic_instance_info,
+			                                   actual_type_info) ||
+			              !_is_gtype_subclass (actual_type_info,
+			                                   static_instance_info));
 
 			g_base_info_unref (actual_type_info);
 		} else if ((i == n_signal_args - 1 && !is_swapped) ||
@@ -1025,8 +1096,8 @@ _check_gsignal_callback_type (const CallExpr &call,
 	 * the type of the GObject subclass which defines the signal. */
 	GIObjectInfo *dynamic_instance_info, *static_instance_info = NULL;
 
-	dynamic_instance_info = _expr_to_gobject_type (gobject_arg->IgnoreParenImpCasts (),
-	                                               context, gir_manager);
+	dynamic_instance_info = _expr_to_gtype (gobject_arg->IgnoreParenImpCasts (),
+	                                        context, gir_manager);
 	if (dynamic_instance_info == NULL) {
 		/* Warning. */
 		Debug::emit_warning ("Could not find GObject subclass for "
@@ -1051,9 +1122,9 @@ _check_gsignal_callback_type (const CallExpr &call,
 	/* Find the signal in the GObject. */
 	GISignalInfo *signal_info;
 
-	signal_info = _gobject_look_up_signal (dynamic_instance_info,
-	                                       &static_instance_info,
-	                                       signal_name.c_str ());
+	signal_info = _gtype_look_up_signal (dynamic_instance_info,
+	                                     &static_instance_info,
+	                                     signal_name.c_str ());
 	if (signal_info == NULL) {
 		/* Warning. */
 		Debug::emit_warning ("No signal named ‘%0’ in GObject class "
