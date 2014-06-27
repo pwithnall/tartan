@@ -1,0 +1,9 @@
+Larger projects will commonly have internal GObjects which never get exposed to the world. In order to facilitate analysis using those objects, Tartan requires that they be exposed in a GIR file and typelib.
+
+Tartan needs to grow two things:
+ • A way to easily integrate generation of an internal GIR file into a project’s build system.
+ • A way of easily loading a project-internal GIR file and typelib to use in analysis.
+
+Note that this necessarily means the first build of the project will not be statically analysable, due to the following dependency chains:
+    static analysis ← GIR file ← executable binary ← compilation process
+    static analysis ← compilation process

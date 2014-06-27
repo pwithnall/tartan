@@ -1,0 +1,6 @@
+Currently, the Clang HTML reports only contain diagnostics from the static analysis plugins, not from other compiler plugins (which operate on the AST rather than the data flow graph). This is a bit confusing for users.
+
+Possible solutions:
+ • Ignore the reports.
+ • Modify upstream to include all compiler warnings in the reports.
+ • Change all the Tartan checkers to be static analysis checkers. This would mean they could never be run at (non-analysis) compile time. Rewriting them would also be tricky.
