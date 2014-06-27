@@ -48,7 +48,7 @@ _type_should_be_const (GITransfer transfer, GITypeTag type_tag)
 }
 
 /* Determine whether an argument is definitely required to be non-NULL given
- * its (allow-none) annotation, direction annotation and type.
+ * its (nullable) and (optional) annotations, direction annotation and type.
  *
  * If it’s an array type, it may be NULL if its associated length parameter is
  * 0. Since we can’t currently analyse array bounds, assume that all C array

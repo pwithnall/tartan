@@ -26,30 +26,32 @@
  * This AST visitor inspects function declarations, checking the nullability of
  * their parameters is correctly annotated. It checks for the presence of:
  *  • A nonnull attribute on the function.
- *  • (allow-none) annotations on the parameters.
+ *  • (nullable) annotations on the parameters.
+ *  • (optional) annotations on the parameters.
  *  • g_return[_val]_if_fail() precondition assertions in the function body.
  *
  * It then checks that the assertions implied by these three sources agree, and
  * that a reasonable number of the sources exist. If two sources conflict (e.g.
- * a parameter has an (allow-none) attribute but also has a
+ * a parameter has an (nullable) or (optional) attribute but also has a
  * g_return_if_fail(param != NULL) precondition assertion), an error is emitted.
  * Otherwise, if the nullability of a parameter is uncertain, warnings are
- * emitted to ask the user to add a precondition assertion or an (allow-none)
- * annotation. The user is only optionally requested to add nonnull attributes,
- * as many users have voiced opinions that such attributes are ugly.
+ * emitted to ask the user to add a precondition assertion or a (nullable) or
+ * (optional) annotation. The user is only optionally requested to add nonnull
+ * attributes, as many users have voiced opinions that such attributes are ugly.
  *
  * Note that precondition assertions can only be used for non-NULL checks by the
  * static analyser within a single code base. For analysis across code bases,
- * (allow-none) annotations or nonnull attributes are needed. Hence the warnings
- * emitted by this checker try to gently push the user towards adding them.
+ * (nullable) and (optional) annotations or nonnull attributes are needed. Hence
+ * the warnings emitted by this checker try to gently push the user towards
+ * adding them.
  *
  * FIXME: The majority of false positives from this checker come from implicit
  * nonnull attributes added to functions which aren’t correctly annotated with
- * (allow-none). The checker produces an error like the following:
+ * (nullable) or (optional). The checker produces an error like the following:
  *     Missing non-NULL precondition assertion on the ‘key’ parameter of
  *     function g_hash_table_remove() (already has a nonnull attribute).
  * Which implies that a nonnull attribute exists when it doesn’t. Instead, the
- * error should say that a non-NULL precondition assertion *or* an (allow-none)
+ * error should say that a non-NULL precondition assertion *or* a (nullable)
  * annotation should be added, and it should ignore the implicit nonnull
  * attribute. However, if a function has an explicit nonnull attribute (i.e. not
  * implicitly added by the analyser plugin) the warning message should be
@@ -108,7 +110,7 @@ NullabilityVisitor::TraverseFunctionDecl (FunctionDecl* func)
 
 	DEBUG ("Examining " << func->getNameAsString ());
 
-	/* For each parameter, check whether it has an (allow-none) annotation,
+	/* For each parameter, check whether it has a (nullable) annotation,
 	 * a nonnull attribute, and a non-NULL assertion. */
 	NonNullAttr* nonnull_attr = func->getAttr<NonNullAttr> ();
 
@@ -221,11 +223,18 @@ NullabilityVisitor::TraverseFunctionDecl (FunctionDecl* func)
 		 *      ¬nonnull ∧ assertion ⇒ Warning (incomplete nonnull)
 		 *      (nonnull = ?) ∧ assertion ⇒
 		 *          Soft warning (missing nonnull)
+		 *
+		 * FIXME: This analysis currently considers (nullable) and
+		 * (optional) annotations as equivalent. It should be expanded
+		 * to consider them separately, along with the type of the
+		 * variable in question, since (nullable) will not affect the
+		 * nullability of an out function parameter.
 		 */
 		if (has_nonnull == EXPLICIT_NONNULL && has_allow_none) {
 			Debug::emit_error (
 				"Conflict between nonnull attribute and "
-				"(allow-none) annotation on the ‘%0’ parameter "
+				"(nullable), (optional) or (allow-none) "
+				"annotation on the ‘%0’ parameter "
 				"of function %1().",
 				this->_compiler,
 				parm_decl->getLocStart ())
@@ -233,7 +242,8 @@ NullabilityVisitor::TraverseFunctionDecl (FunctionDecl* func)
 			<< func->getNameAsString ();
 		} else if (has_allow_none && has_assertion) {
 			Debug::emit_error (
-				"Conflict between (allow-none) annotation and "
+				"Conflict between (nullable), (optional) or "
+				"(allow-none) annotation and "
 				"non-NULL precondition assertion on the ‘%0’ "
 				"parameter of function %1().",
 				this->_compiler,
@@ -244,7 +254,8 @@ NullabilityVisitor::TraverseFunctionDecl (FunctionDecl* func)
 			switch (has_nonnull) {
 			case EXPLICIT_NULLABLE:
 				Debug::emit_warning (
-					"Missing (allow-none) annotation on "
+					"Missing (nullable) or (optional) "
+					"annotation on "
 					"the ‘%0’ parameter of function %1() "
 					"(already has a nonnull attribute or "
 					"no non-NULL precondition assertion).",
@@ -255,7 +266,8 @@ NullabilityVisitor::TraverseFunctionDecl (FunctionDecl* func)
 				break;
 			case MAYBE:
 				Debug::emit_warning (
-					"Missing (allow-none) annotation or "
+					"Missing (nullable) or (optional) "
+					"annotation or "
 					"non-NULL precondition assertion on "
 					"the ‘%0’ parameter of function %1().",
 					this->_compiler,
@@ -268,7 +280,8 @@ NullabilityVisitor::TraverseFunctionDecl (FunctionDecl* func)
 					"Missing non-NULL precondition "
 					"assertion on the ‘%0’ parameter of "
 					"function %1() (already has a nonnull "
-					"attribute or no (allow-none) "
+					"attribute or no (nullable), "
+					"(optional) or (allow-none) "
 					"annotation).",
 					this->_compiler,
 					parm_decl->getLocStart ())
