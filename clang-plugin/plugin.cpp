@@ -46,10 +46,10 @@ private:
 	std::shared_ptr<GirManager> _gir_manager =
 		std::make_shared<GirManager> ();
 
-	/* Enabling/Disabling plugins is implemented as a blacklist: all plugins
-	 * are enabled by default, unless a --disable-plugin argument
+	/* Enabling/Disabling checkers is implemented as a blacklist: all
+	 * checkers are enabled by default, unless a --disable-checker argument
 	 * specifically disables them (by listing their name in this set). */
-	std::shared_ptr<std::unordered_set<std::string>> _disabled_plugins =
+	std::shared_ptr<std::unordered_set<std::string>> _disabled_checkers =
 		std::make_shared<std::unordered_set<std::string>> ();
 
 protected:
@@ -72,19 +72,19 @@ protected:
 		consumers.push_back (
 			new NullabilityConsumer (compiler,
 			                         this->_gir_manager,
-			                         this->_disabled_plugins));
+			                         this->_disabled_checkers));
 		consumers.push_back (
 			new GVariantConsumer (compiler,
 			                      this->_gir_manager,
-			                      this->_disabled_plugins));
+			                      this->_disabled_checkers));
 		consumers.push_back (
 			new GSignalConsumer (compiler,
 			                     this->_gir_manager,
-			                     this->_disabled_plugins));
+			                     this->_disabled_checkers));
 		consumers.push_back (
 			new GirAttributesChecker (compiler,
 			                          this->_gir_manager,
-			                          this->_disabled_plugins));
+			                          this->_disabled_checkers));
 
 		return new MultiplexConsumer (consumers);
 	}
@@ -199,7 +199,7 @@ protected:
 		/* Load all typelibs. */
 		this->_load_gi_repositories (CI);
 
-		/* Enable the default set of plugins. */
+		/* Enable the default set of checkers. */
 		for (std::vector<std::string>::const_iterator it = args.begin();
 		     it != args.end (); ++it) {
 			std::string arg = *it;
@@ -209,13 +209,13 @@ protected:
 			} else if (arg == "--enable-checker") {
 				const std::string checker = *(++it);
 				if (checker == "all") {
-					this->_disabled_plugins.get ()->clear ();
+					this->_disabled_checkers.get ()->clear ();
 				} else {
-					this->_disabled_plugins.get ()->erase (std::string (checker));
+					this->_disabled_checkers.get ()->erase (std::string (checker));
 				}
 			} else if (arg == "--disable-checker") {
 				const std::string checker = *(++it);
-				this->_disabled_plugins.get ()->insert (std::string (checker));
+				this->_disabled_checkers.get ()->insert (std::string (checker));
 			}
 		}
 
@@ -232,13 +232,13 @@ protected:
 		       "GIR metadata and other GLib coding conventions.\n"
 		       "\n"
 		       "Arguments:\n"
-		       "    --enable-plugin [name]\n"
-		       "        Enable the given Tartan plugin, which may be "
-		               "‘all’. All plugins are\n"
+		       "    --enable-checker [name]\n"
+		       "        Enable the given Tartan checker, which may be "
+		               "‘all’. All checkers are\n"
 		       "        enabled by default.\n"
-		       "    --disable-plugin [name]\n"
-		       "        Disable the given Tartan plugin, which may be "
-		               "‘all’. All plugins are\n"
+		       "    --disable-checker [name]\n"
+		       "        Disable the given Tartan checker, which may be "
+		               "‘all’. All checkers are\n"
 		       "        enabled by default.\n"
 		       "\n"
 		       "Usage:\n"
