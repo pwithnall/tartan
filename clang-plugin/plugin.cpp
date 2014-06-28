@@ -20,6 +20,8 @@
  *     Philip Withnall <philip.withnall@collabora.co.uk>
  */
 
+#include "config.h"
+
 #include <clang/Frontend/FrontendPluginRegistry.h>
 #include <clang/AST/AST.h>
 #include <clang/AST/ASTConsumer.h>
@@ -51,6 +53,9 @@ private:
 	 * specifically disables them (by listing their name in this set). */
 	std::shared_ptr<std::unordered_set<std::string>> _disabled_checkers =
 		std::make_shared<std::unordered_set<std::string>> ();
+
+	/* Whether to limit output to only diagnostics. */
+	bool _quiet = false;
 
 protected:
 	/* Note: This is called before ParseArgs, and must transfer ownership
@@ -206,6 +211,8 @@ protected:
 
 			if (arg == "--help") {
 				this->PrintHelp (llvm::errs ());
+			} else if (arg == "--quiet") {
+				this->_quiet = true;
 			} else if (arg == "--enable-checker") {
 				const std::string checker = *(++it);
 				if (checker == "all") {
@@ -217,6 +224,30 @@ protected:
 				const std::string checker = *(++it);
 				this->_disabled_checkers.get ()->insert (std::string (checker));
 			}
+		}
+
+		/* Output a version message. */
+		if (!this->_quiet) {
+			llvm::errs () << "Tartan version " << VERSION << " "
+			                 "compiled for LLVM " <<
+			                 LLVM_CONFIG_VERSION << ".\n" <<
+			                 "Disabled checkers: ";
+
+			for (std::unordered_set<std::string>::const_iterator it = this->_disabled_checkers.get ()->begin ();
+			     it != this->_disabled_checkers.get ()->end (); ++it) {
+				std::string checker = *it;
+
+				if (it != this->_disabled_checkers.get ()->begin ()) {
+					llvm::errs () << ", ";
+				}
+				llvm::errs () << checker;
+			}
+			if (this->_disabled_checkers.get ()->begin () ==
+			    this->_disabled_checkers.get ()->end ()) {
+				llvm::errs () << "(none)";
+			}
+
+			llvm::errs () << "\n";
 		}
 
 		return true;
@@ -240,6 +271,10 @@ protected:
 		       "        Disable the given Tartan checker, which may be "
 		               "‘all’. All checkers are\n"
 		       "        enabled by default.\n"
+		       "    --quiet\n"
+		       "        Disable all plugin output except code "
+		               "diagnostics (remarks,\n"
+		       "        warnings and errors).\n"
 		       "\n"
 		       "Usage:\n"
 		       "    clang -cc1 -load /path/to/libtartan.so "
