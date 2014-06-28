@@ -91,7 +91,6 @@ exec "$real_clang" \
 	"$first_arg" \
 	-load "$plugin_path" \
 	-add-plugin "$plugin_name" \
-	${plugin_gir_options[@]} \
 	${plugin_options[@]} \
 	$GNOME_CLANG_CFLAGS \
 	$TARTAN_CFLAGS \
