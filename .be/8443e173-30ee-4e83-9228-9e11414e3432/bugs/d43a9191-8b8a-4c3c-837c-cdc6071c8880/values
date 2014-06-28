@@ -12,6 +12,27 @@
 
 
 
+    "extra_strings": [
+
+
+
+
+
+
+        "TAG:bounds"
+
+
+
+
+
+
+    ], 
+
+
+
+
+
+
     "reporter": "Philip Withnall <philip.withnall@collabora.co.uk>", 
 
 
@@ -19,7 +40,7 @@
 
 
 
-    "severity": "minor", 
+    "severity": "wishlist", 
 
 
 

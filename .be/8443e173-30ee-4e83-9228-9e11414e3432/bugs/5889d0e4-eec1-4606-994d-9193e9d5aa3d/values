@@ -12,6 +12,34 @@
 
 
 
+    "extra_strings": [
+
+
+
+
+
+
+        "TAG:gobject", 
+
+
+
+
+
+
+        "TAG:refcounting"
+
+
+
+
+
+
+    ], 
+
+
+
+
+
+
     "reporter": "Philip Withnall <philip.withnall@collabora.co.uk>", 
 
 
@@ -19,7 +47,7 @@
 
 
 
-    "severity": "minor", 
+    "severity": "wishlist", 
 
 
 

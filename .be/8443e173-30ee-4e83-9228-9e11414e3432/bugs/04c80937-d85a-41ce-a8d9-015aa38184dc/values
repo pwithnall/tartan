@@ -12,6 +12,27 @@
 
 
 
+    "extra_strings": [
+
+
+
+
+
+
+        "TAG:integration"
+
+
+
+
+
+
+    ], 
+
+
+
+
+
+
     "reporter": "Philip Withnall <philip.withnall@collabora.co.uk>", 
 
 

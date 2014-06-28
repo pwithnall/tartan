@@ -12,6 +12,34 @@
 
 
 
+    "extra_strings": [
+
+
+
+
+
+
+        "TAG:annotations", 
+
+
+
+
+
+
+        "TAG:gerror"
+
+
+
+
+
+
+    ], 
+
+
+
+
+
+
     "reporter": "Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>", 
 
 
