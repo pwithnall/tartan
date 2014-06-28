@@ -357,3 +357,13 @@
 	                         G_CALLBACK (dbus_connection_closed_cb),
 	                         self, 0);
 }
+
+/*
+ * No error
+ */
+{
+	// Connecting to a signal with underscores in its name.
+	GDBusObject *obj = g_malloc (5);  // only checking the type
+	g_signal_connect (obj, "interface_added",
+	                  (GCallback) dbus_object_interface_added_cb, NULL);
+}

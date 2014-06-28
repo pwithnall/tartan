@@ -1013,6 +1013,37 @@ _signal_flags_is_swapped (const Expr *flags_expr,
 	}
 }
 
+/* Parse the signal name out of a user-provided string. It could be in the
+ * format:
+ *  • signal-name
+ *  • signal_name
+ *  • signal-name::some-detail
+ * We need to return the signal name with hyphens. */
+static std::string
+_parse_signal_name (const std::string &in)
+{
+	std::string::size_type d = in.find ("::");
+	std::string signal_name;
+
+	if (d != std::string::npos) {
+		/* Strip off the detail string.
+		 *
+		 * FIXME: In future we could validate this. e.g. For the
+		 * ‘notify’ signal, validate it against the object’s
+		 * properties. */
+		signal_name = in.substr (0, d);
+	} else {
+		signal_name = in;
+	}
+
+	/* Normalise the string. */
+	std::replace (signal_name.begin (), signal_name.end (), '_', '-');
+
+	assert (!signal_name.empty ());
+
+	return signal_name;
+}
+
 /* Check the type of the function pointer passed to a g_signal_connect() call,
  * and ensure that its declaration matches the signal definition.
  *
@@ -1056,21 +1087,7 @@ _check_gsignal_callback_type (const CallExpr &call,
 
 	/* Sort out the signal name, splitting off the detail if necessary. */
 	StringRef signal_name_str_ref = signal_name_str->getString ();
-	const std::string signal_name_and_detail = signal_name_str_ref.str ();
-
-	std::string::size_type d = signal_name_and_detail.find ("::");
-	std::string signal_name;
-
-	if (d != std::string::npos) {
-		/* Strip off the detail string.
-		 *
-		 * FIXME: In future we could validate this. e.g. For the
-		 * ‘notify’ signal, validate it against the object’s
-		 * properties. */
-		signal_name = signal_name_and_detail.substr (0, d);
-	} else {
-		signal_name = signal_name_and_detail;
-	}
+	std::string signal_name = _parse_signal_name (signal_name_str_ref.str ());
 
 	DEBUG ("Using signal name ‘" << signal_name << "’.");
 
