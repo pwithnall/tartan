@@ -133,10 +133,9 @@ NullabilityVisitor::TraverseFunctionDecl (FunctionDecl* func)
 		return true;
 
 	if (g_base_info_get_type (info) != GI_INFO_TYPE_FUNCTION) {
-		llvm::errs () << "Error: Unhandled GI type " <<
-		                 g_base_info_get_type (info) <<
-		                 " in introspection info for function ‘" <<
-		                 func_name << "’.\n";
+		WARN ("Error: Unhandled GI type " <<
+		      g_base_info_get_type (info) << " in introspection info "
+		      "for function ‘" << func_name << "’.");
 		return true;
 	}
 
