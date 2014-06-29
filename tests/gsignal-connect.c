@@ -346,6 +346,22 @@
 }
 
 /*
+ * Type for argument ‘self’ is not specific enough in signal handler for signal ‘GDBusObject::interface-added’. It should be ‘GDBusObject *’ but is currently ‘GObject *’.
+ *                           (GCallback) object_interface_added_cb, NULL);
+ *                                       ^
+ * note: expanded from macro 'g_signal_connect'
+ *     g_signal_connect_data ((instance), (detailed_signal), (c_handler), (data), NULL, (GConnectFlags) 0)
+ *                                                            ^
+ */
+{
+	// Connecting to a signal defined on an interface implemented by the
+	// object. Using a parent class as the actual type in the callback.
+	GDBusObjectProxy *proxy = g_malloc (5);  // only checking the type
+	g_signal_connect (proxy, "interface-added",
+	                  (GCallback) object_interface_added_cb, NULL);
+}
+
+/*
  * No error
  */
 {
