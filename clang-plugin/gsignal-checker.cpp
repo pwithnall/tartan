@@ -423,16 +423,26 @@ _type_info_to_type (GITypeInfo *type_info,
 /* Returns true iff
  *  • @a is a GObject, @b is a GObject, and @a is equal to or a subclass of @b;
  *  • @a is a GInterface, @b is a GInterface, and @a is equal to @b;
+ *  • @a is a GInterface, @b is a GObject, and at least one of @a’s
+ *    prerequisites is equal to or a subtype of @b;
  *  • @a is a GObject, @b is a GInterface, and @a or one of its superclasses
  *    implements @b.
  */
 static bool
 _is_gtype_subclass (GIBaseInfo *a, GIBaseInfo *b)
 {
-	assert (g_base_info_get_type (a) == GI_INFO_TYPE_OBJECT ||
-	        g_base_info_get_type (a) == GI_INFO_TYPE_INTERFACE);
-	assert (g_base_info_get_type (b) == GI_INFO_TYPE_OBJECT ||
-	        g_base_info_get_type (b) == GI_INFO_TYPE_INTERFACE);
+	GIInfoType a_type, b_type;
+
+	a_type = g_base_info_get_type (a);
+	b_type = g_base_info_get_type (b);
+
+	DEBUG ("Checking whether " << g_base_info_get_name (a) << " is a "
+	       "subtype of " << g_base_info_get_name (b) << ".");
+
+	assert (a_type == GI_INFO_TYPE_OBJECT ||
+	        a_type == GI_INFO_TYPE_INTERFACE);
+	assert (b_type == GI_INFO_TYPE_OBJECT ||
+	        b_type == GI_INFO_TYPE_INTERFACE);
 
 	/* The case where @a and @b are equal. */
 	if (g_base_info_equal (a, b)) {
@@ -440,7 +450,8 @@ _is_gtype_subclass (GIBaseInfo *a, GIBaseInfo *b)
 	}
 
 	/* The case where @a implements @b. */
-	if (g_base_info_get_type (b) == GI_INFO_TYPE_INTERFACE) {
+	if (a_type == GI_INFO_TYPE_OBJECT &&
+	    b_type == GI_INFO_TYPE_INTERFACE) {
 		for (gint i = 0; i < g_object_info_get_n_interfaces (a); i++) {
 			GIInterfaceInfo *iface;
 
@@ -454,18 +465,47 @@ _is_gtype_subclass (GIBaseInfo *a, GIBaseInfo *b)
 		}
 	}
 
-	/* The case where @a is a subclass of @b, or a subclass of a class which
-	 * implements @b. */
-	GIObjectInfo *ap = g_object_info_get_parent ((GIObjectInfo *) a);
+	/* The case where one of @a’s prerequisites is a subtype of @b. Note
+	 * that prerequisites may be classes or interfaces, and all interfaces
+	 * have GObject as an implicit prerequisite. */
+	if (a_type == GI_INFO_TYPE_INTERFACE &&
+	    b_type == GI_INFO_TYPE_OBJECT) {
+		/* GObject prerequisite. */
+		if (strcmp (g_base_info_get_namespace (b), "GObject") == 0 &&
+		    strcmp (g_base_info_get_name (b), "Object") == 0) {
+			return true;
+		}
 
-	if (ap == NULL) {
-		return false;
+		/* Normal prerequisites. */
+		for (gint i = 0; i < g_interface_info_get_n_prerequisites (a); i++) {
+			GIBaseInfo *prereq;
+
+			prereq = g_interface_info_get_prerequisite (a, i);
+			bool subtype = _is_gtype_subclass (prereq, b);
+			g_base_info_unref (prereq);
+
+			if (subtype) {
+				return true;
+			}
+		}
 	}
 
-	bool retval = _is_gtype_subclass (ap, b);
-	g_base_info_unref (ap);
+	/* The case where @a is a subclass of @b, or a subclass of a class which
+	 * implements @b. */
+	if (a_type == GI_INFO_TYPE_OBJECT) {
+		GIObjectInfo *ap = g_object_info_get_parent (a);
 
-	return retval;
+		if (ap == NULL) {
+			return false;
+		}
+
+		bool subclass = _is_gtype_subclass (ap, b);
+		g_base_info_unref (ap);
+
+		return subclass;
+	}
+
+	return false;
 }
 
 /* A safe calling convention is any convention which is caller-cleanup and where
