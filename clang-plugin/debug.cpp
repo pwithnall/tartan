@@ -21,6 +21,7 @@
  */
 
 #include <clang/Basic/Diagnostic.h>
+#include <clang/Basic/Version.h>
 #include <clang/Frontend/CompilerInstance.h>
 
 #include "debug.h"
@@ -78,6 +79,12 @@ DiagnosticBuilder
 Debug::emit_remark (const char *format_string, CompilerInstance& compiler,
                     SourceLocation location)
 {
+#if (CLANG_VERSION_MAJOR > 3) || \
+    (CLANG_VERSION_MAJOR == 3 && CLANG_VERSION_MINOR > 4)
+	return Debug::emit_report (DiagnosticsEngine::Remark, format_string,
+	                           compiler, location);
+#else
 	return Debug::emit_report (DiagnosticsEngine::Warning, format_string,
 	                           compiler, location);
+#endif
 }
