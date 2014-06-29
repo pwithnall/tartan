@@ -210,7 +210,7 @@ protected:
 			std::string arg = *it;
 
 			if (arg == "--help") {
-				this->PrintHelp (llvm::errs ());
+				this->PrintHelp (llvm::outs ());
 			} else if (arg == "--quiet") {
 				this->_quiet = true;
 			} else if (arg == "--enable-checker") {
@@ -228,7 +228,7 @@ protected:
 
 		/* Output a version message. */
 		if (!this->_quiet) {
-			llvm::errs () << "Tartan version " << VERSION << " "
+			llvm::outs () << "Tartan version " << VERSION << " "
 			                 "compiled for LLVM " <<
 			                 LLVM_CONFIG_VERSION << ".\n" <<
 			                 "Disabled checkers: ";
@@ -238,16 +238,16 @@ protected:
 				std::string checker = *it;
 
 				if (it != this->_disabled_checkers.get ()->begin ()) {
-					llvm::errs () << ", ";
+					llvm::outs () << ", ";
 				}
-				llvm::errs () << checker;
+				llvm::outs () << checker;
 			}
 			if (this->_disabled_checkers.get ()->begin () ==
 			    this->_disabled_checkers.get ()->end ()) {
-				llvm::errs () << "(none)";
+				llvm::outs () << "(none)";
 			}
 
-			llvm::errs () << "\n";
+			llvm::outs () << "\n";
 		}
 
 		return true;
