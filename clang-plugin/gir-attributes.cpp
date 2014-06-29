@@ -336,10 +336,9 @@ GirAttributesConsumer::_handle_function_decl (FunctionDecl& func)
 	case GI_INFO_TYPE_UNRESOLVED:
 	case GI_INFO_TYPE_INVALID:
 	default:
-		llvm::errs () << "Error: Unhandled GI type " <<
-		                 g_base_info_get_type (info) <<
-		                 " in introspection info for function ‘" <<
-		                 func_name << "’.\n";
+		WARN ("Error: Unhandled GI type " <<
+		      g_base_info_get_type (info) << " in introspection info "
+		      "for function ‘" << func_name << "’.");
 	}
 
 	g_base_info_unref (info);
@@ -463,10 +462,9 @@ GirAttributesChecker::_handle_function_decl (FunctionDecl& func)
 	case GI_INFO_TYPE_UNRESOLVED:
 	case GI_INFO_TYPE_INVALID:
 	default:
-		llvm::errs () << "Error: Unhandled GI type " <<
-		                 g_base_info_get_type (info) <<
-		                 " in introspection info for function ‘" <<
-		                 func_name << "’.\n";
+		WARN ("Error: Unhandled GI type " <<
+		      g_base_info_get_type (info) << " in introspection info "
+		      "for function ‘" << func_name << "’.");
 	}
 
 	g_base_info_unref (info);
