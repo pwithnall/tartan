@@ -143,15 +143,15 @@ typedef enum {
 static const VariantFuncInfo *
 _func_uses_gvariant_format (const FunctionDecl& func)
 {
-	const char *func_name = func.getNameAsString ().c_str ();
+	const std::string func_name = func.getNameAsString ();
 	guint i;
 
 	/* Fast path elimination of irrelevant functions. */
-	if (*func_name != 'g')
+	if (func_name[0] != 'g')
 		return NULL;
 
 	for (i = 0; i < G_N_ELEMENTS (gvariant_format_funcs); i++) {
-		if (strcmp (func_name, gvariant_format_funcs[i].func_name) == 0)
+		if (func_name == gvariant_format_funcs[i].func_name)
 			return &gvariant_format_funcs[i];
 	}
 
