@@ -107,15 +107,15 @@ static const SignalFuncInfo gsignal_connect_funcs[] = {
 static const SignalFuncInfo *
 _func_is_gsignal_connect (const FunctionDecl& func)
 {
-	const char *func_name = func.getNameAsString ().c_str ();
+	const std::string func_name = func.getNameAsString ();
 	guint i;
 
 	/* Fast path elimination of irrelevant functions. */
-	if (*func_name != 'g')
+	if (func_name[0] != 'g')
 		return NULL;
 
 	for (i = 0; i < G_N_ELEMENTS (gsignal_connect_funcs); i++) {
-		if (strcmp (func_name, gsignal_connect_funcs[i].func_name) == 0) {
+		if (func_name == gsignal_connect_funcs[i].func_name) {
 			return &gsignal_connect_funcs[i];
 		}
 	}
