@@ -510,3 +510,43 @@
 	va_list some_va_list;
 	g_variant_get_va (existing_variant, "invalid", NULL, &some_va_list);
 }
+
+/*
+ * Expected a GVariant variadic argument of type 'gint64 *' (aka 'long *') but saw one of type 'glong *' (aka 'long *'). These types are not compatible on every architecture.
+ *         g_variant_get (existing_variant, "x", &some_long);
+ *                                               ^
+ */
+{
+	glong some_long;
+	g_variant_get (existing_variant, "x", &some_long);
+}
+
+/*
+ * Expected a GVariant variadic argument of type 'gint64 *' (aka 'long *') but saw one of type 'long *'. These types are not compatible on every architecture.
+ *         g_variant_get (existing_variant, "x", &some_long);
+ *                                               ^
+ */
+{
+	long some_long;
+	g_variant_get (existing_variant, "x", &some_long);
+}
+
+/*
+ * Expected a GVariant variadic argument of type 'guint64 *' (aka 'unsigned long *') but saw one of type 'gulong *' (aka 'unsigned long *'). These types are not compatible on every architecture.
+ *         g_variant_get (existing_variant, "t", &some_long);
+ *                                               ^
+ */
+{
+	gulong some_long;
+	g_variant_get (existing_variant, "t", &some_long);
+}
+
+/*
+ * Expected a GVariant variadic argument of type 'gint32 *' (aka 'int *') but saw one of type 'glong *' (aka 'long *'). These types are not compatible on every architecture.
+ *         g_variant_get (existing_variant, "i", &some_long);
+ *                                               ^
+ */
+{
+	glong some_long;
+	g_variant_get (existing_variant, "i", &some_long);
+}

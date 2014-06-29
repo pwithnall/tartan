@@ -212,6 +212,63 @@ _compare_types (const QualType actual_type, const QualType expected_type,
 	                       flags, context);
 }
 
+/*
+ * Return true if the given @type is known to differ in width on different
+ * operating systems or processor architectures. This is important for
+ * portability, as otherwise the static analysis is only testing correctness
+ * for the current platform.
+ *
+ * For example,
+ *    g_variant_get (x, "i", &some_long)
+ * is valid on 32-bit machines (where long is 32 bits wide), but invalid on
+ * 64-bit machines (where it is 64 bits wide). We want to flag the problem
+ * regardless of whether the analyser is run on a 32- or 64-bit host.
+ */
+static bool
+_type_is_arch_dependent (const QualType type, ASTContext &context)
+{
+	/* Strip off any pointers. */
+	const PointerType *pointer_type = dyn_cast<PointerType> (type);
+
+	if (pointer_type != NULL) {
+		return _type_is_arch_dependent (pointer_type->getPointeeType (),
+		                                context);
+	}
+
+	/* If it’s a typedef type, assume it’s not architecture dependent.
+	 * This is a tricky one, but is required because the Clang type system
+	 * ignores typedefs and preprocessor statements when comparing types, so
+	 *     hasSameType(gint64, long)
+	 * returns true, just the same as
+	 *     hasSameType (long, long)
+	 * return true. We want to avoid g* basic types (such as gint64) being
+	 * considered as architecture-dependent, since they carefully use
+	 * preprocessor voodoo to avoid that.
+	 *
+	 * So, assume that if the programmer has used an architecture-dependent
+	 * type in a typedef, they know enough to make the typedef
+	 * architecture-dependent.
+	 *
+	 * But glong is a typedef, so we have to special case that. Sigh. */
+	const TypedefType *typedef_type = dyn_cast<TypedefType> (type);
+
+	if (typedef_type != NULL) {
+		const std::string typedef_name =
+			typedef_type->getDecl ()->getNameAsString ();
+		return (typedef_name == "glong" ||
+		        typedef_name == "gulong");
+	}
+
+	/* Well-known architecture-dependent types.
+	 *
+	 * Reference: https://software.intel.com/en-us/articles/
+	 *            size-of-long-integer-type-on-different-architecture-and-os
+	 */
+	return (context.hasSameType (type, context.LongTy) ||
+	        context.hasSameType (type, context.UnsignedLongTy) ||
+	        context.hasSameType (type, context.LongDoubleTy));
+}
+
 /* Consume a single variadic argument from the varargs array, checking that one
  * exists and has the given @expected_type.
  *
@@ -300,8 +357,22 @@ _consume_variadic_argument (QualType expected_type,
 		return false;
 	} else if (!is_null_constant) {
 		/* Normal case. */
-		if (!_compare_types (actual_type, expected_type,
-		                     flags, context)) {
+		bool type_error = !_compare_types (actual_type, expected_type,
+		                                   flags, context);
+		bool arch_error = _type_is_arch_dependent (actual_type,
+		                                           context);
+
+		if (arch_error) {
+			Debug::emit_error ("Expected a GVariant variadic "
+			                   "argument of type %0 but saw one "
+			                   "of type %1. These types are not "
+			                   "compatible on every architecture.",
+			                   compiler, arg->getLocStart ())
+			<< expected_type
+			<< actual_type;
+
+			return false;
+		} else if (type_error) {
 			Debug::emit_error ("Expected a GVariant variadic "
 			                   "argument of type %0 but saw one "
 			                   "of type %1.", compiler,
