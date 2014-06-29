@@ -348,23 +348,23 @@ _check_basic_type_string (const gchar **type_str,
 		expected_type = context.UnsignedCharTy;
 		break;
 	case 'n': /* gint16 */
-		expected_type = context.getIntTypeForBitwidth (16, true);
+		expected_type = type_manager.find_type_by_name ("gint16");
 		break;
 	case 'q': /* guint16 */
-		expected_type = context.getIntTypeForBitwidth (16, false);
+		expected_type = type_manager.find_type_by_name ("guint16");
 		break;
 	case 'i':
 	case 'h': /* gint32 */
-		expected_type = context.getIntTypeForBitwidth (32, true);
+		expected_type = type_manager.find_type_by_name ("gint32");
 		break;
 	case 'u': /* guint32 */
-		expected_type = context.getIntTypeForBitwidth (32, false);
+		expected_type = type_manager.find_type_by_name ("guint32");
 		break;
 	case 'x': /* gint64 */
-		expected_type = context.getIntTypeForBitwidth (64, true);
+		expected_type = type_manager.find_type_by_name ("gint64");
 		break;
 	case 't': /* guint64 */
-		expected_type = context.getIntTypeForBitwidth (64, false);
+		expected_type = type_manager.find_type_by_name ("guint64");
 		break;
 	case 'd': /* gdouble ≡ double */
 		expected_type = context.DoubleTy;
@@ -389,6 +389,8 @@ _check_basic_type_string (const gchar **type_str,
 
 		return false;
 	}
+
+	assert (!expected_type.isNull ());
 
 	/* Handle type promotion. Integer types which are smaller than 32 bits
 	 * (for all architectures we care about) are automatically promoted to

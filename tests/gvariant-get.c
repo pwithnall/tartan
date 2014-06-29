@@ -36,7 +36,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type 'int *' but there wasn’t one.
+ * Expected a GVariant variadic argument of type 'gint32 *' (aka 'int *') but there wasn’t one.
  *         g_variant_get (existing_variant, "invalid");
  *                        ^
  */
@@ -466,7 +466,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type 'long *' but saw one of type 'gint32 *' (aka 'int *').
+ * Expected a GVariant variadic argument of type 'gint64 *' (aka 'long *') but saw one of type 'gint32 *' (aka 'int *').
  *         g_variant_get (existing_variant, "x", &some_int);
  *                                               ^
  */
@@ -484,7 +484,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type 'long *' but saw one of type 'guint64 *' (aka 'unsigned long *').
+ * Expected a GVariant variadic argument of type 'gint64 *' (aka 'long *') but saw one of type 'guint64 *' (aka 'unsigned long *').
  *         g_variant_get (existing_variant, "x", &some_uint);
  *                                               ^
  */
