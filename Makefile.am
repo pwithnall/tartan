@@ -46,6 +46,7 @@ clang_plugin_libtartan_la_CPPFLAGS = \
 clang_plugin_libtartan_la_CXXFLAGS = \
 	$(AM_CXXFLAGS) \
 	-std=c++0x -pedantic \
+	$(CODE_COVERAGE_CFLAGS) \
 	$(TARTAN_CFLAGS) \
 	$(LLVM_CXXFLAGS) \
 	$(WARN_CXXFLAGS) \
@@ -53,6 +54,7 @@ clang_plugin_libtartan_la_CXXFLAGS = \
 
 clang_plugin_libtartan_la_LIBADD = \
 	$(AM_LIBADD) \
+	$(CODE_COVERAGE_LDFLAGS) \
 	$(TARTAN_LIBS) \
 	$(LLVM_LIBS) \
 	$(NULL)
@@ -67,6 +69,14 @@ clang_plugin_libtartan_la_LDFLAGS = \
 
 # Clang wrapper script
 dist_bin_SCRIPTS = scripts/tartan
+
+# Code coverage
+@CODE_COVERAGE_RULES@
+CODE_COVERAGE_IGNORE_PATTERN = \
+	"include/clang/*" \
+	"include/llvm/*" \
+	"include/c++/*" \
+	$(NULL)
 
 # Cleaning
 EXTRA_DIST += \

@@ -102,6 +102,9 @@ AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE],"$GETTEXT_PACKAGE",
                    [The name of the gettext domain])
 IT_PROG_INTLTOOL([0.40.0])
 
+# Code coverage for unit tests
+AX_CODE_COVERAGE
+
 # Compiler warnings
 m4_include([m4/gnome-compiler-flags.m4])
 GNOME_COMPILE_WARNINGS([maximum])
