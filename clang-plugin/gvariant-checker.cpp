@@ -479,7 +479,7 @@ _check_basic_type_string (const gchar **type_str,
 	if (!(flags & CHECK_FLAG_DIRECTION_OUT) &&
 	    (**type_str == 'y' || **type_str == 'n' || **type_str == 'q')) {
 		assert (expected_type->isPromotableIntegerType ());
-		expected_type = context.IntTy;
+		expected_type = context.getPromotedIntegerType (expected_type);
 	}
 
 	/* Consume the type string. */
