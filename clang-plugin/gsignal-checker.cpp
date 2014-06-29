@@ -277,10 +277,10 @@ _type_interface_info_to_type (GITypeInfo *type_info,
 	case GI_INFO_TYPE_INVALID:
 		/* These are all invalid */
 	default:
-		llvm::errs () << "Warning: Unexpected base info type " <<
-			g_base_info_get_type (interface_info) <<
-			" for base info " <<
-			g_base_info_get_name (interface_info) << ".\n";
+		WARN ("Warning: Unexpected base info type " <<
+		      g_base_info_get_type (interface_info) <<
+		      " for base info " <<
+		      g_base_info_get_name (interface_info) << ".");
 	}
 
 	g_base_info_unref (interface_info);
@@ -345,10 +345,10 @@ _type_array_info_to_type (GITypeInfo *array_info,
 	case GI_ARRAY_TYPE_BYTE_ARRAY:
 		return type_manager.find_pointer_type_by_name ("GByteArray");
 	default:
-		llvm::errs () << "Warning: Unexpected array type " <<
-			g_type_info_get_array_type (array_info) <<
-			" for base info " <<
-			g_base_info_get_name (array_info) << ".\n";
+		WARN ("Warning: Unexpected array type " <<
+		      g_type_info_get_array_type (array_info) <<
+		      " for base info " <<
+		      g_base_info_get_name (array_info) << ".");
 		return QualType ();
 	}
 }
@@ -412,10 +412,10 @@ _type_info_to_type (GITypeInfo *type_info,
 	case GI_TYPE_TAG_ERROR:
 		return type_manager.find_pointer_type_by_name ("GError");
 	default:
-		llvm::errs () << "Warning: Unexpected base info type " <<
-			g_base_info_get_type (type_info) <<
-			" for base info " <<
-			g_base_info_get_name (type_info) << ".\n";
+		WARN ("Warning: Unexpected base info type " <<
+		      g_base_info_get_type (type_info) <<
+		      " for base info " <<
+		      g_base_info_get_name (type_info) << ".");
 		return QualType ();
 	}
 }
