@@ -19,6 +19,9 @@ AC_USE_SYSTEM_EXTENSIONS
 AM_INIT_AUTOMAKE([1.12 dist-xz no-dist-gzip check-news subdir-objects parallel-tests])
 AM_SILENT_RULES([yes])
 
+# Debugging
+AX_CHECK_ENABLE_DEBUG([no])
+
 AC_PROG_CXX
 AM_PROG_CC_C_O
 LT_INIT([])
@@ -98,17 +101,6 @@ AC_SUBST([GETTEXT_PACKAGE])
 AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE],"$GETTEXT_PACKAGE",
                    [The name of the gettext domain])
 IT_PROG_INTLTOOL([0.40.0])
-
-# Debugging
-AC_ARG_ENABLE([debug],
-              AS_HELP_STRING([--enable-debug],
-                             [turn on debugging]),,
-              [enable_debug=no])
-
-AS_IF([test "$enable_debug" = "yes"],[
-	AC_DEFINE([ENABLE_DEBUG],[1],
-	          [Enable additional debugging output])
-])
 
 # Compiler warnings
 m4_include([m4/gnome-compiler-flags.m4])
