@@ -19,7 +19,14 @@
 
 
 
-        "TAG:integration"
+        "TAG:integration", 
+
+
+
+
+
+
+        "TAG:reporting"
 
 
 
@@ -40,7 +47,7 @@
 
 
 
-    "severity": "wishlist", 
+    "severity": "minor", 
 
 
 
@@ -54,14 +61,14 @@
 
 
 
-    "summary": "Support project-internal GIR files", 
+    "summary": "Investigate supporting per-diagnostic suppressions", 
 
 
 
 
 
 
-    "time": "Fri, 27 Jun 2014 23:19:35 +0000"
+    "time": "Sun, 29 Jun 2014 20:18:59 +0000"
 
 
 

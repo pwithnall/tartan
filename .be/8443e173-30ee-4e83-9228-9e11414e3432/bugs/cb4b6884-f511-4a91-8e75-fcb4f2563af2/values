@@ -12,27 +12,6 @@
 
 
 
-    "extra_strings": [
-
-
-
-
-
-
-        "TAG:integration"
-
-
-
-
-
-
-    ], 
-
-
-
-
-
-
     "reporter": "Philip Withnall <philip.withnall@collabora.co.uk>", 
 
 
@@ -40,7 +19,7 @@
 
 
 
-    "severity": "wishlist", 
+    "severity": "minor", 
 
 
 
@@ -54,14 +33,14 @@
 
 
 
-    "summary": "Support project-internal GIR files", 
+    "summary": "Check for Deprecated: gtk-doc tag on deprecated signals", 
 
 
 
 
 
 
-    "time": "Fri, 27 Jun 2014 23:19:35 +0000"
+    "time": "Sun, 29 Jun 2014 20:48:28 +0000"
 
 
 

@@ -40,7 +40,7 @@
 
 
 
-    "severity": "wishlist", 
+    "severity": "minor", 
 
 
 
@@ -54,14 +54,14 @@
 
 
 
-    "summary": "Support project-internal GIR files", 
+    "summary": "Add project integration tooling", 
 
 
 
 
 
 
-    "time": "Fri, 27 Jun 2014 23:19:35 +0000"
+    "time": "Sun, 29 Jun 2014 20:25:04 +0000"
 
 
 

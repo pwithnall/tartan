@@ -1,0 +1,4 @@
+It would be nice to have an autoconf macro which people could include in their projects which magically:
+ • Adds a `check` target for Tartan, so that running (e.g.) `make check-static-analysis` runs Tartan on the code base.
+ • Automatically passes a private GIR file to Tartan, if the project has one. Automates generation of such a GIR file.
+ • Automatically passes a suppression file to Tartan, if the project has one.

@@ -1,0 +1,15 @@
+Find some way of exposing information about parameters and return types which are FDs to the existing Clang static analysis checker for FD leaks.
+
+This might involve adding a __attribute__((fd [in|out|in-out] [transfer-none|transfer-full])) and changing the Clang checker to pay attention to it, then adding a GIR annotation to highlight FDs (maybe (type GFileDescriptor), with typedef int GFileDescriptor).
+
+The idea would be to get Clang to warn about the FD leak in:
+    {
+        int some_fd;
+
+        some_fd = g_file_open_tmp ("tmpl.XXXXXX", NULL, NULL);
+        write (some_fd, "hello", 5);
+        /* no close(some_fd)! */
+
+        return;
+    }
+without having access to the internals of g_file_open_tmp().

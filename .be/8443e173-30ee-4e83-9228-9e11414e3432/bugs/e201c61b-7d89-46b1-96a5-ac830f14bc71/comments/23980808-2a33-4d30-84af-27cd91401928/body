@@ -1,0 +1,6 @@
+Also check that the GDestroyNotify (if supported and passed) matches the user_data type, e.g.
+    X *user_data;
+    g_idle_add_full (0, (GSourceFunc) callback, user_data, (GDestroyNotify) X_free);
+    static void X_free (Y *data) { … }
+
+Check that X <: Y.

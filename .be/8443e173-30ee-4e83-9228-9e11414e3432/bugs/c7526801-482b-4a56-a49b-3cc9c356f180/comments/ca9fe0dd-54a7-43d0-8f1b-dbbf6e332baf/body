@@ -1,0 +1,9 @@
+Suppressions should be supported as a matter of importance. False positive noise makes users less likely to use Tartan as part of their programming routine, which means that it gets less testing, and their code gets less analysis.
+
+Suppressions should be supported, ideally upstream in Clang, but a first start could be in Tartan. An upstream suppression format may not be accepted as the Clang developers (rightfully) err on the side of eliminating false positives from the diagnostics instead.
+
+http://llvm.org/bugs/show_bug.cgi?id=12263
+
+Suppressions should be implemented in Tartan as an external file which accompanies each project, rather than as preprocessor manipulation, specially formatted comments, or other annotations in the code. Such modifications to the code are irritating and make downstream code less legible.
+
+I'm not sure what format a suppression file should take, but it should perhaps be based on functions, e.g. 'suppress all instances of diagnostic X in function Y'. This is probably fine grained enough to be useful without eliminating too many true positives (since the code in each suppressed function will probably have been audited before the suppression was added), and without the suppressions losing their targets frequently as would happen with line-number-based suppressions — functions are not renamed very often.

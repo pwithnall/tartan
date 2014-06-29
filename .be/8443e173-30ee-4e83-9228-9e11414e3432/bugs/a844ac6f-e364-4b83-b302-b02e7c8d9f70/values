@@ -19,7 +19,7 @@
 
 
 
-        "TAG:integration"
+        "TAG:attributes"
 
 
 
@@ -40,7 +40,7 @@
 
 
 
-    "severity": "wishlist", 
+    "severity": "minor", 
 
 
 
@@ -54,14 +54,14 @@
 
 
 
-    "summary": "Support project-internal GIR files", 
+    "summary": "Add attributes to FD functions", 
 
 
 
 
 
 
-    "time": "Fri, 27 Jun 2014 23:19:35 +0000"
+    "time": "Sun, 29 Jun 2014 20:52:09 +0000"
 
 
 
