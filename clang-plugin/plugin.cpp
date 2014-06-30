@@ -226,6 +226,12 @@ protected:
 			}
 		}
 
+		/* Listen to the V environment variable (as standard in automake) too. */
+		const char *v_value = getenv ("V");
+		if (v_value != NULL && strcmp (v_value, "0") == 0) {
+			this->_quiet = true;
+		}
+
 		/* Output a version message. */
 		if (!this->_quiet) {
 			llvm::outs () << "Tartan version " << VERSION << " "
