@@ -52,6 +52,9 @@ GirManager::load_namespace (const std::string& gi_namespace,
 	const char *c_prefix =
 		g_irepository_get_c_prefix (this->_repo,
 		                            gi_namespace.c_str ());
+	if (c_prefix == NULL) {
+		c_prefix = "";
+	}
 
 	Nspace r;
 	r.nspace = gi_namespace;
@@ -81,12 +84,14 @@ GirManager::find_function_info (const std::string& func_name) const
 
 		/* The func_name includes the namespace, which needs stripping.
 		 * e.g. g_irepository_find_by_name → find_by_name. */
-		if (func_name.compare (0, r.c_prefix_lower.size (),
+		if (!r.c_prefix_lower.empty () &&
+		    func_name.compare (0, r.c_prefix_lower.size (),
 		                       r.c_prefix_lower) == 0) {
 			size_t prefix_len =
 				r.c_prefix_lower.size () + 1 /* underscore */;
+
 			func_name_stripped = func_name.substr (prefix_len);
-		} else {
+		} else if (!r.c_prefix_lower.empty ()) {
 			continue;
 		}
 
@@ -137,11 +142,12 @@ GirManager::find_object_info (const std::string& type_name) const
 
 		/* The type_name includes the namespace, which needs stripping.
 		 * e.g. GObject → Object. */
-		if (type_name_stripped.compare (0, r.c_prefix.size (),
+		if (!r.c_prefix.empty () &&
+		    type_name_stripped.compare (0, r.c_prefix.size (),
 		                                r.c_prefix) == 0) {
 			size_t prefix_len = r.c_prefix.size ();
 			type_name_stripped = type_name.substr (prefix_len);
-		} else {
+		} else if (!r.c_prefix.empty ()) {
 			continue;
 		}
 
@@ -174,9 +180,13 @@ GirManager::find_object_info (const std::string& type_name) const
 std::string
 GirManager::get_c_name_for_type (GIBaseInfo *base_info) const
 {
-	std::string prefix (g_irepository_get_c_prefix (this->_repo,
-	                                                g_base_info_get_namespace (base_info)));
 	std::string symbol_name (g_base_info_get_name (base_info));
+	const gchar *c_prefix = g_irepository_get_c_prefix (this->_repo,
+	                                                    g_base_info_get_namespace (base_info));
 
-	return prefix + symbol_name;
+	if (c_prefix == NULL) {
+		return symbol_name;
+	} else {
+		return std::string (c_prefix) + symbol_name;
+	}
 }
