@@ -20,7 +20,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type 'int' but there wasn’t one.
+ * Expected a GVariant variadic argument of type 'gint32' (aka 'int') but there wasn’t one.
  *         floating_variant = g_variant_new ("invalid");
  *                                            ^
  */
@@ -129,7 +129,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type 'int' but saw one of type 'char *'.
+ * Expected a GVariant variadic argument of type 'gint32' (aka 'int') but saw one of type 'char *'.
  *         floating_variant = g_variant_new ("i", "nope");
  *                                                ^
  */
@@ -160,7 +160,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type 'unsigned int' but saw one of type 'char *'.
+ * Expected a GVariant variadic argument of type 'guint32' (aka 'unsigned int') but saw one of type 'char *'.
  *         floating_variant = g_variant_new ("u", "nope");
  *                                                ^
  */
@@ -199,7 +199,7 @@
 }
 
 /*
- *  Expected a GVariant variadic argument of type 'long' but saw one of type 'char *'.
+ *  Expected a GVariant variadic argument of type 'gint64' (aka 'long') but saw one of type 'char *'.
  *         floating_variant = g_variant_new ("x", "nope");
  *                                                ^
  */
@@ -208,7 +208,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type 'long' but saw one of type 'int'.
+ * Expected a GVariant variadic argument of type 'gint64' (aka 'long') but saw one of type 'int'.
  *         floating_variant = g_variant_new ("x", -5);
  *                                                ^
  */
@@ -217,7 +217,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type 'long' but saw one of type 'gint32' (aka 'int').
+ * Expected a GVariant variadic argument of type 'gint64' (aka 'long') but saw one of type 'gint32' (aka 'int').
  *         floating_variant = g_variant_new ("x", some_var);
  *                                                ^
  */
@@ -242,7 +242,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type 'unsigned long' but saw one of type 'char *'.
+ * Expected a GVariant variadic argument of type 'guint64' (aka 'unsigned long') but saw one of type 'char *'.
  *         floating_variant = g_variant_new ("t", "nada");
  *                                                ^
  */
@@ -251,7 +251,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type 'unsigned long' but saw one of type 'unsigned int'.
+ * Expected a GVariant variadic argument of type 'guint64' (aka 'unsigned long') but saw one of type 'unsigned int'.
  *         floating_variant = g_variant_new ("t", 5);
  *                                                ^
  */
@@ -260,7 +260,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type 'unsigned long' but saw one of type 'guint32' (aka 'unsigned int').
+ * Expected a GVariant variadic argument of type 'guint64' (aka 'unsigned long') but saw one of type 'guint32' (aka 'unsigned int').
  *         floating_variant = g_variant_new ("t", some_var);
  *                                                ^
  */
@@ -285,7 +285,7 @@
 }
 
 /*
- * Expected a GVariant variadic argument of type 'int' but saw one of type 'char *'.
+ * Expected a GVariant variadic argument of type 'gint32' (aka 'int') but saw one of type 'char *'.
  *         floating_variant = g_variant_new ("h", "nope");
  *                                                ^
  */
