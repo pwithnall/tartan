@@ -383,3 +383,14 @@
 	g_signal_connect (obj, "interface_added",
 	                  (GCallback) dbus_object_interface_added_cb, NULL);
 }
+
+/*
+ * No error
+ */
+{
+	// Connecting to a signal which returns a flag variable.
+	GTlsConnection *conn = g_malloc (5);  // only checking the type
+	g_signal_connect (conn, "accept-certificate",
+	                  (GCallback) tls_connection_accept_certificate_cb,
+	                  NULL);
+}

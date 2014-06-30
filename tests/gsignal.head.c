@@ -150,6 +150,16 @@ dbus_connection_closed_cb (GDBusConnection *conn,
 	/* Done */
 }
 
+static gboolean
+tls_connection_accept_certificate_cb (GTlsConnection *conn,
+                                      GTlsCertificate *peer_certificate,
+                                      GTlsCertificateFlags errors,
+                                      gpointer user_data)
+{
+	/* Done */
+	return FALSE;
+}
+
 int
 main (void)
 {

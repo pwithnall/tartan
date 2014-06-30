@@ -257,11 +257,15 @@ _type_interface_info_to_type (GITypeInfo *type_info,
 	assert (interface_info != NULL);
 
 	switch (g_base_info_get_type (interface_info)) {
+	case GI_INFO_TYPE_ENUM:
+	case GI_INFO_TYPE_FLAGS: {
+		std::string c_type (gir_manager.get_c_name_for_type (interface_info));
+		retval = type_manager.find_type_by_name (c_type);
+		break;
+	}
 	case GI_INFO_TYPE_CALLBACK:
 	case GI_INFO_TYPE_STRUCT:
 	case GI_INFO_TYPE_BOXED:
-	case GI_INFO_TYPE_ENUM:
-	case GI_INFO_TYPE_FLAGS:
 	case GI_INFO_TYPE_OBJECT:
 	case GI_INFO_TYPE_INTERFACE:
 	case GI_INFO_TYPE_UNION: {
