@@ -377,7 +377,7 @@ _type_info_to_type (GITypeInfo *type_info,
 	case GI_TYPE_TAG_VOID:
 		return context.VoidTy;
 	case GI_TYPE_TAG_BOOLEAN:
-		return context.IntTy;
+		return type_manager.find_type_by_name ("gboolean");
 	case GI_TYPE_TAG_INT8:
 		return context.getIntTypeForBitwidth (8, true);
 	case GI_TYPE_TAG_UINT8:
