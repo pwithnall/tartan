@@ -85,13 +85,17 @@ GirManager::find_function_info (const std::string& func_name) const
 		/* The func_name includes the namespace, which needs stripping.
 		 * e.g. g_irepository_find_by_name → find_by_name. */
 		if (!r.c_prefix_lower.empty () &&
+		    func_name.size () > r.c_prefix_lower.size () &&
 		    func_name.compare (0, r.c_prefix_lower.size (),
-		                       r.c_prefix_lower) == 0) {
+		                       r.c_prefix_lower) == 0 &&
+		    func_name[r.c_prefix_lower.size ()] == '_') {
 			size_t prefix_len =
 				r.c_prefix_lower.size () + 1 /* underscore */;
 
 			func_name_stripped = func_name.substr (prefix_len);
-		} else if (!r.c_prefix_lower.empty ()) {
+		} else if (r.c_prefix_lower.empty ()) {
+			func_name_stripped = func_name;
+		} else {
 			continue;
 		}
 
@@ -138,16 +142,17 @@ GirManager::find_object_info (const std::string& type_name) const
 	     ie = this->_typelibs.end (); it != ie; ++it) {
 		const Nspace r = *it;
 
-		type_name_stripped = std::string (type_name);
-
 		/* The type_name includes the namespace, which needs stripping.
 		 * e.g. GObject → Object. */
 		if (!r.c_prefix.empty () &&
-		    type_name_stripped.compare (0, r.c_prefix.size (),
-		                                r.c_prefix) == 0) {
+		    type_name.size () > r.c_prefix.size () &&
+		    type_name.compare (0, r.c_prefix.size (),
+		                       r.c_prefix) == 0) {
 			size_t prefix_len = r.c_prefix.size ();
 			type_name_stripped = type_name.substr (prefix_len);
-		} else if (!r.c_prefix.empty ()) {
+		} else if (r.c_prefix.empty ()) {
+			type_name_stripped = type_name;
+		} else {
 			continue;
 		}
 
