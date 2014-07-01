@@ -77,7 +77,10 @@ for arg in $TARTAN_OPTIONS; do
 	plugin_options+=( "$arg" )
 done
 
-# Clang can’t accept -load as the first argument.
+# Detect whether we’re running under scan-build. If we are, -cc1 has been set as
+# the first argument by ccc-analyzer. Otherwise, the user seems to be trying to
+# run Tartan directly, e.g. as `make CC=tartan`. This will work, but no static
+# analysis will be performed.
 first_arg=$1
 shift
 
@@ -86,11 +89,22 @@ if [ "$first_arg" == "" ]; then
 	exit 3
 fi
 
+add_plugin=( "-load" "$plugin_path" \
+             "-add-plugin" "$plugin_name" )
+if [ "$first_arg" != "-cc1" ]; then
+	_add_plugin=()
+	for arg in "${add_plugin[@]}"; do
+		_add_plugin+=( "-Xclang" "$arg" )
+	done
+	add_plugin=( "${_add_plugin[@]}" )
+
+	echo "Warning: Running $0 with static analysis disabled. Use scan-build to enable static analysis." >& 2
+fi
+
 # Exec Clang with the plugin loaded.
 exec "$real_clang" \
 	"$first_arg" \
-	-load "$plugin_path" \
-	-add-plugin "$plugin_name" \
+	${add_plugin[@]} \
 	${plugin_options[@]} \
 	$GNOME_CLANG_CFLAGS \
 	$TARTAN_CFLAGS \
