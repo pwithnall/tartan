@@ -19,7 +19,7 @@ AC_CONFIG_SRCDIR([clang-plugin/plugin.cpp])
 AC_CONFIG_HEADERS([config.h])
 AC_USE_SYSTEM_EXTENSIONS
 
-AM_INIT_AUTOMAKE([1.12 dist-xz no-dist-gzip check-news subdir-objects parallel-tests])
+AM_INIT_AUTOMAKE([1.12 dist-xz no-dist-gzip check-news subdir-objects color-tests parallel-tests])
 AM_SILENT_RULES([yes])
 
 AC_PROG_CXX
