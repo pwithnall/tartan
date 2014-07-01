@@ -10,6 +10,9 @@ AC_INIT([Tartan],
         [http://people.collabora.com/~pwith/tartan/],[tartan],
         [http://people.collabora.com/~pwith/tartan/])
 
+# Debugging
+AX_CHECK_ENABLE_DEBUG([no])
+
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_SRCDIR([clang-plugin/plugin.cpp])
@@ -18,9 +21,6 @@ AC_USE_SYSTEM_EXTENSIONS
 
 AM_INIT_AUTOMAKE([1.12 dist-xz no-dist-gzip check-news subdir-objects parallel-tests])
 AM_SILENT_RULES([yes])
-
-# Debugging
-AX_CHECK_ENABLE_DEBUG([no])
 
 AC_PROG_CXX
 AM_PROG_CC_C_O
