@@ -91,7 +91,8 @@ fi
 
 add_plugin=( "-load" "$plugin_path" \
              "-add-plugin" "$plugin_name" )
-if [ "$first_arg" != "-cc1" ]; then
+if [ "$first_arg" != "-cc1" -a \
+     "$first_arg" != "--version" ]; then
 	_add_plugin=()
 	for arg in "${add_plugin[@]}"; do
 		_add_plugin+=( "-Xclang" "$arg" )
@@ -99,6 +100,10 @@ if [ "$first_arg" != "-cc1" ]; then
 	add_plugin=( "${_add_plugin[@]}" )
 
 	echo "Warning: Running $0 with static analysis disabled. Use scan-build to enable static analysis." >& 2
+elif [ "$first_arg" = "--version" ]; then
+	# This is passed to us during ./configure (e.g. scan-build ./configure)
+	# so take the opportunity to output Tartan version information.
+	echo "tartan: Running under scan-build" >& 2
 fi
 
 # Exec Clang with the plugin loaded.
