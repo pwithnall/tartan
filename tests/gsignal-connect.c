@@ -294,6 +294,36 @@
 }
 
 /*
+ * No error
+ */
+{
+	GSettings *settings = g_malloc (5);  // only checking the type
+	GApplication *app = g_malloc (5);  // only checking the type
+	g_signal_connect_swapped (app, "activate",
+	                          G_CALLBACK (application_activate_swapped_gpointer_cb),
+	                          settings);
+}
+
+/*
+ * Incorrect type for argument ‘self’ in swapped signal handler for signal ‘GApplication::activate’. Expected ‘void *’ but saw ‘const gchar *’.
+ *                                   G_CALLBACK (application_activate_swapped_incorrect_cb),
+ *                                               ^
+ * note: expanded from macro 'G_CALLBACK'
+ * #define G_CALLBACK(f)                    ((GCallback) (f))
+ *                                                        ^
+ * note: expanded from macro 'g_signal_connect_swapped'
+ *     g_signal_connect_data ((instance), (detailed_signal), (c_handler), (data), NULL, G_CONNECT_SWAPPED)
+ *                                                            ^
+ */
+{
+	GSettings *settings = g_malloc (5);  // only checking the type
+	GApplication *app = g_malloc (5);  // only checking the type
+	g_signal_connect_swapped (app, "activate",
+	                          G_CALLBACK (application_activate_swapped_incorrect_cb),
+	                          settings);
+}
+
+/*
  * Incorrect number of arguments in signal handler for signal ‘GApplication::activate’. Expected 2 but saw 4.
  *                                   G_CALLBACK (application_activate_swapped_excess_arguments_cb),
  *                                               ^

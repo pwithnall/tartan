@@ -111,6 +111,18 @@ application_activate_swapped_cb (GSettings *self, GApplication *app)
 }
 
 static void
+application_activate_swapped_gpointer_cb (GSettings *self, GApplication *app)
+{
+	/* Done */
+}
+
+static void
+application_activate_swapped_incorrect_cb (GSettings *self, const gchar *incorrect)
+{
+	/* Done */
+}
+
+static void
 application_activate_swapped_excess_arguments_cb (GSettings *self,
                                                   const gchar *some_random_arg,
                                                   guint another_random_arg,

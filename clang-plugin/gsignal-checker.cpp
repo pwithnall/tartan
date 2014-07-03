@@ -65,6 +65,8 @@
  *     g_signal_connect (D, "S::signal-name", callback, U_1)
  * and a callback defined as:
  *     R callback (U_2, …, A)
+ * and a new optional relationship:
+ *     A = gpointer
  */
 
 #include <cstring>
@@ -792,7 +794,19 @@ _check_signal_callback_type (const Expr *expr,
 			GIBaseInfo *actual_type_info =
 				gir_manager.find_object_info (actual_type_str);
 
-			if (actual_type_info == NULL) {
+			if (actual_type_info == NULL && is_swapped) {
+				/* Allow the instance argument to be a gpointer
+				 * if things are swapped. */
+				expected_type = context.getPointerType (context.VoidTy);
+
+				DEBUG ("Comparing expected ‘" <<
+				       expected_type.getAsString () << "’ with "
+				       "actual ‘" <<
+				       actual_type.getAsString () << "’.");
+
+				type_error = !(context.hasSameType (actual_type,
+				                                    expected_type));
+			} else if (actual_type_info == NULL) {
 				/* Error. */
 
 				/* TODO: Emit expected type of signal callback? */
@@ -812,70 +826,72 @@ _check_signal_callback_type (const Expr *expr,
 				continue;
 			}
 
-			DEBUG ("Checking expected subclass relationships ‘" <<
-			       g_base_info_get_name (dynamic_instance_info) <<
-			       "’ <: ‘" <<
-			       g_base_info_get_name (actual_type_info) <<
-			       "’, ‘" <<
-			       g_base_info_get_name (static_instance_info) <<
-			       "’ <: ‘" <<
-			       g_base_info_get_name (actual_type_info) <<
-			       "’ and ‘" <<
-			       g_base_info_get_name (dynamic_instance_info) <<
-			       "’ <: ‘" <<
-			       g_base_info_get_name (static_instance_info) <<
-			       "’.");
+			if (actual_type_info != NULL) {
+				DEBUG ("Checking expected subclass relationships ‘" <<
+				       g_base_info_get_name (dynamic_instance_info) <<
+				       "’ <: ‘" <<
+				       g_base_info_get_name (actual_type_info) <<
+				       "’, ‘" <<
+				       g_base_info_get_name (static_instance_info) <<
+				       "’ <: ‘" <<
+				       g_base_info_get_name (actual_type_info) <<
+				       "’ and ‘" <<
+				       g_base_info_get_name (dynamic_instance_info) <<
+				       "’ <: ‘" <<
+				       g_base_info_get_name (static_instance_info) <<
+				       "’.");
 
-			/* See the documentation at the top of the file for an
-			 * explanation of the (non-trivial) GObject type
-			 * checking for the first parameter. */
-			type_error = (actual_type_info == NULL ||
-			              atp.isConstQualified () ||
-			              !_is_gtype_subclass (dynamic_instance_info,
-			                                   actual_type_info) ||
-			              !_is_gtype_subclass (static_instance_info,
-			                                   actual_type_info) ||
-			              !_is_gtype_subclass (dynamic_instance_info,
-			                                   static_instance_info));
+				/* See the documentation at the top of the file for an
+				 * explanation of the (non-trivial) GObject type
+				 * checking for the first parameter. */
+				type_error = (actual_type_info == NULL ||
+				              atp.isConstQualified () ||
+				              !_is_gtype_subclass (dynamic_instance_info,
+				                                   actual_type_info) ||
+				              !_is_gtype_subclass (static_instance_info,
+				                                   actual_type_info) ||
+				              !_is_gtype_subclass (dynamic_instance_info,
+				                                   static_instance_info));
 
-			/* Remark about callbacks which have a instance
-			 * parameter which is not tightly typed. */
-			bool type_warning;
-			type_warning = (!g_base_info_equal (static_instance_info,
-			                                    actual_type_info) &&
-			                !type_error);
+				/* Remark about callbacks which have a instance
+				 * parameter which is not tightly typed. */
+				bool type_warning;
+				type_warning = (!g_base_info_equal (static_instance_info,
+				                                    actual_type_info) &&
+				                !type_error);
 
-			if (type_warning && is_swapped) {
-				Debug::emit_remark ("Type for argument ‘%0’ is "
-				                    "not specific enough in "
-				                    "swapped signal handler "
-				                    "for signal ‘%1::%2’. It "
-				                    "should be ‘%3’ but is "
-				                    "currently ‘%4’.", compiler,
-				                    expr->getLocStart ())
-				<< arg_name
-				<< gir_manager.get_c_name_for_type (static_instance_info)
-				<< g_base_info_get_name (signal_info)
-				<< expected_type.getAsString ()
-				<< actual_type.getAsString ()
-				<< decl_range;
-			} else if (type_warning) {
-				Debug::emit_remark ("Type for argument ‘%0’ is "
-				                    "not specific enough in "
-				                    "signal handler "
-				                    "for signal ‘%1::%2’. It "
-				                    "should be ‘%3’ but is "
-				                    "currently ‘%4’.", compiler,
-				                    expr->getLocStart ())
-				<< arg_name
-				<< gir_manager.get_c_name_for_type (static_instance_info)
-				<< g_base_info_get_name (signal_info)
-				<< expected_type.getAsString ()
-				<< actual_type.getAsString ()
-				<< decl_range;
+				if (type_warning && is_swapped) {
+					Debug::emit_remark ("Type for argument ‘%0’ is "
+					                    "not specific enough in "
+					                    "swapped signal handler "
+					                    "for signal ‘%1::%2’. It "
+					                    "should be ‘%3’ but is "
+					                    "currently ‘%4’.", compiler,
+					                    expr->getLocStart ())
+					<< arg_name
+					<< gir_manager.get_c_name_for_type (static_instance_info)
+					<< g_base_info_get_name (signal_info)
+					<< expected_type.getAsString ()
+					<< actual_type.getAsString ()
+					<< decl_range;
+				} else if (type_warning) {
+					Debug::emit_remark ("Type for argument ‘%0’ is "
+					                    "not specific enough in "
+					                    "signal handler "
+					                    "for signal ‘%1::%2’. It "
+					                    "should be ‘%3’ but is "
+					                    "currently ‘%4’.", compiler,
+					                    expr->getLocStart ())
+					<< arg_name
+					<< gir_manager.get_c_name_for_type (static_instance_info)
+					<< g_base_info_get_name (signal_info)
+					<< expected_type.getAsString ()
+					<< actual_type.getAsString ()
+					<< decl_range;
+				}
+
+				g_base_info_unref (actual_type_info);
 			}
-
-			g_base_info_unref (actual_type_info);
 		} else if ((i == n_signal_args - 1 && !is_swapped) ||
 		           (i == 0 && is_swapped)) {
 			/* Final argument is always a gpointer user_data. */
