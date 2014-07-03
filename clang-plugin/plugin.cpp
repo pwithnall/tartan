@@ -55,7 +55,11 @@ private:
 		std::make_shared<std::unordered_set<std::string>> ();
 
 	/* Whether to limit output to only diagnostics. */
-	bool _quiet = false;
+	enum {
+		VERBOSITY_QUIET,
+		VERBOSITY_NORMAL,
+		VERBOSITY_VERBOSE,
+	}_verbosity = VERBOSITY_NORMAL;
 
 protected:
 	/* Note: This is called before ParseArgs, and must transfer ownership
@@ -212,7 +216,9 @@ protected:
 			if (arg == "--help") {
 				this->PrintHelp (llvm::outs ());
 			} else if (arg == "--quiet") {
-				this->_quiet = true;
+				this->_verbosity = VERBOSITY_QUIET;
+			} else if (arg == "--verbose") {
+				this->_verbosity = VERBOSITY_VERBOSE;
 			} else if (arg == "--enable-checker") {
 				const std::string checker = *(++it);
 				if (checker == "all") {
@@ -229,11 +235,11 @@ protected:
 		/* Listen to the V environment variable (as standard in automake) too. */
 		const char *v_value = getenv ("V");
 		if (v_value != NULL && strcmp (v_value, "0") == 0) {
-			this->_quiet = true;
+			this->_verbosity = VERBOSITY_QUIET;
 		}
 
 		/* Output a version message. */
-		if (!this->_quiet) {
+		if (this->_verbosity > VERBOSITY_NORMAL) {
 			llvm::outs () << "Tartan version " << VERSION << " "
 			                 "compiled for LLVM " <<
 			                 LLVM_CONFIG_VERSION << ".\n" <<
@@ -281,6 +287,8 @@ protected:
 		       "        Disable all plugin output except code "
 		               "diagnostics (remarks,\n"
 		       "        warnings and errors).\n"
+		       "    --verbose\n"
+		       "        Output additional versioning information.\n"
 		       "\n"
 		       "Usage:\n"
 		       "    clang -cc1 -load /path/to/libtartan.so "
