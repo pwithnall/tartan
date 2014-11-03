@@ -24,6 +24,7 @@ AM_SILENT_RULES([yes])
 
 AC_PROG_CXX
 AM_PROG_CC_C_O
+AX_CXX_COMPILE_STDCXX_11()
 LT_INIT([])
 PKG_PROG_PKG_CONFIG
 
@@ -84,6 +85,11 @@ AC_SUBST([LLVM_VERSION])
 
 AC_DEFINE_UNQUOTED([LLVM_CONFIG_VERSION],"$llvm_version",
                    [Configured LLVM version])
+
+# LLVM-specific version definitions
+AS_IF([test "$major" -eq 3 -a "$minor" -ge 5 -o "$major" -gt 3],[
+	AC_DEFINE([HAVE_LLVM_3_5], [1], [Whether LLVM ≥ 3.5 is available])
+])
 
 # Clang dependency (e.g. the clang-devel package on Fedora)
 AC_LANG_PUSH([C++])
