@@ -24,7 +24,7 @@
 }
 
 /*
- * null passed to a callee which requires a non-null argument
+ * null passed to a callee that requires a non-null argument
  *         guint64 size = g_ascii_strtoull (NULL, NULL, 10);
  *                                          ~~~~          ^
  */

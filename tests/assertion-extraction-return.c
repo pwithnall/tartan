@@ -8,10 +8,10 @@
 }
 
 /*
- * warning: null passed to a callee which requires a non-null argument
+ * null passed to a callee that requires a non-null argument
  *         assertion_val_func (NULL, 1, obj);
  *                             ~~~~        ^
- * null passed to a callee which requires a non-null argument
+ * null passed to a callee that requires a non-null argument
  *         assertion_val_func (NULL, 3, NULL);
  *                             ~~~~         ^
  */
@@ -20,10 +20,10 @@
 }
 
 /*
- * null passed to a callee which requires a non-null argument
+ * null passed to a callee that requires a non-null argument
  *         assertion_val_func ("str", 2, NULL);
  *                                       ~~~~^
- * null passed to a callee which requires a non-null argument
+ * null passed to a callee that requires a non-null argument
  *         assertion_val_func (NULL, 3, NULL);
  *                                      ~~~~^
  */
@@ -32,16 +32,16 @@
 }
 
 /*
- *  null passed to a callee which requires a non-null argument
+ *  null passed to a callee that requires a non-null argument
  *         assertion_val_func (NULL, 1, obj);
  *                             ~~~~        ^
- * null passed to a callee which requires a non-null argument
+ * null passed to a callee that requires a non-null argument
  *         assertion_val_func ("str", 2, NULL);
  *                                       ~~~~^
- * null passed to a callee which requires a non-null argument
+ * null passed to a callee that requires a non-null argument
  *         assertion_val_func (NULL, 3, NULL);
  *                                      ~~~~^
- * null passed to a callee which requires a non-null argument
+ * null passed to a callee that requires a non-null argument
  *         assertion_val_func (NULL, 3, NULL);
  *                             ~~~~         ^
  */
@@ -51,10 +51,10 @@
 }
 
 /*
- * null passed to a callee which requires a non-null argument
+ * null passed to a callee that requires a non-null argument
  *         assertion_val_func ("str", 2, NULL);
  *                                       ~~~~^
- * null passed to a callee which requires a non-null argument
+ * null passed to a callee that requires a non-null argument
  *         assertion_val_func (NULL, 3, NULL);
  *                                      ~~~~^
  */
@@ -65,10 +65,10 @@
 }
 
 /*
- * null passed to a callee which requires a non-null argument
+ * null passed to a callee that requires a non-null argument
  *         assertion_val_func ("str", 2, NULL);
  *                                       ~~~~^
- * null passed to a callee which requires a non-null argument
+ * null passed to a callee that requires a non-null argument
  *         assertion_val_func (NULL, 3, NULL);
  *                                      ~~~~^
  */
@@ -78,10 +78,10 @@
 }
 
 /*
- * null passed to a callee which requires a non-null argument
+ * null passed to a callee that requires a non-null argument
  *         assertion_val_func (NULL, 1, obj);
  *                             ~~~~        ^
- * null passed to a callee which requires a non-null argument
+ * null passed to a callee that requires a non-null argument
  *         assertion_val_func (NULL, 3, NULL);
  *                             ~~~~         ^
  */
@@ -91,10 +91,10 @@
 }
 
 /*
- * null passed to a callee which requires a non-null argument
+ * null passed to a callee that requires a non-null argument
  *         assertion_val_func (NULL, 1, obj);
  *                             ~~~~        ^
- * null passed to a callee which requires a non-null argument
+ * null passed to a callee that requires a non-null argument
  *         assertion_val_func (NULL, 3, NULL);
  *                             ~~~~         ^
  */
@@ -104,16 +104,16 @@
 }
 
 /*
- * null passed to a callee which requires a non-null argument
+ * null passed to a callee that requires a non-null argument
  *         assertion_val_func (NULL, 1, obj);
  *                             ~~~~        ^
- * null passed to a callee which requires a non-null argument
+ * null passed to a callee that requires a non-null argument
  *         assertion_val_func ("str", 2, NULL);
  *                                       ~~~~^
- * null passed to a callee which requires a non-null argument
+ * null passed to a callee that requires a non-null argument
  *         assertion_val_func (NULL, 3, NULL);
  *                                      ~~~~^
- * null passed to a callee which requires a non-null argument
+ * null passed to a callee that requires a non-null argument
  *         assertion_val_func (NULL, 3, NULL);
  *                             ~~~~         ^
  */
@@ -131,10 +131,10 @@
 }
 
 /*
- * null passed to a callee which requires a non-null argument
+ * null passed to a callee that requires a non-null argument
  *         assertion_val_func (NULL, 1, obj);
  *                             ~~~~        ^
- * null passed to a callee which requires a non-null argument
+ * null passed to a callee that requires a non-null argument
  *         assertion_val_func (NULL, 3, NULL);
  *                             ~~~~         ^
  */
