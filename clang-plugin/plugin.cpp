@@ -66,6 +66,39 @@ protected:
 	 * of the ASTConsumer. The TartanAction object is destroyed immediately
 	 * after this function call returns, so must be careful not to retain
 	 * state which is needed by the consumers. */
+#ifdef HAVE_LLVM_3_5
+	std::unique_ptr<ASTConsumer>
+	CreateASTConsumer (CompilerInstance &compiler, llvm::StringRef in_file)
+	{
+		std::vector<std::unique_ptr<ASTConsumer>> consumers;
+
+		/* Annotaters. */
+		consumers.push_back (std::unique_ptr<ASTConsumer> (
+			new GirAttributesConsumer (this->_gir_manager)));
+		consumers.push_back (std::unique_ptr<ASTConsumer> (
+			new GAssertAttributesConsumer ()));
+
+		/* Checkers. */
+		consumers.push_back (std::unique_ptr<ASTConsumer> (
+			new NullabilityConsumer (compiler,
+			                         this->_gir_manager,
+			                         this->_disabled_checkers)));
+		consumers.push_back (std::unique_ptr<ASTConsumer> (
+			new GVariantConsumer (compiler,
+			                      this->_gir_manager,
+			                      this->_disabled_checkers)));
+		consumers.push_back (std::unique_ptr<ASTConsumer> (
+			new GSignalConsumer (compiler,
+			                     this->_gir_manager,
+			                     this->_disabled_checkers)));
+		consumers.push_back (std::unique_ptr<ASTConsumer> (
+			new GirAttributesChecker (compiler,
+			                          this->_gir_manager,
+			                          this->_disabled_checkers)));
+
+		return llvm::make_unique<MultiplexConsumer> (std::move (consumers));
+	}
+#else /* if !HAVE_LLVM_3_5 */
 	ASTConsumer *
 	CreateASTConsumer (CompilerInstance &compiler, llvm::StringRef in_file)
 	{
@@ -97,6 +130,7 @@ protected:
 
 		return new MultiplexConsumer (consumers);
 	}
+#endif /* !HAVE_LLVM_3_5 */
 
 private:
 	bool
