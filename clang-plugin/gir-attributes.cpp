@@ -20,6 +20,8 @@
  *     Philip Withnall <philip.withnall@collabora.co.uk>
  */
 
+#include "config.h"
+
 #include <cstring>
 
 #include <girepository.h>
@@ -258,11 +260,19 @@ GirAttributesConsumer::_handle_function_decl (FunctionDecl& func)
 
 		if (non_null_args.size () > 0 &&
 		    !_ignore_glib_internal_func (func_name)) {
+#ifdef HAVE_LLVM_3_5
+			nonnull_attr = ::new (func.getASTContext ())
+				NonNullAttr (func.getSourceRange (),
+				             func.getASTContext (),
+				             non_null_args.data (),
+				             non_null_args.size (), 0);
+#else /* if !HAVE_LLVM_3_5 */
 			nonnull_attr = ::new (func.getASTContext ())
 				NonNullAttr (func.getSourceRange (),
 				             func.getASTContext (),
 				             non_null_args.data (),
 				             non_null_args.size ());
+#endif /* !HAVE_LLVM_3_5 */
 			func.addAttr (nonnull_attr);
 		}
 
@@ -278,10 +288,17 @@ GirAttributesConsumer::_handle_function_decl (FunctionDecl& func)
 		return_type_tag = g_type_info_get_tag (&return_type_info);
 
 		if (return_transfer != GI_TRANSFER_NOTHING) {
+#ifdef HAVE_LLVM_3_5
+			WarnUnusedAttr* warn_unused_attr =
+				::new (func.getASTContext ())
+				WarnUnusedAttr (func.getSourceRange (),
+				                func.getASTContext (), 0);
+#else /* if !HAVE_LLVM_3_5 */
 			WarnUnusedAttr* warn_unused_attr =
 				::new (func.getASTContext ())
 				WarnUnusedAttr (func.getSourceRange (),
 				                func.getASTContext ());
+#endif /* !HAVE_LLVM_3_5 */
 			func.addAttr (warn_unused_attr);
 		} else if (_type_should_be_const (return_transfer,
 		                                  return_type_tag)) {
@@ -293,12 +310,21 @@ GirAttributesConsumer::_handle_function_decl (FunctionDecl& func)
 		 * or replacement function so we can’t make use of them. */
 		if (g_base_info_is_deprecated (info) &&
 		    !func.hasAttr<DeprecatedAttr> ()) {
+#ifdef HAVE_LLVM_3_5
+			DeprecatedAttr* deprecated_attr =
+				::new (func.getASTContext ())
+				DeprecatedAttr (func.getSourceRange (),
+				                func.getASTContext (),
+				                "Deprecated using the gtk-doc "
+				                "attribute.", 0);
+#else /* if !HAVE_LLVM_3_5 */
 			DeprecatedAttr* deprecated_attr =
 				::new (func.getASTContext ())
 				DeprecatedAttr (func.getSourceRange (),
 				                func.getASTContext (),
 				                "Deprecated using the gtk-doc "
 				                "attribute.");
+#endif /* !HAVE_LLVM_3_5 */
 			func.addAttr (deprecated_attr);
 		}
 
@@ -307,10 +333,17 @@ GirAttributesConsumer::_handle_function_decl (FunctionDecl& func)
 		if (g_function_info_get_flags (info) &
 		    GI_FUNCTION_IS_CONSTRUCTOR &&
 		    !func.hasAttr<MallocAttr> ()) {
+#ifdef HAVE_LLVM_3_5
+			MallocAttr* malloc_attr =
+				::new (func.getASTContext ())
+				MallocAttr (func.getSourceRange (),
+				            func.getASTContext (), 0);
+#else /* if !HAVE_LLVM_3_5 */
 			MallocAttr* malloc_attr =
 				::new (func.getASTContext ())
 				MallocAttr (func.getSourceRange (),
 				            func.getASTContext ());
+#endif /* !HAVE_LLVM_3_5 */
 			func.addAttr (malloc_attr);
 		}
 
