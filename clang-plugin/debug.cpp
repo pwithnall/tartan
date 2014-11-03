@@ -34,6 +34,7 @@ Debug::emit_report (DiagnosticsEngine::Level level, const char *format_string,
                     CompilerInstance& compiler, SourceLocation location)
 {
 	DiagnosticsEngine& engine = compiler.getDiagnostics ();
+	DiagnosticIDs& ids = *engine.getDiagnosticIDs ();
 
 	/* Fix up the message levels according to command line
 	 * options. */
@@ -48,8 +49,8 @@ Debug::emit_report (DiagnosticsEngine::Level level, const char *format_string,
 	std::string prefixed_format_string =
 		"[tartan]: " + std::string (format_string);
 
-	unsigned diag_id = engine.getCustomDiagID (level,
-	                                           prefixed_format_string);
+	unsigned diag_id = ids.getCustomDiagID ((DiagnosticIDs::Level) level,
+	                                        prefixed_format_string);
 
 	if (!location.isValid ()) {
 		return engine.Report (diag_id);

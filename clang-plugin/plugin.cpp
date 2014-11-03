@@ -127,8 +127,9 @@ private:
 		    !g_error_matches (error, G_IREPOSITORY_ERROR,
 		                      G_IREPOSITORY_ERROR_NAMESPACE_VERSION_CONFLICT)) {
 			DiagnosticsEngine &d = CI.getDiagnostics ();
-			unsigned int id = d.getCustomDiagID (
-				DiagnosticsEngine::Warning,
+			DiagnosticIDs &ids = *d.getDiagnosticIDs ();
+			unsigned int id = ids.getCustomDiagID (
+				(DiagnosticIDs::Level) DiagnosticsEngine::Warning,
 				"Fail to load GI repository ‘" + gi_namespace +
 				"’ (version " + gi_version + "): " +
 				error->message);
