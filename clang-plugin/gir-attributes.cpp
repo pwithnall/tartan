@@ -72,7 +72,11 @@ _arg_is_nonnull (GIArgInfo arg, GITypeInfo type_info)
 static bool
 _function_return_type_is_const (FunctionDecl& func)
 {
+#ifdef HAVE_LLVM_3_5
+	QualType type = func.getReturnType ();
+#else /* if !HAVE_LLVM_3_5 */
 	QualType type = func.getResultType ();
+#endif /* !HAVE_LLVM_3_5 */
 
 	const PointerType* pointer_type = dyn_cast<PointerType> (type);
 	if (pointer_type == NULL)
@@ -95,7 +99,11 @@ _constify_function_return_type (FunctionDecl& func)
 	 * is immutable. */
 	const FunctionType* f_type = func.getType ()->getAs<FunctionType> ();
 	ASTContext& context = func.getASTContext ();
+#ifdef HAVE_LLVM_3_5
+	const QualType old_result_type = f_type->getReturnType ();
+#else /* if !HAVE_LLVM_3_5 */
 	const QualType old_result_type = f_type->getResultType ();
+#endif /* !HAVE_LLVM_3_5 */
 
 	const PointerType* old_result_pointer_type = dyn_cast<PointerType> (old_result_type);
 	if (old_result_pointer_type == NULL)
@@ -117,8 +125,16 @@ _constify_function_return_type (FunctionDecl& func)
 		} else {
 			const FunctionProtoType *f_p_type =
 				cast<FunctionProtoType> (f_type);
+			ArrayRef<QualType> param_types;
+
+#ifdef HAVE_LLVM_3_5
+			param_types = f_p_type->getParamTypes ();
+#else /* !HAVE_LLVM_3_5 */
+			param_types = f_p_type->getArgTypes ();
+#endif /* !HAVE_LLVM_3_5 */
+
 			t = context.getFunctionType (new_result_type,
-			                             f_p_type->getArgTypes (),
+			                             param_types,
 			                             f_p_type->getExtProtoInfo ());
 		}
 

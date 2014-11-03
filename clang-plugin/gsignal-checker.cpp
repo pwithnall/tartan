@@ -69,6 +69,8 @@
  *     A = gpointer
  */
 
+#include "config.h"
+
 #include <cstring>
 
 #include <clang/AST/Attr.h>
@@ -742,7 +744,13 @@ _check_signal_callback_type (const Expr *expr,
 	 */
 	GICallableInfo *callable_info = signal_info;
 	guint n_signal_args = g_callable_info_get_n_args (callable_info) + 2;
-	guint n_callback_args = callback_type->getNumArgs ();
+	guint n_callback_args;
+
+#ifdef HAVE_LLVM_3_5
+	n_callback_args = callback_type->getNumParams ();
+#else /* if !HAVE_LLVM_3_5 */
+	n_callback_args = callback_type->getNumArgs ();
+#endif /* !HAVE_LLVM_3_5 */
 
 	GITypeInfo expected_type_info;
 	QualType actual_type, expected_type;
@@ -771,7 +779,11 @@ _check_signal_callback_type (const Expr *expr,
 		const gchar *arg_name;
 		bool type_error;
 
+#ifdef HAVE_LLVM_3_5
+		actual_type = callback_type->getParamType (i);
+#else /* if !HAVE_LLVM_3_5 */
 		actual_type = callback_type->getArgType (i);
+#endif /* !HAVE_LLVM_3_5 */
 
 		if ((i == 0 && !is_swapped) ||
 		    (i == n_signal_args - 1 && is_swapped)) {
@@ -1007,7 +1019,11 @@ _check_signal_callback_type (const Expr *expr,
 
 	/* Return type. */
 	g_callable_info_load_return_type (callable_info, &expected_type_info);
+#ifdef HAVE_LLVM_3_5
+	actual_type = callback_type->getReturnType ();
+#else /* !HAVE_LLVM_3_5 */
 	actual_type = callback_type->getResultType ();
+#endif /* HAVE_LLVM_3_5 */
 	expected_type = _type_info_to_type (&expected_type_info, context,
 	                                    gir_manager, type_manager);
 	if (expected_type.isNull ()) {
