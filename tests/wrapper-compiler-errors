@@ -87,6 +87,9 @@ while [[ -f `printf "${temp_dir}/${input_filename}_%02d.c" ${num}` ]]; do
 	fi
 
 	# Run the compiler.
+	# e.g. Set
+	# TARTAN_TEST_OPTIONS="-analyzer-checker=debug.ViewExplodedGraph" to
+	# debug the ExplodedGraph
 	TARTAN_PLUGIN=$tartan_plugin \
 	TARTAN_OPTIONS=--quiet \
 	$tartan \
