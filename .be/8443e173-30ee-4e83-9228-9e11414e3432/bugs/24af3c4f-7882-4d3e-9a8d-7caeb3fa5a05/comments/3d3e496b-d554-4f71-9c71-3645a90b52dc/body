@@ -1,0 +1,1 @@
+Add a unit test for each checker which runs some static analysis runs with and without the checker enabled, and fails if the run takes too much longer with the checker enabled. e.g. Fail if it takes more than 10% extra time.
