@@ -89,3 +89,8 @@ Debug::emit_remark (const char *format_string, CompilerInstance& compiler,
 	                           compiler, location);
 #endif
 }
+
+/* Well-known strings used for the category of Tartan static analysis issues. */
+namespace Debug { namespace Categories {
+	const char * const GError = "GError API";
+}}

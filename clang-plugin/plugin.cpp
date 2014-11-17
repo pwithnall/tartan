@@ -33,6 +33,7 @@
 #include "debug.h"
 #include "gir-attributes.h"
 #include "gassert-attributes.h"
+#include "gerror-checker.h"
 #include "gsignal-checker.h"
 #include "gvariant-checker.h"
 #include "nullability-checker.h"
@@ -351,6 +352,8 @@ X("tartan", "add attributes and warnings using GLib-specific metadata");
 /* Register the path-dependent plugins with Clang. */
 extern "C"
 void clang_registerCheckers (ento::CheckerRegistry &registry) {
+	registry.addChecker<GErrorChecker> ("tartan.GErrorChecker",
+	                                    "Check GError API usage");
 }
 
 extern "C"

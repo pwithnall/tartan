@@ -18,6 +18,8 @@ clang_plugin_libtartan_la_SOURCES = \
 	clang-plugin/debug.cpp \
 	clang-plugin/debug.h \
 	clang-plugin/plugin.cpp \
+	clang-plugin/gerror-checker.cpp \
+	clang-plugin/gerror-checker.h \
 	clang-plugin/gir-attributes.cpp \
 	clang-plugin/gir-attributes.h \
 	clang-plugin/gir-manager.cpp \

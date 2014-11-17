@@ -70,6 +70,12 @@ namespace Debug {
 	DiagnosticBuilder emit_remark (const char *format_string,
 	                               CompilerInstance& compiler,
 	                               SourceLocation location);
+
+	/* Well-known strings used for the category of Tartan static analysis
+	 * issues. */
+	namespace Categories {
+		extern const char * const GError;
+	}
 }
 
 #endif /* !TARTAN_DEBUG_H */

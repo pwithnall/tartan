@@ -16,6 +16,7 @@ c_tests = \
 	gvariant-lookup.c \
 	gvariant-new.c \
 	nonnull.c \
+	gerror-api.c \
 	$(NULL)
 
 templates = \
@@ -25,6 +26,8 @@ templates = \
 	assertion-return.tail.c \
 	generic.head.c \
 	generic.tail.c \
+	gerror.head.c \
+	gerror.tail.c \
 	gsignal.head.c \
 	gsignal.tail.c \
 	gvariant.head.c \
