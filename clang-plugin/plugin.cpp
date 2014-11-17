@@ -23,6 +23,7 @@
 #include "config.h"
 
 #include <clang/Frontend/FrontendPluginRegistry.h>
+#include <clang/StaticAnalyzer/Core/CheckerRegistry.h>
 #include <clang/AST/AST.h>
 #include <clang/AST/ASTConsumer.h>
 #include <clang/Frontend/CompilerInstance.h>
@@ -343,8 +344,16 @@ protected:
 };
 
 
-/* Register the plugin with LLVM. */
+/* Register the AST checkers with LLVM. */
 static FrontendPluginRegistry::Add<TartanAction>
 X("tartan", "add attributes and warnings using GLib-specific metadata");
+
+/* Register the path-dependent plugins with Clang. */
+extern "C"
+void clang_registerCheckers (ento::CheckerRegistry &registry) {
+}
+
+extern "C"
+const char clang_analyzerAPIVersionString[] = CLANG_ANALYZER_API_VERSION_STRING;
 
 } /* namespace tartan */
