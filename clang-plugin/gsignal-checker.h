@@ -56,12 +56,12 @@ public:
 	bool VisitCallExpr (CallExpr* call);
 };
 
-class GSignalConsumer : public tartan::Checker {
+class GSignalConsumer : public tartan::ASTChecker {
 public:
 	GSignalConsumer (CompilerInstance& compiler,
 	                 std::shared_ptr<const GirManager> gir_manager,
 	                 std::shared_ptr<const std::unordered_set<std::string>> disabled_plugins) :
-		Checker (compiler, gir_manager, disabled_plugins),
+		ASTChecker (compiler, gir_manager, disabled_plugins),
 		_visitor (compiler, gir_manager) {};
 
 private:

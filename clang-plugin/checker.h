@@ -37,10 +37,16 @@ namespace tartan {
 
 using namespace clang;
 
-class Checker : public clang::ASTConsumer {
+class Checker {
+public:
+	virtual const std::string get_name () const = 0;
+};
+
+class ASTChecker : public tartan::Checker,
+                   public clang::ASTConsumer {
 
 public:
-	explicit Checker (
+	explicit ASTChecker (
 		CompilerInstance& compiler,
 		std::shared_ptr<const GirManager> gir_manager,
 		std::shared_ptr<const std::unordered_set<std::string>> disabled_plugins) :
@@ -54,7 +60,6 @@ protected:
 
 public:
 	bool is_enabled () const;
-	virtual const std::string get_name () const = 0;
 };
 
 } /* namespace tartan */

@@ -27,7 +27,7 @@
 namespace tartan {
 
 bool
-Checker::is_enabled () const
+ASTChecker::is_enabled () const
 {
 	/* Run away if the plugin is disabled. */
 	return (this->_disabled_plugins.get ()->find (this->get_name ()) ==

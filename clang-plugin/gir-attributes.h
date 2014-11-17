@@ -54,14 +54,14 @@ public:
 };
 
 
-class GirAttributesChecker : public tartan::Checker {
+class GirAttributesChecker : public tartan::ASTChecker {
 
 public:
 	explicit GirAttributesChecker (
 		CompilerInstance& compiler,
 		std::shared_ptr<const GirManager> gir_manager,
 		std::shared_ptr<const std::unordered_set<std::string>> disabled_plugins) :
-		Checker (compiler, gir_manager, disabled_plugins) {}
+		ASTChecker (compiler, gir_manager, disabled_plugins) {}
 
 private:
 	void _handle_function_decl (FunctionDecl& func);
