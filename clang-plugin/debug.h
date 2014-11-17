@@ -39,10 +39,15 @@ namespace Debug {
 	llvm::dbgs () << M; \
 	(E).printPretty (llvm::dbgs (), NULL, context.getPrintingPolicy ()); \
 	llvm::dbgs () << "\n")
+#define DEBUG_DUMPABLE(M, D) DEBUG_WITH_TYPE ("tartan", \
+	llvm::dbgs () << M; \
+	(D).dumpToStream (llvm::dbgs ()); \
+	llvm::dbgs () << "\n")
 
 #else
 #define DEBUG(M)
 #define DEBUG_EXPR(M, E)
+#define DEBUG_DUMPABLE(M, D)
 #endif
 
 /* For use with internal errors, such as unexpected precondition failures or
