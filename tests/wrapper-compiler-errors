@@ -93,7 +93,7 @@ while [[ -f `printf "${temp_dir}/${input_filename}_%02d.c" ${num}` ]]; do
 	TARTAN_PLUGIN=$tartan_plugin \
 	TARTAN_OPTIONS=--quiet \
 	$tartan \
-		-cc1 -analyze -std=c89 -Wno-visibility \
+		-cc1 -analyze -std=c89 -Wno-visibility $TARTAN_TEST_OPTIONS \
 		`pkg-config --cflags glib-2.0` \
 		$system_includes \
 		$section_filename > $actual_error_filename 2>&1
