@@ -77,43 +77,70 @@ for arg in $TARTAN_OPTIONS; do
 	plugin_options+=( "$arg" )
 done
 
-# Detect whether we’re running under scan-build. If we are, -cc1 has been set as
-# the first argument by ccc-analyzer. Otherwise, the user seems to be trying to
-# run Tartan directly, e.g. as `make CC=tartan`. This will work, but no static
-# analysis will be performed.
-first_arg=$1
-shift
+# Detect whether we’re running under scan-build. If we are, -### --analyze will
+# be passed by ccc-analyzer to us. We should append our plugin flags and pass
+# through to Clang, which will output a series of commands to be executed to
+# perform the analysis, keeping the plugin arguments. Similarly for
+# -### -fsyntax-only, except then the arguments do not need escaping as they are
+# being passed directly to the compiler.
+#
+# Another possibility is that the user is trying to run Tartan directly, e.g. as
+# `make CC=tartan`. This will work, but no static analysis will be performed.
 
-if [ "$first_arg" == "" ]; then
-	echo "Error: $0 must be called with at least one argument or source code file to scan." >& 2
-	exit 3
+include_plugin_flags=0
+escape_plugin_flags=0
+argv=("$@")
+
+containsElement () {
+	local e
+	for e in "${@:2}"; do [[ "$e" == "$1" ]] && return 0; done
+	return 1
+}
+
+if containsElement "--analyze" "${argv[@]}"; then
+	include_plugin_flags=1
+	escape_plugin_flags=1
+elif containsElement "-fsyntax-only" "${argv[@]}"; then
+	include_plugin_flags=1
+	escape_plugin_flags=0
+elif containsElement "--version" "${argv[@]}"; then
+	# This is passed to us during ./configure (e.g. scan-build ./configure)
+	# so take the opportunity to output Tartan version information.
+	echo "tartan: Running under scan-build" >& 2
+elif ! containsElement "-analyze" "${argv[@]}"; then
+	echo "Warning: Running $0 with static analysis disabled. Use scan-build to enable static analysis." >& 2
 fi
 
 # The -analyzer-checker argument loads all 'tartan.*' static checkers.
 # The -add-plugin argument loads the tartan AST frontend plugin.
 add_plugin=( "-load" "$plugin_path" \
              "-add-plugin" "$plugin_name" \
-             "-analyzer-checker" "$plugin_name" \ )
-if [ "$first_arg" != "-cc1" -a \
-     "$first_arg" != "--version" ]; then
+             "-analyzer-checker" "$plugin_name" )
+
+if [ "$escape_plugin_flags" = "1" ]; then
 	_add_plugin=()
 	for arg in "${add_plugin[@]}"; do
 		_add_plugin+=( "-Xclang" "$arg" )
 	done
+	for arg in "${add_plugin[@]}"; do
+		_add_plugin+=( "-Xanalyzer" "$arg" )
+	done
 	add_plugin=( "${_add_plugin[@]}" )
-
-	echo "Warning: Running $0 with static analysis disabled. Use scan-build to enable static analysis." >& 2
-elif [ "$first_arg" = "--version" ]; then
-	# This is passed to us during ./configure (e.g. scan-build ./configure)
-	# so take the opportunity to output Tartan version information.
-	echo "tartan: Running under scan-build" >& 2
 fi
 
-# Exec Clang with the plugin loaded.
-exec "$real_clang" \
-	"$first_arg" \
-	${add_plugin[@]} \
-	${plugin_options[@]} \
-	$GNOME_CLANG_CFLAGS \
-	$TARTAN_CFLAGS \
-	"$@"
+#	echo "Warning: Running $0 with static analysis disabled. Use scan-build to enable static analysis." >& 2
+
+
+if [ "$include_plugin_flags" = "1" ]; then
+	# Exec Clang with the plugin loaded.
+	exec "$real_clang" \
+		${argv[@]} \
+		${add_plugin[@]} \
+		${plugin_options[@]} \
+		$GNOME_CLANG_CFLAGS \
+		$TARTAN_CFLAGS
+else
+	# Pass through to Clang with the arguments unchanged.
+	exec "$real_clang" \
+		${argv[@]}
+fi
