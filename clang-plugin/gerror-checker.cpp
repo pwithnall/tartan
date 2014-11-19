@@ -149,40 +149,7 @@ GErrorChecker::_error_from_error_ptr (SVal ptr_error_location,
 	DEBUG_DUMPABLE ("Getting GError* location from call:",
 	                ptr_error_location);
 
-return context.getState()->getSVal(ptr_error_location.castAs<Loc>());
-
-	const MemRegion *region = ptr_error_location.getAsRegion ();
-	if (region == NULL) {
-		DEBUG ("Not a MemRegion.");
-		return UnknownVal ();
-	}
-
-	/* We only support typed regions at the moment, as those come from
-	 * taking a pointer address. */
-	const TypedValueRegion *typed_region =
-		region->getAs<TypedValueRegion> ();
-	if (typed_region == NULL) {
-		return UnknownVal ();
-	}
-
-	/* Sanity check the type. */
-	const ASTContext &ast_context = context.getASTContext ();
-	QualType error_ptr_type =
-		ast_context.getPointerType (this->_gerror_type);
-
-	this->_initialise_identifiers (ast_context);
-	assert (ast_context.hasSameType (typed_region->getValueType (),
-	                                 error_ptr_type));
-
-	const ProgramStateRef state = context.getState ();
-
-	/* Get the SVal bound to the MemRegion pointed at by the argument, or
-	 * UnknownVal if no SVal is currently bound. */
-	SVal retval = state->getSVal (region);
-
-	DEBUG_DUMPABLE ("Got SVal for MemRegion:", retval);
-
-	return retval;
+	return context.getState()->getSVal(ptr_error_location.castAs<Loc>());
 }
 
 /**
