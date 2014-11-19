@@ -462,7 +462,9 @@ GErrorChecker::checkPreCall (const CallEvent &call,
 	}
 
 	ASTContext &ast_context = context.getASTContext ();
-	this->_initialise_identifiers (ast_context);
+	if (!this->_initialise_identifiers (ast_context)) {
+		return;
+	}
 
 	const IdentifierInfo *call_ident = call.getCalleeIdentifier ();
 
@@ -506,7 +508,9 @@ GErrorChecker::evalCall (const CallExpr *call,
 	}
 
 	ASTContext &ast_context = context.getASTContext ();
-	this->_initialise_identifiers (ast_context);
+	if (!this->_initialise_identifiers (ast_context)) {
+		return false;
+	}
 
 	const IdentifierInfo *call_ident = func_decl->getIdentifier ();
 
@@ -557,7 +561,9 @@ GErrorChecker::checkBind (SVal loc, SVal val, const Stmt *stmt,
 	}
 
 	const ASTContext &ast_context = context.getASTContext ();
-	this->_initialise_identifiers (ast_context);
+	if (!this->_initialise_identifiers (ast_context)) {
+		return;
+	}
 
 	QualType error_type = ast_context.getPointerType (this->_gerror_type);
 	QualType value_type = region->getValueType ();
@@ -674,7 +680,8 @@ GErrorChecker::_gerror_new (const Expr *call_expr,
 		dyn_cast_or_null<SymbolicRegion> (allocated_region);
 
 	if (symbolic_allocated_region != NULL) {
-		this->_initialise_identifiers (ast_context);
+		/* Should have been initialised on entry to the checker. */
+		assert (this->_initialise_identifiers (ast_context));
 
 		DefinedOrUnknownSVal extent =
 			symbolic_allocated_region->getExtent (sval_builder);
@@ -1053,18 +1060,19 @@ GErrorChecker::_clear_gerror (SVal error_location,
 	                       ErrorState::getClear (source_range));
 }
 
-void
+/* Initialisation may fail if glib.h has not been included.
+ * Return true iff initialisation succeeded. */
+bool
 GErrorChecker::_initialise_identifiers (const ASTContext &context) const
 {
 	if (!this->_gerror_type.isNull ()) {
-		return;
+		return true;
 	}
 
 	TypeManager manager = TypeManager (context);
 
 	/* Types. */
 	this->_gerror_type = manager.find_type_by_name ("GError");
-	assert (!this->_gerror_type.isNull ());
 
 	/* Functions. */
 	this->_identifier_g_set_error =
@@ -1085,6 +1093,8 @@ GErrorChecker::_initialise_identifiers (const ASTContext &context) const
 		&context.Idents.get ("g_propagate_error");
 	this->_identifier_g_propagate_prefixed_error =
 		&context.Idents.get ("g_propagate_prefixed_error");
+
+	return (!this->_gerror_type.isNull ());
 }
 
 void

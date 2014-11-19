@@ -78,7 +78,7 @@ private:
 	mutable IdentifierInfo *_identifier_g_propagate_error;
 	mutable IdentifierInfo *_identifier_g_propagate_prefixed_error;
 
-	void _initialise_identifiers (const ASTContext &context) const;
+	bool _initialise_identifiers (const ASTContext &context) const;
 
 	/* Cached bug reports. */
 	mutable std::unique_ptr<BuiltinBug> _overwrite_set;
