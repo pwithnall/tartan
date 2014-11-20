@@ -103,6 +103,9 @@ if containsElement "--analyze" "${argv[@]}"; then
 elif containsElement "-fsyntax-only" "${argv[@]}"; then
 	include_plugin_flags=1
 	escape_plugin_flags=0
+elif containsElement "-analyze" "${argv[@]}"; then
+	include_plugin_flags=1
+	escape_plugin_flags=0
 elif containsElement "--version" "${argv[@]}"; then
 	# This is passed to us during ./configure (e.g. scan-build ./configure)
 	# so take the opportunity to output Tartan version information.
