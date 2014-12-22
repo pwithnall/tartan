@@ -109,6 +109,14 @@ struct ErrorState {
 		ID.AddInteger (K);
 		ID.AddPointer (&S);
 	}
+
+	void dump (raw_ostream &stream) const {
+		switch (K) {
+		case Clear: stream << "Clear"; break;
+		case Set: stream << "Set"; break;
+		case Freed: stream << "Freed"; break;
+		}
+	}
 };
 
 } /* namespace tartan */
