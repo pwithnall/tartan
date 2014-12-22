@@ -42,14 +42,15 @@ using namespace clang;
 
 namespace tartan {
 
+/* Global GIR manager shared between AST and path-sensitive checkers. */
+std::shared_ptr<GirManager> global_gir_manager =
+	std::make_shared<GirManager> ();
+
 /**
  * Plugin core.
  */
 class TartanAction : public PluginASTAction {
 private:
-	std::shared_ptr<GirManager> _gir_manager =
-		std::make_shared<GirManager> ();
-
 	/* Enabling/Disabling checkers is implemented as a blacklist: all
 	 * checkers are enabled by default, unless a --disable-checker argument
 	 * specifically disables them (by listing their name in this set). */
@@ -76,26 +77,26 @@ protected:
 
 		/* Annotaters. */
 		consumers.push_back (std::unique_ptr<ASTConsumer> (
-			new GirAttributesConsumer (this->_gir_manager)));
+			new GirAttributesConsumer (global_gir_manager)));
 		consumers.push_back (std::unique_ptr<ASTConsumer> (
 			new GAssertAttributesConsumer ()));
 
 		/* Checkers. */
 		consumers.push_back (std::unique_ptr<ASTConsumer> (
 			new NullabilityConsumer (compiler,
-			                         this->_gir_manager,
+			                         global_gir_manager,
 			                         this->_disabled_checkers)));
 		consumers.push_back (std::unique_ptr<ASTConsumer> (
 			new GVariantConsumer (compiler,
-			                      this->_gir_manager,
+			                      global_gir_manager,
 			                      this->_disabled_checkers)));
 		consumers.push_back (std::unique_ptr<ASTConsumer> (
 			new GSignalConsumer (compiler,
-			                     this->_gir_manager,
+			                     global_gir_manager,
 			                     this->_disabled_checkers)));
 		consumers.push_back (std::unique_ptr<ASTConsumer> (
 			new GirAttributesChecker (compiler,
-			                          this->_gir_manager,
+			                          global_gir_manager,
 			                          this->_disabled_checkers)));
 
 		return llvm::make_unique<MultiplexConsumer> (std::move (consumers));
@@ -108,26 +109,26 @@ protected:
 
 		/* Annotaters. */
 		consumers.push_back (
-			new GirAttributesConsumer (this->_gir_manager));
+			new GirAttributesConsumer (global_gir_manager));
 		consumers.push_back (
 			new GAssertAttributesConsumer ());
 
 		/* Checkers. */
 		consumers.push_back (
 			new NullabilityConsumer (compiler,
-			                         this->_gir_manager,
+			                         global_gir_manager,
 			                         this->_disabled_checkers));
 		consumers.push_back (
 			new GVariantConsumer (compiler,
-			                      this->_gir_manager,
+			                      global_gir_manager,
 			                      this->_disabled_checkers));
 		consumers.push_back (
 			new GSignalConsumer (compiler,
-			                     this->_gir_manager,
+			                     global_gir_manager,
 			                     this->_disabled_checkers));
 		consumers.push_back (
 			new GirAttributesChecker (compiler,
-			                          this->_gir_manager,
+			                          global_gir_manager,
 			                          this->_disabled_checkers));
 
 		return new MultiplexConsumer (consumers);
@@ -156,7 +157,7 @@ private:
 		/* Load the repository. */
 		GError *error = NULL;
 
-		this->_gir_manager.get ()->load_namespace (gi_namespace,
+		global_gir_manager.get ()->load_namespace (gi_namespace,
 		                                           gi_version,
 		                                           &error);
 		if (error != NULL &&
