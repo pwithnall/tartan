@@ -69,6 +69,97 @@ GirManager::load_namespace (const std::string& gi_namespace,
 	this->_typelibs.push_back (r);
 }
 
+/* Returns a reference to the #GIFunctionInfo, or %NULL. */
+static GIFunctionInfo *
+_find_function_in_function (GIFunctionInfo *info, const std::string &func_name)
+{
+	if (g_function_info_get_symbol (info) == func_name) {
+		return g_base_info_ref (info);
+	}
+
+	return NULL;
+}
+
+/* Returns a reference to the #GIFunctionInfo, or %NULL. */
+static GIFunctionInfo *
+_find_function_in_struct (GIStructInfo *info, const std::string &func_name)
+{
+	GIFunctionInfo *f_info = NULL;
+	gint n_methods = g_struct_info_get_n_methods (info);
+
+	for (gint i = 0; i < n_methods && f_info == NULL; i++) {
+		GIFunctionInfo *_info = g_struct_info_get_method (info, i);
+		f_info = _find_function_in_function (_info, func_name);
+		g_base_info_unref (_info);
+	}
+
+	return f_info;
+}
+
+/* Returns a reference to the #GIFunctionInfo, or %NULL. */
+static GIFunctionInfo *
+_find_function_in_enum (GIEnumInfo *info, const std::string &func_name)
+{
+	GIFunctionInfo *f_info = NULL;
+	gint n_methods = g_enum_info_get_n_methods (info);
+
+	for (gint i = 0; i < n_methods && f_info == NULL; i++) {
+		GIFunctionInfo *_info = g_enum_info_get_method (info, i);
+		f_info = _find_function_in_function (_info, func_name);
+		g_base_info_unref (_info);
+	}
+
+	return f_info;
+}
+
+/* Returns a reference to the #GIFunctionInfo, or %NULL. */
+static GIFunctionInfo *
+_find_function_in_object (GIObjectInfo *info, const std::string &func_name)
+{
+	GIFunctionInfo *f_info = NULL;
+	gint n_methods = g_object_info_get_n_methods (info);
+
+	for (gint i = 0; i < n_methods && f_info == NULL; i++) {
+		GIFunctionInfo *_info = g_object_info_get_method (info, i);
+		f_info = _find_function_in_function (_info, func_name);
+		g_base_info_unref (_info);
+	}
+
+	return f_info;
+}
+
+/* Returns a reference to the #GIFunctionInfo, or %NULL. */
+static GIFunctionInfo *
+_find_function_in_interface (GIInterfaceInfo *info, const std::string &func_name)
+{
+	GIFunctionInfo *f_info = NULL;
+	gint n_methods = g_interface_info_get_n_methods (info);
+
+	for (gint i = 0; i < n_methods && f_info == NULL; i++) {
+		GIFunctionInfo *_info = g_interface_info_get_method (info, i);
+		f_info = _find_function_in_function (_info, func_name);
+		g_base_info_unref (_info);
+	}
+
+	return f_info;
+}
+
+/* Returns a reference to the #GIFunctionInfo, or %NULL. */
+static GIFunctionInfo *
+_find_function_in_union (GIUnionInfo *info, const std::string &func_name)
+{
+	GIFunctionInfo *f_info = NULL;
+	gint n_methods = g_union_info_get_n_methods (info);
+
+	for (gint i = 0; i < n_methods && f_info == NULL; i++) {
+		GIFunctionInfo *_info = g_union_info_get_method (info, i);
+		f_info = _find_function_in_function (_info, func_name);
+		g_base_info_unref (_info);
+	}
+
+	return f_info;
+}
+
 /* Try to find typelib information about the function.
  * Note: This returns a reference which needs freeing using
  * g_base_info_unref(). */
@@ -76,52 +167,88 @@ GIBaseInfo*
 GirManager::find_function_info (const std::string& func_name) const
 {
 	GIBaseInfo *info = NULL;
-	std::string func_name_stripped;
 
 	for (std::vector<Nspace>::const_iterator it = this->_typelibs.begin (),
-	     ie = this->_typelibs.end (); it != ie; ++it) {
+	     ie = this->_typelibs.end (); it != ie && info == NULL; ++it) {
 		const Nspace r = *it;
 
-		/* The func_name includes the namespace, which needs stripping.
-		 * e.g. g_irepository_find_by_name → find_by_name. */
+		/* Check the function matches this namespace.
+		 * e.g. g_irepository_find_by_name →
+		 *      (g_irepository_, find_by_name). */
 		if (!r.c_prefix_lower.empty () &&
-		    func_name.size () > r.c_prefix_lower.size () &&
-		    func_name.compare (0, r.c_prefix_lower.size (),
-		                       r.c_prefix_lower) == 0 &&
-		    func_name[r.c_prefix_lower.size ()] == '_') {
-			size_t prefix_len =
-				r.c_prefix_lower.size () + 1 /* underscore */;
-
-			func_name_stripped = func_name.substr (prefix_len);
-		} else if (r.c_prefix_lower.empty ()) {
-			func_name_stripped = func_name;
-		} else {
+		    (func_name.size () <= r.c_prefix_lower.size () ||
+		     func_name.compare (0, r.c_prefix_lower.size (),
+		                        r.c_prefix_lower) != 0 ||
+		     func_name[r.c_prefix_lower.size ()] != '_')) {
 			continue;
 		}
 
-		info = g_irepository_find_by_name (this->_repo,
-		                                   r.nspace.c_str (),
-		                                   func_name_stripped.c_str ());
+		/* Iterate through every info in the namespace, trying to match
+		 * the entire @func_name against the info, or one of the methods
+		 * it contains. */
+		guint n_infos = g_irepository_get_n_infos (this->_repo,
+		                                           r.nspace.c_str ());
 
-		if (info != NULL) {
-			/* Successfully found an entry in the typelib. */
-			break;
+		for (guint i = 0; i < n_infos && info == NULL; i++) {
+			GIBaseInfo *_info;
+
+			_info = g_irepository_get_info (this->_repo,
+			                                r.nspace.c_str (), i);
+
+			switch (g_base_info_get_type (_info)) {
+			case GI_INFO_TYPE_FUNCTION:
+				info = _find_function_in_function (_info,
+				                                   func_name);
+				break;
+			case GI_INFO_TYPE_STRUCT:
+				info = _find_function_in_struct (_info,
+				                                 func_name);
+				break;
+			case GI_INFO_TYPE_ENUM:
+				info = _find_function_in_enum (_info,
+				                               func_name);
+				break;
+			case GI_INFO_TYPE_OBJECT:
+				info = _find_function_in_object (_info,
+				                                 func_name);
+				break;
+			case GI_INFO_TYPE_INTERFACE:
+				info = _find_function_in_interface (_info,
+				                                    func_name);
+				break;
+			case GI_INFO_TYPE_UNION:
+				info = _find_function_in_union (_info,
+				                                func_name);
+				break;
+			case GI_INFO_TYPE_INVALID:
+			case GI_INFO_TYPE_CALLBACK:
+			case GI_INFO_TYPE_BOXED:
+			case GI_INFO_TYPE_FLAGS:
+			case GI_INFO_TYPE_CONSTANT:
+			case GI_INFO_TYPE_INVALID_0:
+			case GI_INFO_TYPE_VALUE:
+			case GI_INFO_TYPE_SIGNAL:
+			case GI_INFO_TYPE_VFUNC:
+			case GI_INFO_TYPE_PROPERTY:
+			case GI_INFO_TYPE_FIELD:
+			case GI_INFO_TYPE_ARG:
+			case GI_INFO_TYPE_TYPE:
+			case GI_INFO_TYPE_UNRESOLVED:
+			default:
+				/* Doesn’t have methods — ignore. */
+				break;
+			}
+
+			g_base_info_unref (_info);
 		}
 	}
 
 	/* Double-check that this isn’t a shadowed function, since the parameter
 	 * information from shadowed functions doesn’t match up with what Clang
 	 * has parsed. */
-	if (info != NULL &&
-	    g_base_info_get_type (info) == GI_INFO_TYPE_FUNCTION &&
-	    func_name != g_function_info_get_symbol (info)) {
-		DEBUG ("Ignoring function " << func_name << "() due to "
-		       "mismatch with C symbol ‘" <<
-		       g_function_info_get_symbol (info) << "’.");
-
-		g_base_info_unref (info);
-		info = NULL;
-	}
+	assert (info == NULL ||
+	        (g_base_info_get_type (info) == GI_INFO_TYPE_FUNCTION &&
+	         func_name == g_function_info_get_symbol (info)));
 
 	return info;
 }
