@@ -78,11 +78,17 @@ _function_return_type_is_const (FunctionDecl& func)
 	QualType type = func.getResultType ();
 #endif /* !HAVE_LLVM_3_5 */
 
-	const PointerType* pointer_type = dyn_cast<PointerType> (type);
-	if (pointer_type == NULL)
-		return type.isConstQualified ();
+	QualType canonical_type = type.getCanonicalType ();
 
-	return (pointer_type->getPointeeType ().isConstQualified () || type.isConstQualified ());
+	const PointerType* pointer_type = dyn_cast<PointerType> (canonical_type);
+	if (pointer_type == NULL)
+		return canonical_type.isConstQualified ();
+
+	QualType pointee_type =
+		pointer_type->getPointeeType ().getCanonicalType ();
+
+	return (pointee_type.isConstQualified () ||
+	        canonical_type.isConstQualified ());
 }
 
 /* Make the return type of a FunctionType const. This will go one level of
