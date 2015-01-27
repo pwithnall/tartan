@@ -107,10 +107,20 @@ while [[ -f `printf "${temp_dir}/${input_filename}_%02d.c" ${num}` ]]; do
 
 		while read line
 		do
+			# Check the string and the string with ‘which’ for
+			# ‘that’ against the actual errors. This is a hack
+			# needed to support testing against LLVM 3.4 and 3.5
+			# from the same test vectors.
+			#
+			# See commit 0743df4033967c18a5009e4f01ccf709f7c06c86
+			# for details.
 			grep -F "${line}" "${actual_error_filename}" >/dev/null
-			grep_status=$?
+			grep_status1=$?
 
-			if [ $grep_status -ne 0 ]; then
+			grep -F "${line//that/which}" "${actual_error_filename}" >/dev/null
+			grep_status2=$?
+
+			if [ $grep_status1 -ne 0 -a $grep_status2 -ne 0 ]; then
 				echo " * Non-matching line:" 1>&2
 				echo "${line}" 1>&2
 				grep_failed=1
