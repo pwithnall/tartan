@@ -207,10 +207,15 @@ GirAttributesConsumer::_handle_function_decl (FunctionDecl& func)
 		unsigned int err_params =
 			(g_function_info_get_flags (callable_info) &
 			 GI_FUNCTION_THROWS) ? 1 : 0;
+		unsigned int obj_params =
+			(g_base_info_get_container (info) != NULL &&
+			 g_function_info_get_flags (callable_info) &
+			 GI_FUNCTION_IS_METHOD) ? 1 : 0;
 
 		/* Sanity check. */
-		if (k + err_params != func.getNumParams ()) {
-			WARN ("Number of GIR callable parameters (" << k << ") "
+		if (obj_params + k + err_params != func.getNumParams ()) {
+			WARN ("Number of GIR callable parameters (" <<
+			      obj_params + k + err_params << ") "
 			      "differs from number of C formal parameters (" <<
 			      func.getNumParams () << "). Ignoring function " <<
 			      func_name << "().");
@@ -267,12 +272,13 @@ GirAttributesConsumer::_handle_function_decl (FunctionDecl& func)
 			       g_type_info_get_array_fixed_size (&type_info));
 
 			if (_arg_is_nonnull (arg, type_info)) {
-				DEBUG ("Got nonnull arg " << j << " from GIR.");
-				non_null_args.push_back (j);
+				DEBUG ("Got nonnull arg " << obj_params + j <<
+				       " from GIR.");
+				non_null_args.push_back (obj_params + j);
 			}
 
 			if (_type_should_be_const (transfer, type_tag)) {
-				ParmVarDecl *parm = func.getParamDecl (j);
+				ParmVarDecl *parm = func.getParamDecl (obj_params + j);
 				QualType t = parm->getType ();
 
 				if (!t.isConstant (parm->getASTContext ()))
@@ -449,10 +455,15 @@ GirAttributesChecker::_handle_function_decl (FunctionDecl& func)
 		unsigned int err_params =
 			(g_function_info_get_flags (callable_info) &
 			 GI_FUNCTION_THROWS) ? 1 : 0;
+		unsigned int obj_params =
+			(g_base_info_get_container (info) != NULL &&
+			 g_function_info_get_flags (callable_info) &
+			 GI_FUNCTION_IS_METHOD) ? 1 : 0;
 
 		/* Sanity check. */
-		if (k + err_params != func.getNumParams ()) {
-			WARN ("Number of GIR callable parameters (" << k << ") "
+		if (obj_params + k + err_params != func.getNumParams ()) {
+			WARN ("Number of GIR callable parameters (" <<
+			      obj_params + k + err_params << ") "
 			      "differs from number of C formal parameters (" <<
 			      func.getNumParams () << "). Ignoring function " <<
 			      func_name << "().");
