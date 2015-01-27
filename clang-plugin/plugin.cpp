@@ -331,6 +331,7 @@ protected:
 		       "Usage:\n"
 		       "    clang -cc1 -load /path/to/libtartan.so "
 		           "-add-plugin tartan \\\n"
+		           "-analyzer-checker tartan\\\n"
 		       "        -plugin-arg-tartan --disable-checker \\\n"
 		       "        -plugin-arg-tartan all \\\n"
 		       "        -plugin-arg-tartan --enable-checker \\\n"

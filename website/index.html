@@ -170,9 +170,10 @@ optionally be set to pass extra options to the Tartan plugin (only).</p>
 <h4 id="usage-standalone-raw">Raw Clang plugin</h4>
 
 <p>Finally, Tartan may be used without the wrapper script by passing the
-<span class="command">-load</span> and <span class="command">-add-plugin</span>
-arguments directly to the compiler:</p>
-<pre>clang -cc1 -load <span class="replaceable">$PREFIX</span>/lib/tartan/<span class="replaceable">$LLVM_VERSION</span>/libtartan.so -add-plugin tartan -analyze -std=c89 my-project/*.c</pre>
+<span class="command">-load</span>, <span class="command">-add-plugin</span> and
+<span class="command">-analyzer-checker</span> arguments directly to the
+compiler:</p>
+<pre>clang -cc1 -load <span class="replaceable">$PREFIX</span>/lib/tartan/<span class="replaceable">$LLVM_VERSION</span>/libtartan.so -add-plugin tartan -analyzer-checker tartan -analyze -std=c89 my-project/*.c</pre>
 <p>Again, Tartan can be used both while installed or uninstalled.</p>
 
 
