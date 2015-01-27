@@ -194,8 +194,8 @@ NullabilityVisitor::TraverseFunctionDecl (FunctionDecl* func)
 			(nonnull_attr == NULL) ? MAYBE :
 			(nonnull_attr->isNonNull (idx)) ?
 				EXPLICIT_NONNULL: EXPLICIT_NULLABLE;
-		bool has_allow_none = (g_arg_info_may_be_null (&arg) ||
-		                       g_arg_info_is_optional (&arg));
+		bool has_nullable = (g_arg_info_may_be_null (&arg) ||
+		                     g_arg_info_is_optional (&arg));
 		bool has_assertion = (asserted_parms.count (parm_decl) > 0);
 
 		/* Analysis:
@@ -229,7 +229,7 @@ NullabilityVisitor::TraverseFunctionDecl (FunctionDecl* func)
 		 * variable in question, since (nullable) will not affect the
 		 * nullability of an out function parameter.
 		 */
-		if (has_nonnull == EXPLICIT_NONNULL && has_allow_none) {
+		if (has_nonnull == EXPLICIT_NONNULL && has_nullable) {
 			Debug::emit_error (
 				"Conflict between nonnull attribute and "
 				"(nullable), (optional) or (allow-none) "
@@ -239,7 +239,7 @@ NullabilityVisitor::TraverseFunctionDecl (FunctionDecl* func)
 				parm_decl->getLocStart ())
 			<< parm_decl->getNameAsString ()
 			<< func->getNameAsString ();
-		} else if (has_allow_none && has_assertion) {
+		} else if (has_nullable && has_assertion) {
 			Debug::emit_error (
 				"Conflict between (nullable), (optional) or "
 				"(allow-none) annotation and "
@@ -249,7 +249,7 @@ NullabilityVisitor::TraverseFunctionDecl (FunctionDecl* func)
 				parm_decl->getLocStart ())
 			<< parm_decl->getNameAsString ()
 			<< func->getNameAsString ();
-		} else if (!has_allow_none && !has_assertion) {
+		} else if (!has_nullable && !has_assertion) {
 			switch (has_nonnull) {
 			case EXPLICIT_NULLABLE:
 				Debug::emit_warning (
