@@ -1,0 +1,8 @@
+Use:
+    g_object_notify (G_OBJECT (self), "audio-status");
+instead of:
+    g_signal_emit_by_name(G_OBJECT(self),"notify::audio_status", NULL, NULL);
+
+Same for _pspec versions.
+
+Also check that the detail string matches a property name on the class.

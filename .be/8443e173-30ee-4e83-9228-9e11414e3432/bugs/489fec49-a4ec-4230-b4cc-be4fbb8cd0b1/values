@@ -1,0 +1,71 @@
+{
+
+
+
+
+
+
+    "creator": "Philip Withnall <philip.withnall@collabora.co.uk>", 
+
+
+
+
+
+
+    "extra_strings": [
+
+
+
+
+
+
+        "TAG:new-checker"
+
+
+
+
+
+
+    ], 
+
+
+
+
+
+
+    "reporter": "Philip Withnall <philip.withnall@collabora.co.uk>", 
+
+
+
+
+
+
+    "severity": "minor", 
+
+
+
+
+
+
+    "status": "open", 
+
+
+
+
+
+
+    "summary": "Check for use of heap-allocated structures", 
+
+
+
+
+
+
+    "time": "Mon, 09 Feb 2015 12:21:35 +0000"
+
+
+
+
+
+
+}

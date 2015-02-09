@@ -1,0 +1,3 @@
+Also:
+ • Suggest (x != NULL) rather than (g_[s]list_length (x) [>|!=] 0)
+ • Especially for the case: (priv->m_lstPdiList && g_list_length(priv->m_lstPdiList))

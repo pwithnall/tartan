@@ -1,0 +1,3 @@
+Warn about g_signal_connect() (and similar) without a paired disconnect call.
+
+Initially, this could check that the return value of g_signal_connect() is used. Later, it might be possible to check that the return value is stored somewhere which eventually propagates to a g_signal_handler_disconnect() call.

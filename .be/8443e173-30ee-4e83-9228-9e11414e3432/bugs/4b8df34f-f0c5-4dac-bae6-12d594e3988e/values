@@ -1,0 +1,71 @@
+{
+
+
+
+
+
+
+    "creator": "Philip Withnall <philip.withnall@collabora.co.uk>", 
+
+
+
+
+
+
+    "extra_strings": [
+
+
+
+
+
+
+        "TAG:new-checker"
+
+
+
+
+
+
+    ], 
+
+
+
+
+
+
+    "reporter": "Philip Withnall <philip.withnall@collabora.co.uk>", 
+
+
+
+
+
+
+    "severity": "minor", 
+
+
+
+
+
+
+    "status": "open", 
+
+
+
+
+
+
+    "summary": "Add a checker for redundant NULL checks before free functions", 
+
+
+
+
+
+
+    "time": "Mon, 09 Feb 2015 11:54:45 +0000"
+
+
+
+
+
+
+}

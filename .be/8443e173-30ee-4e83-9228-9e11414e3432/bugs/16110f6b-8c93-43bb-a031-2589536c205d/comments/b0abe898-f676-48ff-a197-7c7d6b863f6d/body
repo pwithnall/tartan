@@ -1,0 +1,2 @@
+Also:
+ • Not storing the return value from g_timeout_add() is likely a bug

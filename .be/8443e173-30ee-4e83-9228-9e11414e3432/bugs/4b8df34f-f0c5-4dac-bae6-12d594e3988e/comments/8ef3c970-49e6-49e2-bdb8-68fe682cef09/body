@@ -1,0 +1,6 @@
+Warn about:
+    if (x) g_free (x);
+and:
+    if (x) g_[s]list_free (x);
+
+etc.

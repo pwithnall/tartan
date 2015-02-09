@@ -1,0 +1,3 @@
+Warn about sscanf(), strtod(), etc. being used for parsing — suggest that g_ascii_*() are used instead.
+
+Not sure how to differentiate between legitimate locale dependence and independence.

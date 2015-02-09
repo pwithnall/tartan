@@ -1,0 +1,6 @@
+Look at a set of rules for writing async functions, with fixits, e.g.
+ • GCancellable parameter always comes before GError
+ • GAsyncResult always has a gpointer user_data
+ • GCancellable is always checked properly in the function callback
+
+This list is nowhere near exhaustive.

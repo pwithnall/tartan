@@ -1,0 +1,2 @@
+e.g. Eliminate the anti-pattern:
+    g_value_set[_static]_string (&value, g_strdup (some_text));

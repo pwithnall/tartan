@@ -1,0 +1,5 @@
+Warn about statements which could corrupt UTF-8 strings, e.g. manipulating strings as arrays, using the non-UTF-8-safe versions of functions like g_utf8_strchr(), g_utf8_strlen(), etc.
+
+Be careful to differentiate between UTF-8 strings and generic byte arrays.
+
+Perhaps suggest code use gchar* solely for UTF-8, and guint8* for byte arrays if the analyser can’t be sure?

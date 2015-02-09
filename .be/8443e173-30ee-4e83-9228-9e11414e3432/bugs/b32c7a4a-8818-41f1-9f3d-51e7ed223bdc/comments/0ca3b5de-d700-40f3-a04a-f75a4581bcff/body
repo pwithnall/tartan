@@ -1,0 +1,7 @@
+Warn about use of certain POSIX APIs in GLib code, since they are inherently incompatible with GLib:
+ • exit() (should use g_application_quit() or g_main_loop_quit() instead)
+ • sigaction() (should use g_unix_signal_add() instead)
+ • system() (should _never_ be used)
+ • sleep() (should use g_timeout_add() instead)
+
+This list is not necessarily complete.

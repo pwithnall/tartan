@@ -1,0 +1,6 @@
+ - detect using *_get_instance_private() with classes defined using G_DEFINE_TYPE() rather than G_DEFINE_TYPE_WITH_PRIVATE() or G_ADD_PRIVATE().
+ - ensure dispose(), finalize(), etc. chain up correctly
+ - check G_DEFINE_TYPE doesn’t pass its own get_type() function (i.e. inheriting from itself)
+ - check the correct parent struct is in the object’s class structure
+ - check the correct parent struct is in the object’s instance structure
+ - for each property which has G_PARAM_READWRITE, check it’s implemented in both get_property() and set_property()

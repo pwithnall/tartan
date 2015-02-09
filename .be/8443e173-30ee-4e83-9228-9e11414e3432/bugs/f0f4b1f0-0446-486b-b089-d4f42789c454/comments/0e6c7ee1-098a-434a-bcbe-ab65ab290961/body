@@ -1,0 +1,1 @@
+ensure a g_dbus_method_invocation_return_*() method is called on every GDBusMethodInvocation exactly once on each code path

@@ -1,0 +1,6 @@
+Look at float vs double promotions in GTK+ APIs (e.g. GtkMisc, GtkProgress)
+
+Work out whether we can give a general principle for when to use float, and when to use double.
+If so, warn if using a float in an API declaration when you should be using a double.
+
+Ensure promotions work OK.

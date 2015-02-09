@@ -1,0 +1,3 @@
+Warn about passing enum declrefs to g_variant_new() (for example), in case the enum changes size in future due to more elements being added.
+
+Either require such enums to have a fixed size (by specifying a size member with value G_MAXUINT32), or require them to be explicitly cast to a fixed-size integer before being passed to varargs functions.

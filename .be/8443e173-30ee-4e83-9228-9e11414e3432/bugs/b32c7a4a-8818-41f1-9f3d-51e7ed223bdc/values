@@ -1,0 +1,50 @@
+{
+
+
+
+
+
+
+    "creator": "Philip Withnall <philip.withnall@collabora.co.uk>", 
+
+
+
+
+
+
+    "reporter": "Philip Withnall <philip.withnall@collabora.co.uk>", 
+
+
+
+
+
+
+    "severity": "minor", 
+
+
+
+
+
+
+    "status": "open", 
+
+
+
+
+
+
+    "summary": "Warn about use of certain POSIX functions in GLib code", 
+
+
+
+
+
+
+    "time": "Mon, 09 Feb 2015 12:00:00 +0000"
+
+
+
+
+
+
+}

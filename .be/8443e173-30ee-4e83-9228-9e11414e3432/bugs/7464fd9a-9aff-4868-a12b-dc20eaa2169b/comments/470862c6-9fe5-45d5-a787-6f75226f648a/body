@@ -1,0 +1,2 @@
+ • Check for 1-bit gbooleans: they’re inherently broken
+ • Check for assignments to boolean struct members without using ‘!!’

@@ -1,0 +1,4 @@
+Warn about g_list_nth() and O(N) friends being called inside a loop, e.g.:
+	for (i = 0; i < g_list_length(l); i++) {
+		g_list_nth[_data](l, i)
+	}

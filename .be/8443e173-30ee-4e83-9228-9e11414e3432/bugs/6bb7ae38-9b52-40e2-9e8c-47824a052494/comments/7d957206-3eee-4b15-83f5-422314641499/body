@@ -1,0 +1,3 @@
+Warn about passing UTF-8 to filename functions and filename-encoded strings to UTF-8 functions.
+
+Suggest use of g_filename_[to|from]_utf8() instead.

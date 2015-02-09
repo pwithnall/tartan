@@ -1,0 +1,1 @@
+Detect unmodified flow of GError messages from base libraries up to the UI (e.g. to avoid https://imgur.com/1vVCqR8)

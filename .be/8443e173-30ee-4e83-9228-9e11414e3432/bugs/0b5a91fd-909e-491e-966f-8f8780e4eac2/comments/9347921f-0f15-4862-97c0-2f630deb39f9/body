@@ -1,0 +1,4 @@
+Check for building filenames incorrectly (manually or without encoding):
+ • Reverse taint checking from fopen() (and friends) to find uses of g_strconcat(), g_strdup_printf(), g_strrstr(), etc.
+ • Encoding checking (as mentioned in 844/6bb).
+ • Detect ‘.cache’ (or other XDG default values) being passed to a filename function and suggest g_get_user_cache_dir() (etc.) is used instead
