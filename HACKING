@@ -55,3 +55,9 @@ positives is highly preferred over avoiding false negatives, on the principle
 that nobody will use the plugin if it produces more than a couple of false
 positives. As long as the plugin finds some true positives, the number of false
 negatives is of low importance — we’re not losing anything by them.
+
+
+Background reading
+------------------
+
+http://lists.llvm.org/pipermail/cfe-dev/2015-August/044825.html
