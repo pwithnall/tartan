@@ -1,0 +1,1 @@
+Note that the GUnix[Input|Output]Stream:close-fd properties complicate matters. For a first attempt, the analysis will have to be aborted if close-fd is set to a non-constant value anywhere in the compilation unit. More advanced analysis could be implemented later.
