@@ -636,7 +636,7 @@ _simplify_boolean_expr (Expr* expr, const ASTContext& context)
  * variables are type checked). The returned number may be an over-estimate
  * of the number of elements in the set, as it doesn’t account for
  * duplicates. */
-unsigned int
+static unsigned int
 _assertion_is_gobject_type_check (Expr& assertion_expr,
                                   const ASTContext& context,
                                   std::unordered_set<const ValueDecl*>& ret)
@@ -705,7 +705,7 @@ _assertion_is_gobject_type_check (Expr& assertion_expr,
  * variables are non-NULL checked). The returned number may be an over-estimate
  * of the number of elements in the set, as it doesn’t account for
  * duplicates. */
-unsigned int
+static unsigned int
 _assertion_is_explicit_nonnull_check (Expr& assertion_expr,
                                       const ASTContext& context,
                                       std::unordered_set<const ValueDecl*>& ret)
