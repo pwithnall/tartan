@@ -107,11 +107,11 @@ elif containsElement "-analyze" "${argv[@]}"; then
 	include_plugin_flags=1
 	escape_plugin_flags=0
 elif containsElement "--version" "${argv[@]}"; then
-	# This is passed to us during ./configure (e.g. scan-build ./configure)
+	# This is passed to us during ./configure (e.g. tartan-build ./configure)
 	# so take the opportunity to output Tartan version information.
-	echo "tartan: Running under scan-build" >& 2
+	echo "tartan: Running under tartan-build" >& 2
 elif ! containsElement "-analyze" "${argv[@]}"; then
-	echo "Warning: Running $0 with static analysis disabled. Use scan-build to enable static analysis." >& 2
+	echo "Warning: Running $0 with static analysis disabled. Use tartan-build to enable static analysis." >& 2
 fi
 
 # The -analyzer-checker argument loads all 'tartan.*' static checkers.
@@ -130,9 +130,6 @@ if [ "$escape_plugin_flags" = "1" ]; then
 	done
 	add_plugin=( "${_add_plugin[@]}" )
 fi
-
-#	echo "Warning: Running $0 with static analysis disabled. Use scan-build to enable static analysis." >& 2
-
 
 if [ "$include_plugin_flags" = "1" ]; then
 	# Exec Clang with the plugin loaded.

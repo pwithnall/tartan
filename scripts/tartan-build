@@ -1,0 +1,10 @@
+#!/bin/sh
+
+if [ -x `which tartan` ]; then
+	tartan=`which tartan`
+else
+	echo "Error: Could not find tartan script. Make sure Tartan is installed in your PATH." >& 2
+	exit 1
+fi
+
+exec scan-build --use-analyzer=$tartan "${@}"

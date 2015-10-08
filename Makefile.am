@@ -69,8 +69,11 @@ clang_plugin_libtartan_la_LDFLAGS = \
 	-no-undefined \
 	$(NULL)
 
-# Clang wrapper script
-dist_bin_SCRIPTS = scripts/tartan
+# Clang and scan-build wrapper scripts
+dist_bin_SCRIPTS = \
+	scripts/tartan \
+	scripts/tartan-build \
+	$(NULL)
 
 # Code coverage
 @CODE_COVERAGE_RULES@
