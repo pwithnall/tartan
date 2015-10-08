@@ -30,16 +30,17 @@
 using namespace clang;
 
 namespace Debug {
-#ifndef NDEBUG
-
+#define DEBUG_TYPE G_LOG_DOMAIN
 #undef DEBUG
-#define DEBUG(M) DEBUG_WITH_TYPE("tartan", llvm::dbgs () << M << "\n")
 
-#define DEBUG_EXPR(M, E) DEBUG_WITH_TYPE ("tartan", \
+#ifndef NDEBUG
+#define DEBUG(M) DEBUG_WITH_TYPE(DEBUG_TYPE, llvm::dbgs () << M << "\n")
+
+#define DEBUG_EXPR(M, E) DEBUG_WITH_TYPE (DEBUG_TYPE, \
 	llvm::dbgs () << M; \
 	(E).printPretty (llvm::dbgs (), NULL, context.getPrintingPolicy ()); \
 	llvm::dbgs () << "\n")
-#define DEBUG_DUMPABLE(M, D) DEBUG_WITH_TYPE ("tartan", \
+#define DEBUG_DUMPABLE(M, D) DEBUG_WITH_TYPE (DEBUG_TYPE, \
 	llvm::dbgs () << M; \
 	(D).dumpToStream (llvm::dbgs ()); \
 	llvm::dbgs () << "\n")
