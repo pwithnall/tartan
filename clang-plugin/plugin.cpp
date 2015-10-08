@@ -353,6 +353,9 @@ X("tartan", "add attributes and warnings using GLib-specific metadata");
 
 /* Register the path-dependent plugins with Clang. */
 extern "C"
+void clang_registerCheckers (ento::CheckerRegistry &registry);
+
+extern "C"
 void clang_registerCheckers (ento::CheckerRegistry &registry) {
 	registry.addChecker<GErrorChecker> ("tartan.GErrorChecker",
 	                                    "Check GError API usage");
