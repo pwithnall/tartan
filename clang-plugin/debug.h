@@ -23,6 +23,8 @@
 #ifndef TARTAN_DEBUG_H
 #define TARTAN_DEBUG_H
 
+#include "config.h"
+
 #include <llvm/Support/Debug.h>
 #include <clang/Basic/Diagnostic.h>
 #include <clang/Frontend/CompilerInstance.h>
@@ -38,6 +40,7 @@ namespace Debug {
 
 #ifndef NDEBUG
 #define DEBUG(M) DEBUG_WITH_TYPE(DEBUG_TYPE, llvm::dbgs () << M << "\n")
+#define DEBUG_CODE(C) DEBUG_WITH_TYPE(DEBUG_TYPE, C)
 
 #define DEBUG_EXPR(M, E) DEBUG_WITH_TYPE (DEBUG_TYPE, \
 	llvm::dbgs () << M; \
@@ -50,6 +53,7 @@ namespace Debug {
 
 #else
 #define DEBUG(M)
+#define DEBUG_CODE(C)
 #define DEBUG_EXPR(M, E)
 #define DEBUG_DUMPABLE(M, D)
 #endif

@@ -245,11 +245,11 @@ GirAttributesConsumer::_handle_function_decl (FunctionDecl& func)
 			transfer = g_arg_info_get_ownership_transfer (&arg);
 			type_tag = g_type_info_get_tag (&type_info);
 
-			int array_type =
+			DEBUG_CODE (int array_type =
 				(g_type_info_get_tag (&type_info) ==
 				 GI_TYPE_TAG_ARRAY) ?
 					g_type_info_get_array_type (&type_info) :
-					-1;
+					-1);
 			DEBUG ("GirAttributes: " << func_name << "(" << j <<
 			       ")\n"
 			       "\tTransfer: " << transfer << "\n"

@@ -411,8 +411,8 @@ GErrorChecker::_handle_eval_g_propagate_error (CheckerContext &context,
 
 	SVal dest_ptr_location = state->getSVal (call_expr.getArg (0),
 	                                         context.getLocationContext ());
-	SVal dest_location =
-		this->_error_from_error_ptr (dest_ptr_location, context);
+	DEBUG_CODE (SVal dest_location =
+		this->_error_from_error_ptr (dest_ptr_location, context));
 	SVal src_location = state->getSVal (call_expr.getArg (1),
 	                                    context.getLocationContext ());
 
