@@ -64,6 +64,7 @@ clang_plugin_libtartan_la_LIBADD = \
 clang_plugin_libtartan_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
 	$(LLVM_LDFLAGS) \
+	$(WARN_LDFLAGS) \
 	-avoid-version \
 	-module \
 	-no-undefined \

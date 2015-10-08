@@ -9,6 +9,7 @@ AC_INIT([Tartan],
         [tartan_version_major.tartan_version_minor.tartan_version_micro],
         [http://people.collabora.com/~pwith/tartan/],[tartan],
         [http://people.collabora.com/~pwith/tartan/])
+AX_IS_RELEASE([git-directory])
 
 # Debugging
 AX_CHECK_ENABLE_DEBUG([no])
@@ -118,14 +119,7 @@ IT_PROG_INTLTOOL([0.40.0])
 AX_CODE_COVERAGE
 
 # Compiler warnings
-m4_include([m4/gnome-compiler-flags.m4])
-GNOME_COMPILE_WARNINGS([maximum])
-GNOME_CXX_WARNINGS([yes])
-
-AC_SUBST([AM_CPPFLAGS])
-AC_SUBST([AM_CFLAGS])
-AC_SUBST([AM_CXXFLAGS])
-AC_SUBST([AM_LDFLAGS])
+AX_COMPILER_FLAGS
 
 # ChangeLog generation
 AX_GENERATE_CHANGELOG
