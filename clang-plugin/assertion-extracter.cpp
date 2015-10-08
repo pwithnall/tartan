@@ -134,7 +134,7 @@ AssertionExtracter::is_assertion_stmt (Stmt& stmt, const ASTContext& context)
 	 *  • g_assertion_message()
 	 *  • g_assertion_message_*()
 	 */
-	switch (stmt.getStmtClass ()) {
+	switch ((int) stmt.getStmtClass ()) {
 	case Stmt::StmtClass::CallExprClass: {
 		/* Handle a direct function call.
 		 * Transformations:
@@ -643,7 +643,7 @@ _assertion_is_gobject_type_check (Expr& assertion_expr,
 {
 	DEBUG_EXPR (__func__ << ": ", assertion_expr);
 
-	switch (assertion_expr.getStmtClass ()) {
+	switch ((int) assertion_expr.getStmtClass ()) {
 	case Expr::StmtExprClass: {
 		/* Parse all the way through the statement expression, checking
 		 * if the first statement is an assignment to the __inst
@@ -712,7 +712,7 @@ _assertion_is_explicit_nonnull_check (Expr& assertion_expr,
 {
 	DEBUG_EXPR (__func__ << ": ", assertion_expr);
 
-	switch (assertion_expr.getStmtClass ()) {
+	switch ((int) assertion_expr.getStmtClass ()) {
 	case Expr::BinaryOperatorClass: {
 		BinaryOperator& bin_expr =
 			cast<BinaryOperator> (assertion_expr);

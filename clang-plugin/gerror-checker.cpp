@@ -115,6 +115,7 @@ struct ErrorState {
 		case Clear: stream << "Clear"; break;
 		case Set: stream << "Set"; break;
 		case Freed: stream << "Freed"; break;
+		default: g_assert_not_reached ();
 		}
 	}
 };

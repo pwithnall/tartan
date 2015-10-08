@@ -671,7 +671,7 @@ _check_signal_callback_type (const Expr *expr,
 
 	/* We can’t just use expr->getType() here because we’ll typically get
 	 * GCallback as the type, which is not helpful. */
-	switch (expr->getStmtClass ()) {
+	switch ((int) expr->getStmtClass ()) {
 	case Stmt::StmtClass::DeclRefExprClass: {
 		/* A reference to a function. Check the variable is a pointer
 		 * and look it up in the GIR namespace. */
@@ -1083,7 +1083,7 @@ _signal_flags_is_swapped (const Expr *flags_expr,
                           CompilerInstance &compiler,
                           const ASTContext &context)
 {
-	switch (flags_expr->getStmtClass ()) {
+	switch ((int) flags_expr->getStmtClass ()) {
 	case Stmt::StmtClass::DeclRefExprClass: {
 		/* A reference to an enum, presumably. */
 		const DeclRefExpr *decl_ref_expr = cast<DeclRefExpr> (flags_expr);

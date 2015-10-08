@@ -287,6 +287,8 @@ NullabilityVisitor::TraverseFunctionDecl (FunctionDecl* func)
 				<< parm_decl->getNameAsString ()
 				<< func->getNameAsString ();
 				break;
+			default:
+			        g_assert_not_reached ();
 			}
 		} else if (has_nonnull == EXPLICIT_NULLABLE && has_assertion) {
 			Debug::emit_warning (
