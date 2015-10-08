@@ -41,6 +41,7 @@ clang_plugin_libtartan_la_SOURCES = \
 clang_plugin_libtartan_la_CPPFLAGS = \
 	$(AM_CPPFLAGS) \
 	-I$(top_srcdir) \
+	-DG_LOG_DOMAIN=\"tartan\" \
 	$(DISABLE_DEPRECATED) \
 	$(LLVM_CPPFLAGS) \
 	$(NULL)
