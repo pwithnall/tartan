@@ -127,6 +127,9 @@ AC_SUBST([AM_CFLAGS])
 AC_SUBST([AM_CXXFLAGS])
 AC_SUBST([AM_LDFLAGS])
 
+# ChangeLog generation
+AX_GENERATE_CHANGELOG
+
 AC_CONFIG_FILES([
 Makefile
 po/Makefile.in
