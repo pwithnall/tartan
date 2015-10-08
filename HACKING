@@ -60,4 +60,5 @@ negatives is of low importance — we’re not losing anything by them.
 Background reading
 ------------------
 
+http://www.clic.cs.columbia.edu/~junfeng/reliable-software/papers/coverity.pdf
 http://lists.llvm.org/pipermail/cfe-dev/2015-August/044825.html
