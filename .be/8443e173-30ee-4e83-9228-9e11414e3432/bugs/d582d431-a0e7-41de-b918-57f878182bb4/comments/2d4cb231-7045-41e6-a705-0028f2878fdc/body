@@ -1,0 +1,2 @@
+ • Check g_task_return_*() and g_task_propagate_*() are correctly paired
+ • Check they are correctly typed for a given GTask instance — could potentially model a GTask as a function (which has a delayed return) but which still has a defined set of parameters and return type and throwable status

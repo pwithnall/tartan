@@ -1,0 +1,1 @@
+Check that GSettings schema IDs and paths are valid when passed to functions like g_settings_new().

@@ -1,0 +1,1 @@
+Check for GApplication IDs being valid reverse-DNS in API like g_application_set_application_id().

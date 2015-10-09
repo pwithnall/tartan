@@ -1,0 +1,3 @@
+Check naming of everything associated with a GObject: the class name, interface names, method names, vfunc names, signals, properties, error domains and values, etc.
+
+https://developer.gnome.org/programming-guidelines/unstable/namespacing.html.en

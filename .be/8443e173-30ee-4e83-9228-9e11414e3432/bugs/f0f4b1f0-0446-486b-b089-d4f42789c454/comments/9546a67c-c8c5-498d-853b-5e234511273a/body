@@ -1,0 +1,4 @@
+ • Check format of strings passed to GDBus functions, for example, this is wrong:
+	g_dbus_interface_skeleton_export (blah, blah, "I.am.not.a.valid.object.path!", blah);
+   or more realistically:
+	g_dbus_interface_skeleton_export (blah, blah, "/org.notvalidbecausethereisadothere/blah/Something/Else/Which/Is/Valid", blah);

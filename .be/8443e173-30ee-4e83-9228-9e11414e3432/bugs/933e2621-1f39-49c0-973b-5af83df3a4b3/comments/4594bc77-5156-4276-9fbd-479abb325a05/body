@@ -1,0 +1,3 @@
+With strcmp() or g_strcmp0().
+ • Warn about any comparisons which can be statically determined to be FALSE or TRUE (e.g. string constants as both operands).
+ • Warn about operands being equal (g_strcmp0(my_variable, my_variable)). 
