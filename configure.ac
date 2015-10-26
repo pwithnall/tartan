@@ -30,6 +30,7 @@ PKG_PROG_PKG_CONFIG
 
 # Requirements
 LLVM_REQS=3.4
+LLVM_CANDIDATE_VERSIONS="3.4 3.5 3.6"
 GLIB_REQS=2.38  # TODO
 GIO_REQS=2.38  # TODO
 GIR_REQS=1.38.0  # TODO
@@ -47,9 +48,20 @@ AC_SUBST([TARTAN_PACKAGES])
 PKG_CHECK_MODULES([TARTAN],[$TARTAN_PACKAGES])
 
 # Tartan LLVM dependency
-AC_PATH_PROG([LLVM_CONFIG],[llvm-config],"failed")
+LLVM_CANDIDATE_STRING="llvm-config "
+
+for i in $LLVM_CANDIDATE_VERSIONS; do
+  LLVM_CANDIDATE_STRING="$LLVM_CANDIDATE_STRING llvm-config-$i"
+done
+
+AC_PATH_PROGS([LLVM_CONFIG],[$LLVM_CANDIDATE_STRING],"failed")
 AS_IF([test $LLVM_CONFIG = "failed"],[
 	AC_MSG_ERROR([LLVM version $LLVM_REQS or later needed.])
+])
+LLVM_CONFIG_TEST=`echo $LLVM_CONFIG | sed -n 's/^.*\(llvm-config\)$/\1/p'`
+AS_IF([test x$LLVM_CONFIG_TEST = "x"],[
+	AC_MSG_ERROR([$LLVM_CONFIG is detected, but llvm packages for development are not properly set.
+please, install more llvm packages. $ac_cv_path_LLVM_CONFIG])
 ])
 
 AC_MSG_CHECKING([for LLVM])
