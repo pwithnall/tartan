@@ -25,11 +25,15 @@ fi
 #     clang version 3.3 (tags/RELEASE_33/rc3)
 #     Target: x86_64-redhat-linux-gnu
 #     Thread model: posix
+# In case of debian, jessie, it returns like:
+#     Debian clang version 3.5.0-10 (tags/RELEASE_350/final) (based on LLVM 3.5.0)
+#     Target: x86_64-pc-linux-gnu
+#     Thread model: posix
 # or:
 #     clang version 3.4.2 (http://llvm.org/git/clang.git 65173e04eacb68ff89a58fbff14979eb318896c9) (http://llvm.org/git/llvm.git 5c6aa738fb3325ae499454877f1e2926d2368135)
 #     Target: x86_64-unknown-linux-gnu
 #     Thread model: posix
-clang_version_full=`"$real_clang" --version | head -n1 | cut -f3 -d ' '`
+clang_version_full=`"$real_clang" --version 2>& 1 | sed -n 's/^.*clang version [^0-9]*\([0-9][0-9.]*\).*$/\1/p'`
 clang_version=`echo "$clang_version_full" | sed 's/\([[0-9]]*\)\.\([[0-9]]*\)\(\.[[0-9]]*\)\?\(svn\)\?/\1.\2/'`
 
 # Sanity check.
