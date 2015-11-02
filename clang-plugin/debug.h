@@ -26,8 +26,11 @@
 #include <llvm/Support/Debug.h>
 #include <clang/Basic/Diagnostic.h>
 #include <clang/Frontend/CompilerInstance.h>
+#include <clang/StaticAnalyzer/Core/BugReporter/BugType.h>
+#include <clang/StaticAnalyzer/Core/PathSensitive/CheckerContext.h>
 
 using namespace clang;
+using namespace ento;
 
 namespace Debug {
 #define DEBUG_TYPE G_LOG_DOMAIN
@@ -57,6 +60,9 @@ namespace Debug {
 #define WARN_EXPR(M, E) llvm::errs () << "Warning: " << M << " in:\n\t"; \
 	(E).printPretty (llvm::errs (), NULL, context.getPrintingPolicy ()); \
 	llvm::errs () << "\n"
+
+	void emit_bug_report (std::unique_ptr<BugReport> report,
+	                      CheckerContext &context);
 
 	DiagnosticBuilder emit_report (DiagnosticsEngine::Level level,
 	                               const char *format_string,

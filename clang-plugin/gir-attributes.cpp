@@ -358,22 +358,37 @@ GirAttributesConsumer::_handle_function_decl (FunctionDecl& func)
 
 		/* Mark the function as allocating memory if it’s a
 		 * constructor. */
+#if defined(HAVE_LLVM_3_7)
+		if (g_function_info_get_flags (info) &
+		    GI_FUNCTION_IS_CONSTRUCTOR &&
+		    !func.hasAttr<RestrictAttr> ()) {
+			RestrictAttr* malloc_attr =
+				::new (func.getASTContext ())
+				RestrictAttr (func.getSourceRange (),
+				              func.getASTContext (), 0);
+			func.addAttr (malloc_attr);
+		}
+#elif defined(HAVE_LLVM_3_6)
 		if (g_function_info_get_flags (info) &
 		    GI_FUNCTION_IS_CONSTRUCTOR &&
 		    !func.hasAttr<MallocAttr> ()) {
-#ifdef HAVE_LLVM_3_5
 			MallocAttr* malloc_attr =
 				::new (func.getASTContext ())
 				MallocAttr (func.getSourceRange (),
 				            func.getASTContext (), 0);
-#else /* if !HAVE_LLVM_3_5 */
+			func.addAttr (malloc_attr);
+		}
+#else
+		if (g_function_info_get_flags (info) &
+		    GI_FUNCTION_IS_CONSTRUCTOR &&
+		    !func.hasAttr<MallocAttr> ()) {
 			MallocAttr* malloc_attr =
 				::new (func.getASTContext ())
 				MallocAttr (func.getSourceRange (),
 				            func.getASTContext ());
-#endif /* !HAVE_LLVM_3_5 */
 			func.addAttr (malloc_attr);
 		}
+#endif
 
 		break;
 	}

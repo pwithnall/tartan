@@ -539,6 +539,7 @@ _is_gtype_subclass (GIBaseInfo *a, GIBaseInfo *b)
  *   • syscall: Same.
  *   • optlink: Same.
  *   • GCC thiscall: Same.
+ *   • vectorcall: Same[13].
  *   • Microsoft x64: Caller clean-up (of parameters, not stack frame),
  *     parameters pushed right-to-left[10].
  *   • System V AMD64 ABI: Same[11, §3.2.3].
@@ -597,6 +598,7 @@ _is_gtype_subclass (GIBaseInfo *a, GIBaseInfo *b)
  *  [11]: http://x86-64.org/documentation/abi.pdf
  *  [12]: https://developer.chrome.com/native-client/reference/
  *        pnacl-bitcode-abi#calling-conventions
+ *  [13]: https://msdn.microsoft.com/en-us/library/dn375768.aspx
  */
 static bool
 calling_convention_is_safe (CallingConv conv)
@@ -607,7 +609,12 @@ calling_convention_is_safe (CallingConv conv)
 	case CC_X86_64SysV:  /* x86-64 */
 	case CC_AAPCS:  /* ARM */
 	case CC_AAPCS_VFP:  /* ARM with VFP registers */
+#ifndef HAVE_LLVM_3_7
 	case CC_PnaclCall:  /* Chromium PNC — equivalent to cdecl */
+#endif
+#ifdef HAVE_LLVM_3_7
+	case CC_X86VectorCall:
+#endif
 		return true;
 	case CC_X86StdCall:
 	case CC_X86FastCall:
@@ -617,6 +624,15 @@ calling_convention_is_safe (CallingConv conv)
 	case CC_IntelOclBicc:
 		/* Intel OpenCL Built-Ins. I can’t find any documentation about
 		 * this, so let’s consider it unsafe. */
+#ifdef HAVE_LLVM_3_7
+	case CC_SpirFunction:
+	case CC_SpirKernel:
+		/* OpenCL SPIR calling conventions. These are ‘defined’ in §3.7
+		 * of
+		 * https://www.khronos.org/files/opencl-spir-12-provisional.pdf,
+		 * but without enough information to classify them as safe or
+		 * unsafe. */
+#endif
 	default:
 		return false;
 	}

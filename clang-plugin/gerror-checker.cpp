@@ -766,14 +766,14 @@ GErrorChecker::_assert_gerror_set (SVal error_location,
 		ExplodedNode *error_node = context.generateSink (state);
 
 		this->_initialise_bug_reports ();
-		BugReport *R = new BugReport (*this->_use_uninitialised,
-		                              "Using uninitialized GError",
-		                              error_node);
+		auto R = llvm::make_unique<BugReport> (*this->_use_uninitialised,
+		                                       "Using uninitialized GError",
+		                                       error_node);
 		#if 0
 		bugreporter::trackNullOrUndefValue (error_node, stmt, *R);
 		#endif
 		R->addRange (source_range);
-		context.emitReport (R);
+		Debug::emit_bug_report (std::move (R), context);
 
 		return false;
 	} else if (!error_location.getAs<DefinedOrUnknownSVal> ()) {
@@ -791,14 +791,14 @@ GErrorChecker::_assert_gerror_set (SVal error_location,
 		ExplodedNode *error_node = context.generateSink (state);
 
 		this->_initialise_bug_reports ();
-		BugReport *R = new BugReport (*this->_free_cleared,
-		                              "Freeing non-set GError",
-		                              error_node);
+		auto R = llvm::make_unique<BugReport> (*this->_free_cleared,
+		                                       "Freeing non-set GError",
+		                                       error_node);
 		#if 0
 		bugreporter::trackNullOrUndefValue (error_node, stmt, *R);
 		#endif
 		R->addRange (source_range);
-		context.emitReport (R);
+		Debug::emit_bug_report (std::move (R), context);
 
 		return false;
 	} else if (null_state && !not_null_state) {
@@ -820,24 +820,24 @@ GErrorChecker::_assert_gerror_set (SVal error_location,
 		ExplodedNode *error_node = context.generateSink (state);
 
 		this->_initialise_bug_reports ();
-		BugReport *R = new BugReport (*this->_double_free,
-		                              "Freeing already-freed GError",
-		                              error_node);
+		auto R = llvm::make_unique<BugReport> (*this->_double_free,
+		                                       "Freeing already-freed GError",
+		                                       error_node);
 		R->addRange (source_range);
 		R->addRange (error_state->S);
-		context.emitReport (R);
+		Debug::emit_bug_report (std::move (R), context);
 
 		return false;
 	} else if (error_state != NULL && !error_state->isSet ()) {
 		ExplodedNode *error_node = context.generateSink (state);
 
 		this->_initialise_bug_reports ();
-		BugReport *R = new BugReport (*this->_free_cleared,
-		                              "Freeing non-set GError",
-		                              error_node);
+		auto R = llvm::make_unique<BugReport> (*this->_free_cleared,
+		                                       "Freeing non-set GError",
+		                                       error_node);
 		R->addRange (source_range);
 		R->addRange (error_state->S);
-		context.emitReport (R);
+		Debug::emit_bug_report (std::move (R), context);
 
 		return false;
 	}
@@ -913,14 +913,14 @@ GErrorChecker::_assert_gerror_unset (SVal error_location,
 		ExplodedNode *error_node = context.generateSink (state);
 
 		this->_initialise_bug_reports ();
-		BugReport *R = new BugReport (*this->_use_uninitialised,
-		                              "Using uninitialized GError",
-		                              error_node);
+		auto R = llvm::make_unique<BugReport> (*this->_use_uninitialised,
+		                                       "Using uninitialized GError",
+		                                       error_node);
 		#if 0
 		bugreporter::trackNullOrUndefValue (error_node, stmt, *R);
 		#endif
 		R->addRange (source_range);
-		context.emitReport (R);
+		Debug::emit_bug_report (std::move (R), context);
 
 		return false;
 	} else if (!error_location.getAs<DefinedOrUnknownSVal> ()) {
@@ -948,12 +948,12 @@ GErrorChecker::_assert_gerror_unset (SVal error_location,
 		ExplodedNode *error_node = context.generateSink (state);
 
 		this->_initialise_bug_reports ();
-		BugReport *R = new BugReport (*this->_overwrite_set,
-		                              "Overwriting already-set GError",
-		                              error_node);
+		auto R = llvm::make_unique<BugReport> (*this->_overwrite_set,
+		                                       "Overwriting already-set GError",
+		                                       error_node);
 		R->addRange (source_range);
 		R->addRange (error_state->S);
-		context.emitReport (R);
+		Debug::emit_bug_report (std::move (R), context);
 
 		return false;
 	} else if (error_state != NULL && error_state->isFreed () &&
@@ -961,12 +961,12 @@ GErrorChecker::_assert_gerror_unset (SVal error_location,
 		ExplodedNode *error_node = context.generateSink (state);
 
 		this->_initialise_bug_reports ();
-		BugReport *R = new BugReport (*this->_overwrite_freed,
-		                              "Overwriting already-freed GError",
-		                              error_node);
+		auto R = llvm::make_unique<BugReport> (*this->_overwrite_freed,
+		                                       "Overwriting already-freed GError",
+		                                       error_node);
 		R->addRange (source_range);
 		R->addRange (error_state->S);
-		context.emitReport (R);
+		Debug::emit_bug_report (std::move (R), context);
 
 		return false;
 	}

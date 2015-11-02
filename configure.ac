@@ -93,6 +93,9 @@ AS_IF([test "$major" -eq 3 -a "$minor" -ge 5 -o "$major" -gt 3],[
 AS_IF([test "$major" -eq 3 -a "$minor" -ge 6 -o "$major" -gt 3],[
 	AC_DEFINE([HAVE_LLVM_3_6], [1], [Whether LLVM ≥ 3.6 is available])
 ])
+AS_IF([test "$major" -eq 3 -a "$minor" -ge 7 -o "$major" -gt 3],[
+	AC_DEFINE([HAVE_LLVM_3_7], [1], [Whether LLVM ≥ 3.7 is available])
+])
 
 # Clang dependency (e.g. the clang-devel package on Fedora)
 AC_LANG_PUSH([C++])

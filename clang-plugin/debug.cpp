@@ -20,13 +20,29 @@
  *     Philip Withnall <philip.withnall@collabora.co.uk>
  */
 
+#include "config.h"
+
 #include <clang/Basic/Diagnostic.h>
 #include <clang/Basic/Version.h>
 #include <clang/Frontend/CompilerInstance.h>
+#include <clang/StaticAnalyzer/Core/BugReporter/BugType.h>
+#include <clang/StaticAnalyzer/Core/PathSensitive/CheckerContext.h>
 
 #include "debug.h"
 
 using namespace clang;
+using namespace ento;
+
+void
+Debug::emit_bug_report (std::unique_ptr<BugReport> report,
+                        CheckerContext &context)
+{
+	#ifndef HAVE_LLVM_3_7
+	context.emitReport (report.get ());
+	#else
+	context.emitReport (std::move (report));
+	#endif
+}
 
 /* Build and emit a warning or error report about the user’s code. */
 DiagnosticBuilder
