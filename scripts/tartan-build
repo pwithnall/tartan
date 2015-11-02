@@ -1,7 +1,11 @@
 #!/bin/sh
 
-if [ -x `which tartan` ]; then
+clang_bin_dir=`dirname "$0"`
+
+if which tartan &> /dev/null; then
 	tartan=`which tartan`
+elif [ -x $clang_bin_dir/tartan ]; then
+	tartan="$clang_bin_dir/tartan"
 else
 	echo "Error: Could not find tartan script. Make sure Tartan is installed in your PATH." >& 2
 	exit 1
