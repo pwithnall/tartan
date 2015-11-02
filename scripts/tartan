@@ -114,6 +114,11 @@ elif ! containsElement "-analyze" "${argv[@]}"; then
 	echo "Warning: Running $0 with static analysis disabled. Use tartan-build to enable static analysis." >& 2
 fi
 
+# -### mode always requires escaping.
+if containsElement "-###" "${argv[@]}"; then
+	escape_plugin_flags=1
+fi
+
 # Sanity check that (somehow) the Tartan plugin flags have not already made it
 # into the argument list. This can happen if both configure and make are run
 # under tartan-builder.
