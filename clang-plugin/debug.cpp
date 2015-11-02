@@ -80,7 +80,11 @@ DiagnosticBuilder
 Debug::emit_error (const char *format_string, CompilerInstance& compiler,
                    SourceLocation location)
 {
-	return Debug::emit_report (DiagnosticsEngine::Error, format_string,
+	/* Emit this as a warning rather than an error because scan-build will
+	 * treat all compiler errors as crashes and divert their diagnostic
+	 * messages into a separate crash dump file which the user will almost
+	 * certainly never see. */
+	return Debug::emit_report (DiagnosticsEngine::Warning, format_string,
 	                           compiler, location);
 }
 
