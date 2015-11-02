@@ -73,6 +73,23 @@ protected:
 	std::unique_ptr<ASTConsumer>
 	CreateASTConsumer (CompilerInstance &compiler, llvm::StringRef in_file)
 	{
+		/* Try and prevent Tartan’s changes to the AST from actually
+		 * affecting compilation. See bug: 844/04c. */
+		if (compiler.getFrontendOpts ().ProgramAction !=
+		    frontend::ActionKind::ParseSyntaxOnly &&
+		    compiler.getFrontendOpts ().ProgramAction !=
+		    frontend::ActionKind::RunAnalysis) {
+			DiagnosticsEngine &d = compiler.getDiagnostics ();
+			DiagnosticIDs &ids = *d.getDiagnosticIDs ();
+			unsigned int id = ids.getCustomDiagID (
+				(DiagnosticIDs::Level) DiagnosticsEngine::Error,
+				"Tartan must only be enabled when in "
+				"syntax-only or analysis modes.");
+			d.Report (id);
+
+			return llvm::make_unique<ASTConsumer> ();
+		}
+
 		std::vector<std::unique_ptr<ASTConsumer>> consumers;
 
 		/* Annotaters. */
