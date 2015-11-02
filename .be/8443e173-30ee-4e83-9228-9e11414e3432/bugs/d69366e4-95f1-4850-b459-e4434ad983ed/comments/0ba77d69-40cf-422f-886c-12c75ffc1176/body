@@ -1,0 +1,1 @@
+Each error type could have a textual name (similar to the -W flag names — for example, bad-gvariant-type) and a numeric identifier for quick reference. The numeric identifier could be calculated as a truncated hash of the textual name (for example, the first 4 characters from the SHA-256 hash).
