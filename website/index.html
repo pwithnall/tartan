@@ -100,14 +100,14 @@ Clang to allow projects to be statically analysed in parallel with compilation
 using Tartan, add the following lines to
 <span class="filename">~/.jhbuildrc</span>:</p>
 <pre>static_analyzer = True
-static_analyzer_template = 'scan-build --use-analyzer=<span class="replaceable">$JHBUILD_PREFIX</span>/bin/tartan -v -o %(outputdir)s/%(module)s</pre>
-<p>where <span class="program-name">tartan</span> is a wrapper script for
+static_analyzer_template = 'tartan-build -v -o %(outputdir)s/%(module)s</pre>
+<p>where <span class="program-name">tartan-build</span> is a wrapper script for
 Clang which loads and enables the Tartan plugin. It can be used both installed
 (<span class="filename"><span class="replaceable">$JHBUILD_PREFIX</span>/bin/tartan</span>)
 or uninstalled (<span class="filename">/path/to/tartan/source/scripts/tartan</span>).</p>
 
-<p>The <span class="program-name">scan-build</span> wrapper can also be used
-without Tartan:</p>
+<p>The <span class="program-name">scan-build</span> wrapper can be used instead
+to use the Clang static analyzer without Tartan:</p>
 <pre>static_analyzer = True
 static_analyzer_template = 'scan-build -v -o %(outputdir)s/%(module)s</pre>
 <p>This will enable static analysis of C code compiled with JHBuild, but will
