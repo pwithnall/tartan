@@ -2,7 +2,7 @@ AC_PREREQ(2.65)
 
 # Tartan release version
 m4_define(tartan_version_major, 0)
-m4_define(tartan_version_minor, 3)
+m4_define(tartan_version_minor, 4)
 m4_define(tartan_version_micro, 0)
 
 AC_INIT([Tartan],
