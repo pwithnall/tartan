@@ -3,6 +3,15 @@ Overview of changes from gnome-clang 0.2.0 to Tartan 0.3.0
 
 Major changes:
  • Change name from gnome-clang to Tartan
+ • Remove dependency on gnome-common
+ • Add a g_signal_connect() checker
+ • Various diagnostic message improvements
+ • Allow individual checkers to be disabled using --[enable|disable]-checker
+ • Add support for (nullable) annotations
+ • Add architecture-specific code checks to GVariant checker
+ • Improve wrapper scripts, tartan-build and tartan
+ • Support LLVM 3.5, 3.6 and 3.7
+ • Add a GError checker
 
 
 Overview of changes from gnome-clang 0.1.0 to gnome-clang 0.2.0
