@@ -7,8 +7,8 @@ m4_define(tartan_version_micro, 0)
 
 AC_INIT([Tartan],
         [tartan_version_major.tartan_version_minor.tartan_version_micro],
-        [http://people.collabora.com/~pwith/tartan/],[tartan],
-        [http://people.collabora.com/~pwith/tartan/])
+        [https://phabricator.freedesktop.org/maniphest/task/create/?projects=tartan],
+        [tartan],[http://www.freedesktop.org/software/tartan/])
 AX_IS_RELEASE([git-directory])
 
 # Debugging

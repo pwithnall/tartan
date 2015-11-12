@@ -8,9 +8,9 @@
 		improve the usefulness of Clang for developing GLib and GNOME
 		applications.
 	</description>
-	<homepage rdf:resource="http://people.collabora.com/~pwith/tartan/"/>
+	<homepage rdf:resource="http://www.freedesktop.org/software/tartan/"/>
 	<license rdf:resource="http://usefulinc.com/doap/licenses/gpl"/>
-	<download-page rdf:resource="http://people.collabora.com/~pwith/tartan/"/>
+	<download-page rdf:resource="http://www.freedesktop.org/software/tartan/releases/"/>
 	<maintainer>
 		<foaf:Person>
 			<foaf:name>Philip Withnall</foaf:name>
