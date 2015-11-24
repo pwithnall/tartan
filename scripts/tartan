@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 clang_bin_dir=`dirname "$0"`
 clang_prefix="$clang_bin_dir/.."
@@ -29,8 +29,11 @@ fi
 #     clang version 3.4.2 (http://llvm.org/git/clang.git 65173e04eacb68ff89a58fbff14979eb318896c9) (http://llvm.org/git/llvm.git 5c6aa738fb3325ae499454877f1e2926d2368135)
 #     Target: x86_64-unknown-linux-gnu
 #     Thread model: posix
-clang_version_full=`"$real_clang" --version | head -n1 | cut -f3 -d ' '`
-clang_version=`echo "$clang_version_full" | sed 's/\([[0-9]]*\)\.\([[0-9]]*\)\(\.[[0-9]]*\)\?\(svn\)\?/\1.\2/'`
+# or:
+#     Vendor-specific clang version 3.6.2-1bo1 (tags/RELEASE_362/final) (based on LLVM 3.6.2)
+#     Target: x86_64-unknown-linux-gnu
+#     Thread model: posix
+clang_version=`"$real_clang" --version | head -n1 | sed 's/\([^0-9]*\)\([[0-9]]*\)\.\([[0-9]]*\)\(\.[[0-9]]*\)\?\(svn\)\?\(.*\)/\2.\3/'`
 
 # Sanity check.
 if [ "$clang_version" == "" ]; then
