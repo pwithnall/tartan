@@ -1,3 +1,7 @@
+# ===========================================================================
+#     http://www.gnu.org/software/autoconf-archive/ax_code_coverage.html
+# ===========================================================================
+#
 # SYNOPSIS
 #
 #   AX_CODE_COVERAGE()
@@ -13,54 +17,94 @@
 #   corresponds to the value of the --enable-code-coverage option, which
 #   defaults to being disabled.
 #
+#   Test also for gcov program and create GCOV variable that could be
+#   substituted.
+#
 #   Note that all optimisation flags in CFLAGS must be disabled when code
 #   coverage is enabled.
 #
 #   Usage example:
+#
 #   configure.ac:
-#      AX_CODE_COVERAGE
+#
+#     AX_CODE_COVERAGE
 #
 #   Makefile.am:
-#      @CODE_COVERAGE_RULES@
-#      my_program_LIBS = … $(CODE_COVERAGE_LDFLAGS) …
-#      my_program_CFLAGS = … $(CODE_COVERAGE_CFLAGS) …
 #
-#   This results in a “check-code-coverage” rule being added to any Makefile.am
-#   which includes “@CODE_COVERAGE_RULES@” (assuming the module has been
-#   configured with --enable-code-coverage). Running `make check-code-coverage`
-#   in that directory will run the module’s test suite (`make check`) and build
-#   a code coverage report detailing the code which was touched, then print the
-#   URI for the report.
+#     @CODE_COVERAGE_RULES@
+#     my_program_LIBS = ... $(CODE_COVERAGE_LDFLAGS) ...
+#     my_program_CFLAGS = ... $(CODE_COVERAGE_CFLAGS) ...
+#
+#   This results in a "check-code-coverage" rule being added to any
+#   Makefile.am which includes "@CODE_COVERAGE_RULES@" (assuming the module
+#   has been configured with --enable-code-coverage). Running `make
+#   check-code-coverage` in that directory will run the module's test suite
+#   (`make check`) and build a code coverage report detailing the code which
+#   was touched, then print the URI for the report.
+#
+#   This code was derived from Makefile.decl in GLib, originally licenced
+#   under LGPLv2.1+.
 #
 # LICENSE
 #
-#   Copyright © 2012, 2014 Philip Withnall
-#   Copyright © 2012 Xan Lopez
-#   Copyright © 2012 Christian Persch
-#   Copyright © 2012 Paolo Borelli
-#   Copyright © 2012 Dan Winship
+#   Copyright (c) 2012 Philip Withnall
+#   Copyright (c) 2012 Xan Lopez
+#   Copyright (c) 2012 Christian Persch
+#   Copyright (c) 2012 Paolo Borelli
+#   Copyright (c) 2012 Dan Winship
+#   Copyright (c) 2015 Bastien ROUCARIES
 #
-#   Derived from Makefile.decl in GLib, originally licenced under LGPLv2.1+.
-#   This file is licenced under LGPLv2.1+.
+#   This library is free software; you can redistribute it and/or modify it
+#   under the terms of the GNU Lesser General Public License as published by
+#   the Free Software Foundation; either version 2.1 of the License, or (at
+#   your option) any later version.
+#
+#   This library is distributed in the hope that it will be useful, but
+#   WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser
+#   General Public License for more details.
+#
+#   You should have received a copy of the GNU Lesser General Public License
+#   along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-#serial 1
+#serial 5
 
 AC_DEFUN([AX_CODE_COVERAGE],[
 	dnl Check for --enable-code-coverage
+	AC_REQUIRE([AC_PROG_SED])
+
+	# allow to override gcov location
+	AC_ARG_WITH([gcov],
+	  [AS_HELP_STRING([--with-gcov[=GCOV]], [use given GCOV for coverage (GCOV=gcov).])],
+	  [_AX_CODE_COVERAGE_GCOV_PROG_WITH=$with_gcov],
+	  [_AX_CODE_COVERAGE_GCOV_PROG_WITH=gcov])
+
 	AC_MSG_CHECKING([whether to build with code coverage support])
-	AC_ARG_ENABLE([code-coverage], AS_HELP_STRING([--enable-code-coverage], [Whether to enable code coverage support]),, enable_code_coverage=no)
+	AC_ARG_ENABLE([code-coverage],
+	  AS_HELP_STRING([--enable-code-coverage],
+	  [Whether to enable code coverage support]),,
+	  enable_code_coverage=no)
+
 	AM_CONDITIONAL([CODE_COVERAGE_ENABLED], [test x$enable_code_coverage = xyes])
 	AC_SUBST([CODE_COVERAGE_ENABLED], [$enable_code_coverage])
 	AC_MSG_RESULT($enable_code_coverage)
 
 	AS_IF([ test "$enable_code_coverage" = "yes" ], [
+		# check for gcov
+		AC_CHECK_TOOL([GCOV],
+		  [$_AX_CODE_COVERAGE_GCOV_PROG_WITH],
+		  [:])
+		AS_IF([test "X$GCOV" = "X:"],
+		  [AC_MSG_ERROR([gcov is needed to do coverage])])
+		AC_SUBST([GCOV])
+
 		dnl Check if gcc is being used
 		AS_IF([ test "$GCC" = "no" ], [
 			AC_MSG_ERROR([not compiling with gcc, which is required for gcov code coverage])
 		])
 
 		# List of supported lcov versions.
-		lcov_version_list="1.6 1.7 1.8 1.9 1.10"
+		lcov_version_list="1.6 1.7 1.8 1.9 1.10 1.11"
 
 		AC_CHECK_PROG([LCOV], [lcov], [lcov])
 		AC_CHECK_PROG([GENHTML], [genhtml], [genhtml])
@@ -112,8 +156,11 @@ CODE_COVERAGE_RULES='
 #  - CODE_COVERAGE_OUTPUT_DIRECTORY: Directory for generated code coverage
 #    reports to be created. (Default:
 #    $(PACKAGE_NAME)-$(PACKAGE_VERSION)-coverage)
+#  - CODE_COVERAGE_LCOV_OPTIONS_GCOVPATH: --gcov-tool pathtogcov
+#  - CODE_COVERAGE_LCOV_OPTIONS_DEFAULT: Extra options to pass to the lcov instance.
+#    (Default: $CODE_COVERAGE_LCOV_OPTIONS_GCOVPATH)
 #  - CODE_COVERAGE_LCOV_OPTIONS: Extra options to pass to the lcov instance.
-#    (Default: empty)
+#    (Default: $CODE_COVERAGE_LCOV_OPTIONS_DEFAULT)
 #  - CODE_COVERAGE_GENHTML_OPTIONS: Extra options to pass to the genhtml
 #    instance. (Default: empty)
 #  - CODE_COVERAGE_IGNORE_PATTERN: Extra glob pattern of files to ignore
@@ -126,7 +173,9 @@ CODE_COVERAGE_RULES='
 CODE_COVERAGE_DIRECTORY ?= $(top_builddir)
 CODE_COVERAGE_OUTPUT_FILE ?= $(PACKAGE_NAME)-$(PACKAGE_VERSION)-coverage.info
 CODE_COVERAGE_OUTPUT_DIRECTORY ?= $(PACKAGE_NAME)-$(PACKAGE_VERSION)-coverage
-CODE_COVERAGE_LCOV_OPTIONS ?=
+CODE_COVERAGE_LCOV_OPTIONS_GCOVPATH ?= --gcov-tool "$(GCOV)"
+CODE_COVERAGE_LCOV_OPTIONS_DEFAULT ?= $(CODE_COVERAGE_LCOV_OPTIONS_GCOVPATH)
+CODE_COVERAGE_LCOV_OPTIONS ?= $(CODE_COVERAGE_LCOV_OPTIONS_DEFAULT)
 CODE_COVERAGE_GENHTML_OPTIONS ?=
 CODE_COVERAGE_IGNORE_PATTERN ?=
 
