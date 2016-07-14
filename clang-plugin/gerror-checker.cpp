@@ -764,7 +764,11 @@ GErrorChecker::_assert_gerror_set (SVal error_location,
                                    const SourceRange &source_range) const
 {
 	if (error_location.getAs<UndefinedVal> ()) {
+#if HAVE_LLVM_3_8
+		ExplodedNode *error_node = context.generateErrorNode (state);
+#else
 		ExplodedNode *error_node = context.generateSink (state);
+#endif
 
 		this->_initialise_bug_reports ();
 		auto R = llvm::make_unique<BugReport> (*this->_use_uninitialised,
@@ -789,7 +793,11 @@ GErrorChecker::_assert_gerror_set (SVal error_location,
 		state->assume (error_location.castAs<DefinedOrUnknownSVal> ());
 	if (null_state && !not_null_state && !null_allowed) {
 		/* Definitely NULL. */
+#if HAVE_LLVM_3_8
+		ExplodedNode *error_node = context.generateErrorNode (state);
+#else
 		ExplodedNode *error_node = context.generateSink (state);
+#endif
 
 		this->_initialise_bug_reports ();
 		auto R = llvm::make_unique<BugReport> (*this->_free_cleared,
@@ -818,7 +826,11 @@ GErrorChecker::_assert_gerror_set (SVal error_location,
 	const ErrorState *error_state = _error_map_get (state, error_sym);
 
 	if (error_state != NULL && error_state->isFreed ()) {
+#if HAVE_LLVM_3_8
+		ExplodedNode *error_node = context.generateErrorNode (state);
+#else
 		ExplodedNode *error_node = context.generateSink (state);
+#endif
 
 		this->_initialise_bug_reports ();
 		auto R = llvm::make_unique<BugReport> (*this->_double_free,
@@ -830,7 +842,13 @@ GErrorChecker::_assert_gerror_set (SVal error_location,
 
 		return false;
 	} else if (error_state != NULL && !error_state->isSet ()) {
+#if HAVE_LLVM_3_8
+		ExplodedNode *error_node = context.generateErrorNode (state);
+#else
 		ExplodedNode *error_node = context.generateSink (state);
+#endif
+
+
 
 		this->_initialise_bug_reports ();
 		auto R = llvm::make_unique<BugReport> (*this->_free_cleared,
@@ -911,7 +929,13 @@ GErrorChecker::_assert_gerror_unset (SVal error_location,
 	/* Branch on whether the GError* is NULL. If it isn’t NULL, there’s a
 	 * bug. */
 	if (error_location.getAs<UndefinedVal> () && !undef_allowed) {
+#if HAVE_LLVM_3_8
+		ExplodedNode *error_node = context.generateErrorNode (state);
+#else
 		ExplodedNode *error_node = context.generateSink (state);
+#endif
+
+
 
 		this->_initialise_bug_reports ();
 		auto R = llvm::make_unique<BugReport> (*this->_use_uninitialised,
@@ -946,7 +970,13 @@ GErrorChecker::_assert_gerror_unset (SVal error_location,
 	const ErrorState *error_state = _error_map_get (state, error_sym);
 
 	if (error_state != NULL && error_state->isSet ()) {
+#if HAVE_LLVM_3_8
+		ExplodedNode *error_node = context.generateErrorNode (state);
+#else
 		ExplodedNode *error_node = context.generateSink (state);
+#endif
+
+
 
 		this->_initialise_bug_reports ();
 		auto R = llvm::make_unique<BugReport> (*this->_overwrite_set,
@@ -959,7 +989,13 @@ GErrorChecker::_assert_gerror_unset (SVal error_location,
 		return false;
 	} else if (error_state != NULL && error_state->isFreed () &&
 	           !undef_allowed) {
+#if HAVE_LLVM_3_8
+		ExplodedNode *error_node = context.generateErrorNode (state);
+#else
 		ExplodedNode *error_node = context.generateSink (state);
+#endif
+
+
 
 		this->_initialise_bug_reports ();
 		auto R = llvm::make_unique<BugReport> (*this->_overwrite_freed,
