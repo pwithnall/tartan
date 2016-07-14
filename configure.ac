@@ -7,7 +7,7 @@ m4_define(tartan_version_micro, 0)
 
 AC_INIT([Tartan],
         [tartan_version_major.tartan_version_minor.tartan_version_micro],
-        [https://phabricator.freedesktop.org/maniphest/task/create/?projects=tartan],
+        [https://phabricator.freedesktop.org/maniphest/task/edit/form/1/?tags=tartan],
         [tartan],[http://www.freedesktop.org/software/tartan/])
 AX_IS_RELEASE([git-directory])
 
