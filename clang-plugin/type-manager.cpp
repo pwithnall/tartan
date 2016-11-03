@@ -34,7 +34,7 @@ namespace tartan {
 
 /* Find a #QualType for the typedeffed type with the given @name. This is a very
  * slow call (it requires iterating through all defined types in the given
- * @context), so its results should be cached where possible (FIXME: do this).
+ * @context), so its results are cached where possible.
  *
  * If type lookup fails, a null type is returned. */
 const QualType
