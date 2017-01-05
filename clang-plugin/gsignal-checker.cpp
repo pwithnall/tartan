@@ -559,6 +559,9 @@ _is_gtype_subclass (GIBaseInfo *a, GIBaseInfo *b)
  *    its register window, so the callee doesn’t need to know the stack frame
  *    size to restore the old stack pointer; parameters pushed right-to-left[9].
  *  - PNaCl: Equivalent to cdecl[12].
+ *  - Swift: Lowers to C function calls, which we assume are handled using a
+ *    safe calling convention[14].
+ *  - PreserveMost/PreserveAll: Arguments are passed identically to cdecl[15].
  *
  * Known unsafe calling conventions:
  *  - x86[1]:
@@ -599,6 +602,9 @@ _is_gtype_subclass (GIBaseInfo *a, GIBaseInfo *b)
  *  [12]: https://developer.chrome.com/native-client/reference/
  *        pnacl-bitcode-abi#calling-conventions
  *  [13]: https://msdn.microsoft.com/en-us/library/dn375768.aspx
+ *  [14]: https://github.com/apple/swift/blob/master/docs/CallingConvention.rst
+ *  [15]: https://github.com/llvm-mirror/llvm/blob/master/docs/LangRef.rst
+ *        #user-content-calling-conventions
  */
 static bool
 calling_convention_is_safe (CallingConv conv)
@@ -615,6 +621,11 @@ calling_convention_is_safe (CallingConv conv)
 #ifdef HAVE_LLVM_3_7
 	case CC_X86VectorCall:
 #endif
+#ifdef HAVE_LLVM_3_9
+	case CC_Swift:  /* Swift — lowered to C calling conventions */
+	case CC_PreserveMost:  /* arguments passed identically to cdecl */
+	case CC_PreserveAll:  /* arguments passed identically to cdecl */
+#endif
 		return true;
 	case CC_X86StdCall:
 	case CC_X86FastCall:
@@ -624,7 +635,10 @@ calling_convention_is_safe (CallingConv conv)
 	case CC_IntelOclBicc:
 		/* Intel OpenCL Built-Ins. I can’t find any documentation about
 		 * this, so let’s consider it unsafe. */
-#ifdef HAVE_LLVM_3_7
+#ifdef HAVE_LLVM_3_9
+	case CC_SpirFunction:
+	case CC_OpenCLKernel:
+#elif HAVE_LLVM_3_8
 	case CC_SpirFunction:
 	case CC_SpirKernel:
 		/* OpenCL SPIR calling conventions. These are ‘defined’ in §3.7

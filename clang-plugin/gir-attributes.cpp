@@ -338,7 +338,13 @@ GirAttributesConsumer::_handle_function_decl (FunctionDecl& func)
 		 * or replacement function so we can’t make use of them. */
 		if (g_base_info_is_deprecated (info) &&
 		    !func.hasAttr<DeprecatedAttr> ()) {
-#ifdef HAVE_LLVM_3_5
+#ifdef HAVE_LLVM_3_8
+			DeprecatedAttr* deprecated_attr =
+				::new (func.getASTContext ())
+				DeprecatedAttr (func.getSourceRange (),
+				                func.getASTContext (),
+				                0);
+#elif HAVE_LLVM_3_5
 			DeprecatedAttr* deprecated_attr =
 				::new (func.getASTContext ())
 				DeprecatedAttr (func.getSourceRange (),
