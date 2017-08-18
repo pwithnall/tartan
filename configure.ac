@@ -64,7 +64,7 @@ llvm_version=`$LLVM_CONFIG --version`
 major=`echo $llvm_version | sed 's/\([[0-9]]*\)\.\([[0-9]]*\)\(\.[[0-9]]*\)\?\(svn\)\?/\1/'`
 minor=`echo $llvm_version | sed 's/\([[0-9]]*\)\.\([[0-9]]*\)\(\.[[0-9]]*\)\?\(svn\)\?/\2/'`
 
-AS_IF([test "$major" -eq "$req_major" -a "$minor" -ge "$req_minor"],[
+AS_IF([test "$major" -gt "$req_major" -o \( "$major" -eq "$req_major" -a "$minor" -ge "$req_minor" \)],[
 	LLVM_CPPFLAGS=`$LLVM_CONFIG --cppflags`
 	LLVM_CXXFLAGS=`$LLVM_CONFIG --cxxflags`
 	LLVM_LDFLAGS=`$LLVM_CONFIG --ldflags`
@@ -88,19 +88,19 @@ AC_DEFINE_UNQUOTED([LLVM_CONFIG_VERSION],"$llvm_version",
                    [Configured LLVM version])
 
 # LLVM-specific version definitions
-AS_IF([test "$major" -eq 3 -a "$minor" -ge 5 -o "$major" -gt 3],[
+AS_IF([test "$major" -gt 3 -o "$major" -eq 3 -a "$minor" -ge 5],[
 	AC_DEFINE([HAVE_LLVM_3_5], [1], [Whether LLVM ≥ 3.5 is available])
 ])
-AS_IF([test "$major" -eq 3 -a "$minor" -ge 6 -o "$major" -gt 3],[
+AS_IF([test "$major" -gt 3 -o "$major" -eq 3 -a "$minor" -ge 6],[
 	AC_DEFINE([HAVE_LLVM_3_6], [1], [Whether LLVM ≥ 3.6 is available])
 ])
-AS_IF([test "$major" -eq 3 -a "$minor" -ge 7 -o "$major" -gt 3],[
+AS_IF([test "$major" -gt 3 -o "$major" -eq 3 -a "$minor" -ge 7],[
 	AC_DEFINE([HAVE_LLVM_3_7], [1], [Whether LLVM ≥ 3.7 is available])
 ])
-AS_IF([test "$major" -eq 3 -a "$minor" -ge 8 -o "$major" -gt 3],[
+AS_IF([test "$major" -gt 3 -o "$major" -eq 3 -a "$minor" -ge 8],[
 	AC_DEFINE([HAVE_LLVM_3_8], [1], [Whether LLVM ≥ 3.8 is available])
 ])
-AS_IF([test "$major" -eq 3 -a "$minor" -ge 9 -o "$major" -gt 3],[
+AS_IF([test "$major" -gt 3 -o "$major" -eq 3 -a "$minor" -ge 9],[
 	AC_DEFINE([HAVE_LLVM_3_9], [1], [Whether LLVM ≥ 3.9 is available])
 ])
 
