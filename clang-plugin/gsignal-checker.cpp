@@ -543,6 +543,7 @@ _is_gtype_subclass (GIBaseInfo *a, GIBaseInfo *b)
  *   • Microsoft x64: Caller clean-up (of parameters, not stack frame),
  *     parameters pushed right-to-left[10].
  *   • System V AMD64 ABI: Same[11, §3.2.3].
+ *   • regcall: Presumably the same as cdecl but using more registers[16, 17].
  *  - PowerPC (32-bit): Caller clean-up (of parameters, not stack frame),
  *    parameters pushed right-to-left[2].
  *  - PowerPC (64-bit): Same[3].
@@ -605,6 +606,10 @@ _is_gtype_subclass (GIBaseInfo *a, GIBaseInfo *b)
  *  [14]: https://github.com/apple/swift/blob/master/docs/CallingConvention.rst
  *  [15]: https://github.com/llvm-mirror/llvm/blob/master/docs/LangRef.rst
  *        #user-content-calling-conventions
+ *  [16]: https://clang.llvm.org/docs/AttributeReference.html
+ *        #regcall-gnu-regcall-regcall
+ *  [17]: https://software.intel.com/en-us/node/693069
+ *        #GUID-F7675A83-FA01-44C9-BD69-D49F891F7566
  */
 static bool
 calling_convention_is_safe (CallingConv conv)
@@ -625,6 +630,9 @@ calling_convention_is_safe (CallingConv conv)
 	case CC_Swift:  /* Swift — lowered to C calling conventions */
 	case CC_PreserveMost:  /* arguments passed identically to cdecl */
 	case CC_PreserveAll:  /* arguments passed identically to cdecl */
+#endif
+#ifdef HAVE_LLVM_4_0
+	case CC_X86RegCall:
 #endif
 		return true;
 	case CC_X86StdCall:
